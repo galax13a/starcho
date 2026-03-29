@@ -5,6 +5,13 @@
             <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navlist.item>
             <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
         </flux:navlist>
+
+        <flux:separator class="my-3" />
+
+        <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider px-1 mb-2">
+            {{ __('Language') }}
+        </p>
+        <x-language-switcher />
     </div>
 
     <flux:separator class="md:hidden" />

@@ -4,60 +4,60 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:badge color="amber" size="sm" class="ms-auto hidden lg:flex">Admin</flux:badge>
-                <flux:sidebar.collapse class="lg:hidden" />
+                <x-app-logo :sidebar="true" href="{{ route('app.dashboard') }}" wire:navigate />
+                <flux:badge color="amber" size="sm" class="hidden lg:flex in-data-flux-sidebar-collapsed-desktop:hidden">Admin</flux:badge>
+                <flux:spacer />
+                <flux:sidebar.collapse />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                {{-- Gestión de permisos --}}
-                <flux:sidebar.group heading="Permisos" class="grid">
-                    <flux:sidebar.item
-                        icon="shield-check"
-                        :href="route('admin.roles.index')"
-                        :current="request()->routeIs('admin.roles.*')"
-                        wire:navigate>
-                        Roles
-                    </flux:sidebar.item>
+                <flux:sidebar.item
+                    icon="shield-check"
+                    :href="route('admin.roles.index')"
+                    :current="request()->routeIs('admin.roles.*')"
+                    wire:navigate>
+                    Roles
+                </flux:sidebar.item>
 
-                    <flux:sidebar.item
-                        icon="key"
-                        :href="route('admin.permissions.index')"
-                        :current="request()->routeIs('admin.permissions.*')"
-                        wire:navigate>
-                        Permisos
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:sidebar.item
+                    icon="key"
+                    :href="route('admin.permissions.index')"
+                    :current="request()->routeIs('admin.permissions.*')"
+                    wire:navigate>
+                    Permisos
+                </flux:sidebar.item>
 
-                {{-- Gestión de usuarios --}}
-                <flux:sidebar.group heading="Usuarios" class="grid">
-                    <flux:sidebar.item
-                        icon="users"
-                        :href="route('admin.users.index')"
-                        :current="request()->routeIs('admin.users.*')"
-                        wire:navigate>
-                        Usuarios
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:sidebar.item
+                    icon="users"
+                    :href="route('admin.users.index')"
+                    :current="request()->routeIs('admin.users.*')"
+                    wire:navigate>
+                    Usuarios
+                </flux:sidebar.item>
 
-                {{-- Sistema --}}
-                <flux:sidebar.group heading="Sistema" class="grid">
-                    <flux:sidebar.item
-                        icon="arrow-path"
-                        :href="route('admin.cache.index')"
-                        :current="request()->routeIs('admin.cache.*')"
-                        wire:navigate>
-                        Caché
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:sidebar.item
+                    icon="clipboard-document-list"
+                    :href="route('admin.tasks.index')"
+                    :current="request()->routeIs('admin.tasks.*')"
+                    wire:navigate>
+                    Tareas
+                </flux:sidebar.item>
+
+                <flux:sidebar.item
+                    icon="arrow-path"
+                    :href="route('admin.cache.index')"
+                    :current="request()->routeIs('admin.cache.*')"
+                    wire:navigate>
+                    Caché
+                </flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="home" :href="route('dashboard')" wire:navigate>
+                <flux:sidebar.item icon="home" :href="route('app.dashboard')" wire:navigate>
                     Volver a la app
                 </flux:sidebar.item>
             </flux:sidebar.nav>
