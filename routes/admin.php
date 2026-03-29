@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CacheController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,10 @@ Route::prefix('admin')
         Route::get('users/{user}/edit',   [UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}',        [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}',     [UserController::class, 'destroy'])->name('users.destroy');
+
+        // ── Tasks (Index + Export) ───────────────────────────────────────────────
+        Route::get('tasks',         [TaskController::class, 'index'])->name('tasks.index');
+        Route::get('tasks/export',  [TaskController::class, 'export'])->name('tasks.export');
 
         // ── Cache ─────────────────────────────────────────────────────────────────
         Route::get('cache',                    [CacheController::class, 'index'])->name('cache.index');

@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Facades\Filter;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
@@ -52,34 +51,19 @@ final class UsersTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')
-                ->sortable(),
-
-            Column::make('Nombre', 'name')
-                ->sortable()
-                ->searchable(),
-
-            Column::make('Email', 'email')
-                ->sortable()
-                ->searchable(),
-
+            Column::make('ID', 'id')->sortable(),
+            Column::make('Nombre', 'name')->sortable()->searchable(),
+            Column::make('Email', 'email')->sortable()->searchable(),
             Column::make('Roles', 'roles_list'),
-
             Column::make('Verificación', 'email_verified_label'),
-
-            Column::make('Registro', 'created_at_formatted', 'created_at')
-                ->sortable(),
-
+            Column::make('Registro', 'created_at_formatted', 'created_at')->sortable(),
             Column::action('Acciones'),
         ];
     }
 
     public function filters(): array
     {
-        return [
-            Filter::inputText('name')->placeholder('Buscar nombre...'),
-            Filter::inputText('email')->placeholder('Buscar email...'),
-        ];
+        return [];
     }
 
     public function actions(User $row): array
@@ -90,13 +74,12 @@ final class UsersTable extends PowerGridComponent
         return [
             Button::add('edit')
                 ->slot($iconEdit)
-                ->route('admin.users.edit', ['user' => $row->id])
+                ->dispatch('openUser', ['id' => $row->id])
                 ->class('inline-flex items-center justify-center size-8 rounded-lg border border-zinc-200 text-zinc-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-blue-400 dark:hover:bg-blue-900/30'),
 
             Button::add('delete')
                 ->slot($iconDelete)
-                ->confirm('¿Eliminar al usuario "' . $row->name . '"? Esta acción no se puede deshacer.')
-                ->dispatchSelf('deleteUser', ['id' => $row->id])
+                ->attributes(['onclick' => "starchoDelete({$row->id},'" . addslashes($row->name) . "','deleteUser','admin.users-table')"])
                 ->class('inline-flex items-center justify-center size-8 rounded-lg border border-zinc-200 text-zinc-600 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-red-400 dark:hover:bg-red-900/30'),
         ];
     }
@@ -104,7 +87,7 @@ final class UsersTable extends PowerGridComponent
     #[On('deleteUser')]
     public function deleteUser(int $id): void
     {
-        User::findOrFail($id)->delete();
+        User::find($id)?->delete();
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

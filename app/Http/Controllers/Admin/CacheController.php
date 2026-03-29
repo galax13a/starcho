@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Artisan;
+use Spatie\Permission\PermissionRegistrar;
 
 class CacheController extends Controller
 {
@@ -19,8 +20,9 @@ class CacheController extends Controller
         Artisan::call('config:clear');
         Artisan::call('view:clear');
         Artisan::call('event:clear');
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        return back()->with('success', 'Todo el caché ha sido limpiado correctamente.');
+        return back()->with('success', 'Todo el caché ha sido limpiado (incluyendo permisos de Spatie).');
     }
 
     public function clearApp()
@@ -49,6 +51,13 @@ class CacheController extends Controller
         Artisan::call('view:clear');
 
         return back()->with('success', 'Caché de vistas limpiado.');
+    }
+
+    public function clearPermissions()
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        return back()->with('success', 'Caché de permisos de Spatie limpiado.');
     }
 
     public function optimize()

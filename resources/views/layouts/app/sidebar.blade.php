@@ -4,18 +4,32 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <x-app-logo :sidebar="true" href="{{ route('app.dashboard') }}" wire:navigate />
+                <flux:sidebar.collapse />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:sidebar.item icon="home" :href="route('app.dashboard')" :current="request()->routeIs('app.dashboard')" wire:navigate>
+                    {{ __('Dashboard') }}
+                </flux:sidebar.item>
+
+                @php
+                    try { $tasksVisible = \App\Models\AppSetting::get('tasks_enabled', '1') !== '0'; }
+                    catch (\Throwable $e) { $tasksVisible = true; }
+                @endphp
+                @if($tasksVisible)
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('app.tasks.index')" :current="request()->routeIs('app.tasks.index')" wire:navigate>
+                    Tareas
+                </flux:sidebar.item>
+                @endif
+
+                @role('admin')
+                <flux:sidebar.item icon="shield-check" :href="route('admin.index')" :current="request()->routeIs('admin.*')" wire:navigate>
+                    Panel Admin
+                </flux:sidebar.item>
+                @endrole
             </flux:sidebar.nav>
 
             <flux:spacer />
