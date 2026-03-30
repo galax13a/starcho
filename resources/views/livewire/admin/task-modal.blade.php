@@ -78,112 +78,74 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-task" class="md:w-[640px] !p-0 app-popup-card" focusable>
+    <flux:modal name="modal-task" class="md:w-[680px]" focusable>
+        <form wire:submit="saveTask" class="space-y-5">
+            <flux:heading size="lg">{{ $taskId > 0 ? __('admin_ui.tasks.edit_title') : __('admin_ui.tasks.create_title') }}</flux:heading>
 
-        <div class="sc-modal-kick">
+            <flux:field>
+                <flux:label>{{ __('admin_ui.tasks.form.title') }}</flux:label>
+                <flux:input wire:model="taskTitle" placeholder="{{ __('admin_ui.tasks.form.title_placeholder') }}" />
+                <flux:error name="taskTitle" />
+            </flux:field>
 
-            {{-- Header ── Kick style ── --}}
-            <div class="sc-modal-kick-header">
-                <div style="width:32px;height:32px;border-radius:5px;background:rgba(83,252,24,.12);border:1px solid rgba(83,252,24,.25);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-clipboard-list" style="color:#53fc18;font-size:13px;"></i>
-                </div>
-                <div>
-                    <div class="sc-modal-kick-title">
-                        {!! $taskId > 0 ? '<span>'.__('tasks.modal_title_edit').'</span> '.__('tasks.modal_task') : '<span>'.__('tasks.modal_title_new').'</span> '.__('tasks.modal_task') !!}
-                    </div>
-                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">{{ __('tasks.modal_subtitle') }}</div>
-                </div>
+            <flux:field>
+                <flux:label>{{ __('admin_ui.tasks.form.description') }}</flux:label>
+                <flux:textarea wire:model="taskDesc" rows="3" placeholder="{{ __('admin_ui.tasks.form.description_placeholder') }}" />
+                <flux:error name="taskDesc" />
+            </flux:field>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>{{ __('admin_ui.tasks.form.status') }}</flux:label>
+                    <flux:select wire:model="taskStatus">
+                        <flux:select.option value="pending">{{ __('admin_ui.tasks.status.pending') }}</flux:select.option>
+                        <flux:select.option value="in_progress">{{ __('admin_ui.tasks.status.in_progress') }}</flux:select.option>
+                        <flux:select.option value="completed">{{ __('admin_ui.tasks.status.completed') }}</flux:select.option>
+                        <flux:select.option value="cancelled">{{ __('admin_ui.tasks.status.cancelled') }}</flux:select.option>
+                    </flux:select>
+                    <flux:error name="taskStatus" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('admin_ui.tasks.form.priority') }}</flux:label>
+                    <flux:select wire:model="taskPriority">
+                        <flux:select.option value="low">{{ __('admin_ui.tasks.priority.low') }}</flux:select.option>
+                        <flux:select.option value="medium">{{ __('admin_ui.tasks.priority.medium') }}</flux:select.option>
+                        <flux:select.option value="high">{{ __('admin_ui.tasks.priority.high') }}</flux:select.option>
+                        <flux:select.option value="urgent">{{ __('admin_ui.tasks.priority.urgent') }}</flux:select.option>
+                    </flux:select>
+                    <flux:error name="taskPriority" />
+                </flux:field>
             </div>
 
-            {{-- Body ── Kick style inputs ── --}}
-            <form wire:submit="saveTask">
-                <div class="sc-modal-kick-body" style="display:flex;flex-direction:column;gap:16px;">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>{{ __('admin_ui.tasks.form.due_date') }}</flux:label>
+                    <flux:input wire:model="taskDueDate" type="date" />
+                    <flux:error name="taskDueDate" />
+                </flux:field>
 
-                    {{-- Título --}}
-                    <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('tasks.field_title') }} <span style="color:#ff4242">*</span></label>
-                        <input wire:model="taskTitle" type="text" placeholder="{{ __('tasks.field_title_ph') }}"
-                               class="sc-input sc-input-kick">
-                        @error('taskTitle')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
-                        @enderror
-                    </div>
+                <flux:field>
+                    <flux:label>{{ __('admin_ui.tasks.form.assign_to') }}</flux:label>
+                    <flux:select wire:model="taskAssigned">
+                        <flux:select.option value="0">{{ __('admin_ui.tasks.form.unassigned') }}</flux:select.option>
+                        @foreach($this->allUsers as $user)
+                            <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="taskAssigned" />
+                </flux:field>
+            </div>
 
-                    {{-- Descripción --}}
-                    <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('tasks.field_desc') }}</label>
-                        <textarea wire:model="taskDesc" placeholder="{{ __('tasks.field_desc_ph') }}" rows="3"
-                                  class="sc-textarea sc-textarea-kick"></textarea>
-                        @error('taskDesc')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    {{-- Estado + Prioridad --}}
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('tasks.field_status') }}</label>
-                            <select wire:model="taskStatus" class="sc-select sc-select-kick app-select">
-                                <option value="pending">⬜ {{ __('tasks.status_pending') }}</option>
-                                <option value="in_progress">🔵 {{ __('tasks.status_in_progress') }}</option>
-                                <option value="completed">✅ {{ __('tasks.status_completed') }}</option>
-                                <option value="cancelled">❌ {{ __('tasks.status_cancelled') }}</option>
-                            </select>
-                        </div>
-                        <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('tasks.field_priority') }}</label>
-                            <select wire:model="taskPriority" class="sc-select sc-select-kick app-select">
-                                <option value="low">🟢 {{ __('tasks.priority_low') }}</option>
-                                <option value="medium">🟡 {{ __('tasks.priority_medium') }}</option>
-                                <option value="high">🟠 {{ __('tasks.priority_high') }}</option>
-                                <option value="urgent">🔴 {{ __('tasks.priority_urgent') }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Fecha + Asignado --}}
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('tasks.field_due_date') }}</label>
-                            <input wire:model="taskDueDate" type="date"
-                                   class="sc-input sc-input-kick"
-                                   style="color-scheme: dark;">
-                            @error('taskDueDate')
-                            <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('tasks.field_assign') }}</label>
-                            <select wire:model="taskAssigned" class="sc-select sc-select-kick app-select">
-                                <option value="0">{{ __('tasks.field_unassigned') }}</option>
-                                @foreach($this->allUsers as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                </div>
-
-                {{-- Footer --}}
-                <div class="sc-modal-kick-footer">
-                    <flux:modal.close>
-                        <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">
-                            {{ __('tasks.btn_cancel') }}
-                        </button>
-                    </flux:modal.close>
-                    <button type="submit" class="sc-btn sc-btn-kick"
-                            wire:loading.attr="disabled"
-                            wire:loading.class="opacity-60">
-                        <span wire:loading.remove wire:target="saveTask">
-                            <i class="fas fa-bolt" style="font-size:11px;"></i>
-                            {{ $taskId > 0 ? __('tasks.btn_update') : __('tasks.btn_save') }}
-                        </span>
-                        <span wire:loading wire:target="saveTask">{{ __('tasks.btn_saving') }}</span>
-                    </button>
-                </div>
-            </form>
-
-        </div>
+            <div class="flex justify-end gap-2 pt-1">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="saveTask">{{ $taskId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save') }}</span>
+                    <span wire:loading wire:target="saveTask">{{ __('admin_ui.common.saving') }}</span>
+                </flux:button>
+            </div>
+        </form>
     </flux:modal>
 </div>
