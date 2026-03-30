@@ -5,13 +5,14 @@ use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'verified', 'role:admin'])
+    ->middleware(['auth', 'verified', 'role:root|admin', 'permission:view-admin'])
     ->group(function () {
 
         Route::get('/', fn () => redirect()->route('admin.roles.index'))->name('index');
@@ -42,6 +43,12 @@ Route::prefix('admin')
 
         // ── Contacts (Index) ─────────────────────────────────────────────────────
         Route::view('contacts', 'admin.contacts.index')->name('contacts.index');
+
+        // ── Site module (SEO / favicon / metadata) ─────────────────────────────
+        Route::get('site', [SiteController::class, 'index'])->name('site.index');
+        Route::put('site', [SiteController::class, 'update'])->name('site.update');
+        Route::get('site/page-editor', [SiteController::class, 'editPage'])->name('site.pages.edit');
+        Route::put('site/page-editor', [SiteController::class, 'updatePage'])->name('site.pages.update');
 
         // ── Modules ──────────────────────────────────────────────────────────────
         Route::get('modules',                    [ModuleController::class, 'index'])->name('modules.index');

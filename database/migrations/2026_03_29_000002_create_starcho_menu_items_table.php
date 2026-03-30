@@ -10,10 +10,12 @@ return new class extends Migration
     {
         Schema::create('starcho_menu_items', function (Blueprint $table) {
             $table->id();
+            $table->enum('panel', ['app', 'admin', 'home'])->default('app');
             $table->string('module_key')->nullable();       // null = core item
             $table->foreignId('parent_id')->nullable()->constrained('starcho_menu_items')->nullOnDelete();
             $table->string('section')->nullable();          // visual group label (no link)
-            $table->string('label');
+            $table->string('label')->nullable();
+            $table->json('name')->nullable();
             $table->string('icon')->nullable();             // heroicon or SVG name
             $table->string('route')->nullable();            // named route e.g. app.tasks.index
             $table->string('url')->nullable();              // fallback absolute URL

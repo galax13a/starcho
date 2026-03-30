@@ -67,6 +67,27 @@ class StarchoSeeder extends Seeder
                     ],
                 ],
             ],
+            [
+                'key'         => 'site',
+                'name'        => ['es' => 'Sitio', 'en' => 'Site', 'pt_BR' => 'Site'],
+                'description' => ['es' => 'Administra SEO, favicon y metadatos globales del sitio web.', 'en' => 'Manage SEO, favicon and global website metadata.', 'pt_BR' => 'Gerencie SEO, favicon e metadados globais do site.'],
+                'icon'        => 'globe',
+                'installed'   => false,
+                'active'      => false,
+                'config'      => [
+                    'settings_route' => 'admin.site.index',
+                    'menu_items' => [
+                        [
+                            'panel'      => 'admin',
+                            'section'    => 'Sistema',
+                            'name'       => ['es' => 'Sitio web', 'en' => 'Website', 'pt_BR' => 'Site'],
+                            'icon'       => 'fas fa-globe',
+                            'route'      => 'admin.site.index',
+                            'sort_order' => 65,
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         foreach ($modules as $data) {

@@ -35,6 +35,7 @@ class CacheController extends Controller
         StarchoMenuItem::clearMenuCache();
         Cache::forget('starcho_module_tasks');
         Cache::forget('starcho_module_contacts');
+        Cache::forget('starcho_module_site');
 
         return back()->with('success', 'Caché del menú lateral limpiado.');
     }

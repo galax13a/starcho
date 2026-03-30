@@ -8,6 +8,7 @@ Route::prefix('app')
     ->group(function () {
 
         Route::view('/', 'dashboard')->name('dashboard');
+        Route::view('dashboard', 'dashboard');
 
         Route::view('tasks', 'tasks.index')->name('tasks.index');
 
