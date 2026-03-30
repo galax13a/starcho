@@ -7,7 +7,22 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                // Base Tailwind + Flux (cargado en partials/head.blade.php — ambas áreas)
+                'resources/css/app.css',
+
+                // CSS específico de /app (cargado en layouts/app/sidebar.blade.php)
+                'resources/css/starcho-app.css',
+
+                // CSS específico de /admin (cargado en layouts/admin/sidebar.blade.php)
+                'resources/css/starcho-admin.css',
+
+                // JS de /app: starcho.js + PowerGrid
+                'resources/js/app.js',
+
+                // JS de /admin: starcho.js + PowerGrid + adminLayout()
+                'resources/js/admin.js',
+            ],
             refresh: true,
         }),
         tailwindcss(),

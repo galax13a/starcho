@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\StarchoMenuItem;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\PermissionRegistrar;
 
 class CacheController extends Controller
@@ -23,6 +25,18 @@ class CacheController extends Controller
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return back()->with('success', 'Todo el caché ha sido limpiado (incluyendo permisos de Spatie).');
+    }
+
+    public function clearMenu()
+    {
+        // Eliminar posibles registros corruptos o residuales (route 'app')
+        StarchoMenuItem::where('route', 'app')->delete();
+
+        StarchoMenuItem::clearMenuCache();
+        Cache::forget('starcho_module_tasks');
+        Cache::forget('starcho_module_contacts');
+
+        return back()->with('success', 'Caché del menú lateral limpiado.');
     }
 
     public function clearApp()

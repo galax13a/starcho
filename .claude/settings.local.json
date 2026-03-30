@@ -3,7 +3,21 @@
     "allow": [
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(composer require:*)",
+      "Bash(where php:*)",
+      "Bash(where composer:*)",
+      "Bash(grep -o \".\\\\{0,60\\\\}modal.show.\\\\{0,60\\\\}\" vendor/livewire/flux/dist/flux.min.js)",
+      "Bash(grep -o \".\\\\{0,40\\\\}Alpine\\\\.start.\\\\{0,40\\\\}\" vendor/power-components/livewire-powergrid/dist/powergrid.js)",
+      "Bash(grep -o \".\\\\{0,60\\\\}data-flux-main.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(grep -o \".\\\\{0,20\\\\}has.\\\\[data-flux-main\\\\].\\\\{0,120\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(grep -o \".\\\\{0,50\\\\}z-index.\\\\{0,50\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(grep -o \".\\\\{0,30\\\\}data-flux-modal.\\\\{0,80\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(grep -o \".\\\\{0,20\\\\}color-accent.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(grep -o \".\\\\{0,60\\\\}accent-foreground.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)"
     ]
   }
 }

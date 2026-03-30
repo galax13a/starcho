@@ -10,4 +10,6 @@ Route::prefix('app')
         Route::view('/', 'dashboard')->name('dashboard');
 
         Route::view('tasks', 'tasks.index')->name('tasks.index');
+
+        Route::view('contacts', 'contacts.index')->name('contacts.index');
     });

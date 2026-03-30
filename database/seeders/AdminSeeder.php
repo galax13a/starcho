@@ -66,5 +66,7 @@ class AdminSeeder extends Seeder
 
         $this->command->info('Admin creado: admin@starcho.com / password');
         $this->command->info('Roles creados: admin, editor, moderator, user, guest');
+
+        $this->call(StarchoSeeder::class);
     }
 }
