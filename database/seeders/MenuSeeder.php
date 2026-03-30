@@ -43,6 +43,16 @@ class MenuSeeder extends Seeder
                 'sort_order' => 30,
                 'active'     => false,
             ],
+            [
+                'panel'      => 'app',
+                'module_key' => 'notes',
+                'section'    => null,
+                'name'       => ['es' => 'Notas', 'en' => 'Notes', 'pt_BR' => 'Notas'],
+                'icon'       => 'fas fa-note-sticky',
+                'route'      => 'app.notes.index',
+                'sort_order' => 35,
+                'active'     => false,
+            ],
 
             // ── ADMIN panel — sección Acceso ───────────────────────────────
             [
@@ -93,6 +103,16 @@ class MenuSeeder extends Seeder
                 'icon'       => 'fas fa-address-book',
                 'route'      => 'admin.contacts.index',
                 'sort_order' => 50,
+                'active'     => false,
+            ],
+            [
+                'panel'      => 'admin',
+                'module_key' => 'notes',
+                'section'    => 'Acceso',
+                'name'       => ['es' => 'Notas', 'en' => 'Notes', 'pt_BR' => 'Notas'],
+                'icon'       => 'fas fa-note-sticky',
+                'route'      => 'admin.notes.index',
+                'sort_order' => 55,
                 'active'     => false,
             ],
 

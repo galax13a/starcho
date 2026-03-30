@@ -1744,9 +1744,23 @@ table .badge {
 
 .dark #power-grid-table-base .sc-select-stripe,
 .dark #power-grid-table-base .starcho-stripeX-filter {
-    background-color: var(--stripe-bg2);
+    background-color: #1a1f2e;
     border-color: rgba(129,140,248,.35);
-    color: var(--stripe-text);
+    color: #c7d2fe;
+}
+
+.dark #power-grid-table-base .sc-select-tt,
+.dark #power-grid-table-base .starcho-tiktok-filter {
+    background-color: #1a1a1a;
+    border-color: rgba(254,44,85,.30);
+    color: #ffffff;
+}
+
+.dark #power-grid-table-base .sc-select-kick,
+.dark #power-grid-table-base .starchi-kick-filter {
+    background-color: #111a10;
+    border-color: rgba(83,252,24,.30);
+    color: #e8f5e6;
 }
 
 .dark #power-grid-table-base [x-show="open"] {
@@ -1776,4 +1790,375 @@ table .badge {
 .dark #pg-footer {
     background: rgba(15,20,31,.84);
     border-top-color: #30384d;
+}
+
+/* Notes - color picker buttons */
+.note-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.note-color-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 2px solid rgba(148, 163, 184, .35);
+    background: var(--note-color);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    cursor: pointer;
+    transition: transform .18s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.note-color-btn:hover {
+    transform: translateY(-1px) scale(1.04);
+    border-color: rgba(255,255,255,.7);
+    box-shadow: 0 6px 16px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.2);
+}
+
+.note-color-btn[data-selected="true"] {
+    transform: scale(1.06);
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, .18), inset 0 0 0 1px rgba(255,255,255,.28);
+}
+
+.dark .note-color-btn {
+    border-color: rgba(255,255,255,.22);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+}
+
+.dark .note-color-btn[data-selected="true"] {
+    border-color: #f8fafc;
+    box-shadow: 0 0 0 3px rgba(0,242,255,.22), inset 0 0 0 1px rgba(255,255,255,.22);
+}
+
+.note-color-selected {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* /app/tasks - Kick theme wrapper */
+.starchi-kick {
+    --kick-bg: #f5fbf3;
+    --kick-bg2: #eef7eb;
+    --kick-card: #ffffff;
+    --kick-border: #c8dec1;
+    --kick-text: #163117;
+    --kick-text2: #4b6a4c;
+    --kick-glow: rgba(83,252,24,.14);
+}
+
+.starchi-kick .starchi-kick-header {
+    background: linear-gradient(135deg, rgba(83,252,24,.08), rgba(59,219,0,.03));
+    border-color: rgba(83,252,24,.25);
+}
+
+.starchi-kick .starchi-kick-btn {
+    min-width: 148px;
+}
+
+.starchi-kick .starchi-kick-card {
+    border-color: rgba(83,252,24,.24);
+}
+
+.starchi-kick .sc-card-kick {
+    background: var(--kick-card);
+    color: var(--kick-text);
+}
+
+.starchi-kick .sc-stat-kick .sc-stat-label {
+    color: var(--kick-text2);
+}
+
+.starchi-kick .starchi-kick-filter {
+    min-width: 180px;
+}
+
+.dark .starchi-kick {
+    --kick-bg: #0a0f09;
+    --kick-bg2: #111a10;
+    --kick-card: #131d12;
+    --kick-border: #1e2e1c;
+    --kick-text: #e8f5e6;
+    --kick-text2: #8dab8a;
+    --kick-glow: rgba(83,252,24,.18);
+}
+
+.dark .starchi-kick .starchi-kick-header {
+    background: linear-gradient(135deg, rgba(83,252,24,.14), rgba(59,219,0,.08));
+    border-color: rgba(83,252,24,.34);
+}
+
+.dark .starchi-kick .starchi-kick-card {
+    border-color: rgba(83,252,24,.30);
+}
+
+/* /app/tasks popup - independent light/dark design */
+.starchi-kick-modal {
+    --kick-bg: #f5fbf3;
+    --kick-bg2: #eef7eb;
+    --kick-card: #ffffff;
+    --kick-border: #c8dec1;
+    --kick-text: #163117;
+    --kick-text2: #4b6a4c;
+    --kick-glow: rgba(83,252,24,.14);
+}
+
+.starchi-kick-modal .sc-modal-kick {
+    border-radius: 12px;
+    background: var(--kick-card);
+    border-color: var(--kick-border);
+}
+
+.starchi-kick-modal .starchi-kick-modal-header {
+    background: linear-gradient(135deg, rgba(83,252,24,.10), rgba(59,219,0,.04));
+    border-bottom: 1px solid rgba(83,252,24,.22);
+}
+
+.starchi-kick-modal .starchi-kick-modal-subtitle {
+    font-size: 11px;
+    color: #426240;
+    margin-top: 1px;
+}
+
+.starchi-kick-modal .starchi-kick-modal-body {
+    background: linear-gradient(180deg, rgba(245,255,243,.9), rgba(240,251,238,.7));
+}
+
+.starchi-kick-modal .starchi-kick-modal-footer {
+    border-top: 1px solid rgba(83,252,24,.22);
+    background: rgba(231,247,229,.7);
+}
+
+.dark .starchi-kick-modal {
+    --kick-bg: #0a0f09;
+    --kick-bg2: #111a10;
+    --kick-card: #131d12;
+    --kick-border: #1e2e1c;
+    --kick-text: #e8f5e6;
+    --kick-text2: #8dab8a;
+    --kick-glow: rgba(83,252,24,.18);
+}
+
+.dark .starchi-kick-modal .starchi-kick-modal-header {
+    background: linear-gradient(135deg, rgba(83,252,24,.18), rgba(59,219,0,.09));
+    border-bottom-color: rgba(83,252,24,.30);
+}
+
+.dark .starchi-kick-modal .starchi-kick-modal-subtitle {
+    color: #8dab8a;
+}
+
+.dark .starchi-kick-modal .starchi-kick-modal-body {
+    background: linear-gradient(180deg, rgba(10,15,9,.95), rgba(17,26,16,.92));
+}
+
+.dark .starchi-kick-modal .starchi-kick-modal-footer {
+    border-top-color: rgba(83,252,24,.24);
+    background: rgba(11,17,10,.92);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   14. APP/NOTES - STARCHO TIKTOK
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.starcho-tiktok {
+    --tt-bg: #f5f5f7;
+    --tt-bg2: #ffffff;
+    --tt-card: #ffffff;
+    --tt-pink: #fe2c55;
+    --tt-cyan: #25f4ee;
+    --tt-border: #e4e4ee;
+    --tt-text: #1a1a2e;
+    --tt-text2: #777790;
+    --tt-glow: rgba(254,44,85,.14);
+}
+
+.starcho-tiktok .starcho-tiktok-header {
+    background: linear-gradient(135deg, rgba(254,44,85,.08), rgba(37,244,238,.05));
+    border-color: rgba(254,44,85,.20);
+}
+
+.starcho-tiktok .starcho-tiktok-btn {
+    min-width: 152px;
+}
+
+.starcho-tiktok .starcho-tiktok-card {
+    border-color: rgba(254,44,85,.16);
+}
+
+.starcho-tiktok .starcho-tiktok-filter {
+    min-width: 180px;
+}
+
+.starcho-tiktok .sc-card-tt {
+    background: var(--tt-card);
+    color: var(--tt-text);
+}
+
+.starcho-tiktok .sc-stat-tt .sc-stat-label {
+    color: var(--tt-text2);
+}
+
+.dark .starcho-tiktok {
+    --tt-bg: #010101;
+    --tt-bg2: #121212;
+    --tt-card: #161616;
+    --tt-border: #2a2a2a;
+    --tt-text: #ffffff;
+    --tt-text2: #aaaaaa;
+    --tt-glow: rgba(254,44,85,.20);
+}
+
+.dark .starcho-tiktok .starcho-tiktok-header {
+    background: linear-gradient(135deg, rgba(254,44,85,.14), rgba(37,244,238,.08));
+    border-color: rgba(254,44,85,.28);
+}
+
+.dark .starcho-tiktok .starcho-tiktok-card {
+    border-color: rgba(254,44,85,.24);
+}
+
+/* /app/notes popup - independent light/dark design */
+.starcho-tiktok-modal {
+    --tt-bg: #f5f5f7;
+    --tt-bg2: #ffffff;
+    --tt-card: #ffffff;
+    --tt-pink: #fe2c55;
+    --tt-cyan: #25f4ee;
+    --tt-border: #e4e4ee;
+    --tt-text: #1a1a2e;
+    --tt-text2: #777790;
+    --tt-glow: rgba(254,44,85,.14);
+}
+
+.starcho-tiktok-modal .sc-modal-tt {
+    border-radius: 12px;
+    background: var(--tt-card);
+    border-color: var(--tt-border);
+}
+
+.starcho-tiktok-modal .sc-modal-tt-header {
+    background: linear-gradient(135deg, rgba(254,44,85,.08), rgba(37,244,238,.05));
+    border-bottom-color: var(--tt-border);
+}
+
+.starcho-tiktok-modal .sc-modal-tt-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(254,44,85,.22);
+    background: rgba(254,44,85,.10);
+    color: var(--tt-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.starcho-tiktok-modal .sc-modal-tt-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--tt-text);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.starcho-tiktok-modal .sc-modal-tt-title span {
+    color: var(--tt-pink);
+}
+
+.starcho-tiktok-modal .starcho-tiktok-modal-subtitle {
+    font-size: 11px;
+    color: #9a9aac;
+    margin-top: 1px;
+}
+
+.starcho-tiktok-modal .starcho-tiktok-modal-body {
+    background: linear-gradient(180deg, rgba(245,245,247,.95), rgba(250,250,251,.85));
+}
+
+.starcho-tiktok-modal .starcho-tiktok-modal-footer {
+    border-top: 1px solid rgba(254,44,85,.16);
+    background: rgba(250,250,251,.85);
+}
+
+.dark .starcho-tiktok-modal {
+    --tt-bg: #010101;
+    --tt-bg2: #121212;
+    --tt-card: #161616;
+    --tt-border: #2a2a2a;
+    --tt-text: #ffffff;
+    --tt-text2: #aaaaaa;
+    --tt-glow: rgba(254,44,85,.20);
+}
+
+.dark .starcho-tiktok-modal .sc-modal-tt-header {
+    background: linear-gradient(135deg, rgba(254,44,85,.16), rgba(37,244,238,.09));
+    border-bottom-color: rgba(254,44,85,.24);
+}
+
+.dark .starcho-tiktok-modal .sc-modal-tt-icon {
+    border-color: rgba(254,44,85,.32);
+    background: rgba(254,44,85,.18);
+    color: #ff6b9d;
+}
+
+.dark .starcho-tiktok-modal .starcho-tiktok-modal-subtitle {
+    color: #888899;
+}
+
+.dark .starcho-tiktok-modal .starcho-tiktok-modal-body {
+    background: linear-gradient(180deg, rgba(1,1,1,.95), rgba(18,18,18,.92));
+}
+
+.dark .starcho-tiktok-modal .starcho-tiktok-modal-footer {
+    border-top-color: rgba(254,44,85,.20);
+    background: rgba(16,16,16,.92);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   15. NOTES CALENDAR MODAL - TIKTOK STYLING
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.calendar-day {
+    position: relative;
+}
+
+.calendar-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.dark .calendar-day:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.24);
+}
+
+.calendar-day[data-selected="true"] {
+    border-color: var(--tt-pink) !important;
+    background: rgba(254,44,85,.08) !important;
+    box-shadow: 0 0 0 2px rgba(254,44,85,.20);
+}
+
+.calendar-day[data-selected="true"]:hover {
+    box-shadow: 0 0 0 2px rgba(254,44,85,.30), 0 4px 12px rgba(254,44,85,.20);
+}
+
+/* Scrollbar personalizado para lista de notas */
+div > div::-webkit-scrollbar {
+    width: 6px;
+}
+
+div > div::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+div > div::-webkit-scrollbar-thumb {
+    background: rgba(254,44,85,.20);
+    border-radius: 3px;
+}
+
+div > div::-webkit-scrollbar-thumb:hover {
+    background: rgba(254,44,85,.40);
 }

@@ -44,6 +44,9 @@ Route::prefix('admin')
         // ── Contacts (Index) ─────────────────────────────────────────────────────
         Route::view('contacts', 'admin.contacts.index')->name('contacts.index');
 
+        // ── Notes (Index) ────────────────────────────────────────────────────────
+        Route::view('notes', 'admin.notes.index')->name('notes.index');
+
         // ── Site module (SEO / favicon / metadata) ─────────────────────────────
         Route::get('site', [SiteController::class, 'index'])->name('site.index');
         Route::put('site', [SiteController::class, 'update'])->name('site.update');
@@ -52,6 +55,7 @@ Route::prefix('admin')
 
         // ── Modules ──────────────────────────────────────────────────────────────
         Route::get('modules',                    [ModuleController::class, 'index'])->name('modules.index');
+        Route::get('modules/{module}/config',    [ModuleController::class, 'config'])->name('modules.config');
         Route::post('modules/{module}/install',  [ModuleController::class, 'install'])->name('modules.install');
         Route::post('modules/{module}/uninstall',[ModuleController::class, 'uninstall'])->name('modules.uninstall');
         Route::post('modules/{module}/activate', [ModuleController::class, 'activate'])->name('modules.activate');

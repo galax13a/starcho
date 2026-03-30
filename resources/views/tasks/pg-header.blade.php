@@ -1,7 +1,7 @@
 <div class="flex flex-wrap items-center gap-2">
 
-    {{-- Filtro estado — Stripe input --}}
-    <select wire:model.live="filterStatus" class="sc-select sc-select-stripe"
+    {{-- Filtro estado — Kick input --}}
+    <select wire:model.live="filterStatus" class="sc-select sc-select-kick starchi-kick-filter"
             style="height:36px;font-size:12.5px;padding:0 34px 0 12px;width:auto;">
         <option value="">{{ __('tasks.filter_all_statuses') }}</option>
         <option value="pending">⬜ {{ __('tasks.status_pending') }}</option>
@@ -10,8 +10,8 @@
         <option value="cancelled">❌ {{ __('tasks.status_cancelled') }}</option>
     </select>
 
-    {{-- Filtro prioridad — Stripe input --}}
-    <select wire:model.live="filterPriority" class="sc-select sc-select-stripe"
+    {{-- Filtro prioridad — Kick input --}}
+    <select wire:model.live="filterPriority" class="sc-select sc-select-kick starchi-kick-filter"
             style="height:36px;font-size:12.5px;padding:0 34px 0 12px;width:auto;">
         <option value="">{{ __('tasks.filter_all_priorities') }}</option>
         <option value="low">🟢 {{ __('tasks.priority_low') }}</option>

@@ -558,6 +558,67 @@
     justify-content: flex-end;
     gap       : 10px;
 }
+.sc-modal-kick-icon {
+    width          : 32px;
+    height         : 32px;
+    border-radius  : 8px;
+    border         : 1px solid rgba(83,252,24,.30);
+    background     : rgba(83,252,24,.12);
+    color          : var(--kick-green);
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    font-size      : 13px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TIKTOK MODAL WRAPPER
+   ════════════════════════════════════════════════════════════════ */
+.sc-modal-tt {
+    background   : var(--tt-card);
+    border       : 1px solid var(--tt-border);
+    border-radius: 12px;
+    box-shadow   : 0 2px 8px rgba(0,0,0,.06), 0 20px 60px rgba(0,0,0,.12);
+    overflow     : hidden;
+}
+.sc-modal-tt-header {
+    padding      : 20px 24px;
+    border-bottom: 1px solid var(--tt-border);
+    display      : flex;
+    align-items  : center;
+    gap          : 10px;
+    background   : linear-gradient(135deg, rgba(254,44,85,.08), rgba(37,244,238,.05));
+}
+.sc-modal-tt-icon {
+    width          : 32px;
+    height         : 32px;
+    border-radius  : 8px;
+    border         : 1px solid rgba(254,44,85,.22);
+    background     : rgba(254,44,85,.10);
+    color          : var(--tt-pink);
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    font-size      : 13px;
+    flex-shrink    : 0;
+}
+.sc-modal-tt-title {
+    font-size     : 15px;
+    font-weight   : 900;
+    color         : var(--tt-text);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+.sc-modal-tt-title span { color: var(--tt-pink); }
+.sc-modal-tt-body   { padding: 24px; }
+.sc-modal-tt-footer {
+    padding        : 16px 24px;
+    border-top     : 1px solid var(--tt-border);
+    display        : flex;
+    justify-content: flex-end;
+    gap            : 10px;
+    background     : var(--tt-bg2);
+}
 
 /* ════════════════════════════════════════════════════════════════
    STAT CARDS (TikTok style)
@@ -649,3 +710,46 @@
 .dark .sc-stripe-customers { color: #6ee7b7; }
 .dark .sc-stripe-churned   { color: #fca5a5; }
 .dark .sc-stripe-email     { color: #fcd34d; }
+
+/* ════════════════════════════════════════════════════════════════
+   STAT CARDS (Kick style)
+   ════════════════════════════════════════════════════════════════ */
+.sc-stat-kick {
+    padding      : 18px;
+    display      : flex;
+    flex-direction: column;
+    gap          : 6px;
+}
+
+.sc-stat-kick .sc-stat-label {
+    font-size      : 10px;
+    font-weight    : 800;
+    text-transform : uppercase;
+    letter-spacing : .08em;
+    color          : var(--kick-text2);
+}
+
+.sc-stat-kick .sc-stat-value {
+    font-size      : 30px;
+    font-weight    : 900;
+    line-height    : 1;
+    letter-spacing : -.02em;
+}
+
+.sc-stat-kick .sc-stat-icon {
+    font-size       : 16px;
+    width           : 34px;
+    height          : 34px;
+    border-radius   : 7px;
+    display         : flex;
+    align-items     : center;
+    justify-content : center;
+    margin-bottom   : 4px;
+}
+
+.sc-kick-total    { color: var(--kick-green); }
+.sc-kick-pending  { color: var(--kick-text2); }
+.sc-kick-progress { color: #25f4ee; }
+.sc-kick-done     { color: #53fc18; }
+.sc-kick-late     { color: #fe2c55; }
+.sc-kick-today    { color: #f59e0b; }

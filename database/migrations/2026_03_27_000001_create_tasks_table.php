@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->json('title');
-            $table->json('description')->nullable();
+            $table->text('title');
+            $table->text('description')->nullable();
             $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             $table->date('due_date')->nullable();

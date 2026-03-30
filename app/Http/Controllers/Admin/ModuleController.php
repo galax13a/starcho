@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\StarchoModule;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Route;
 
 class ModuleController extends Controller
 {
@@ -34,5 +36,18 @@ class ModuleController extends Controller
     {
         $module->deactivate();
         return back()->with('success', "Módulo «{$module->name}» desactivado.");
+    }
+
+    public function config(StarchoModule $module): RedirectResponse
+    {
+        $settingsRoute = data_get($module->config, 'settings_route');
+
+        if (is_string($settingsRoute) && $settingsRoute !== '' && Route::has($settingsRoute)) {
+            return redirect()->route($settingsRoute);
+        }
+
+        return redirect()
+            ->route('admin.modules.index')
+            ->with('warning', "El módulo «{$module->name}» no tiene configuración disponible.");
     }
 }
