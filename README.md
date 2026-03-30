@@ -49,7 +49,35 @@ El seeder crea:
 
 ---
 
-## Estructura de directorios relevante
+## 🎨 Cambios Recientes (v1.1.0)
+
+### Diseño Admin-Style en /app
+Se aplicó el mismo estilo visual del panel `/admin` al área de usuario `/app`, manteniendo la separación lógica:
+
+- **CSS Unificado**: `starcho-app.css` ahora incluye componentes admin-like (`.sa-page`, `.sa-btn`, `.app-popup-*`)
+- **Headers Consistentes**: Páginas de tasks y contacts ahora tienen botones de acción en el header
+- **Modales Limpios**: Eliminación de elementos duplicados, títulos renderizados correctamente
+- **Popups Centrados**: Flexbox centering con `modal-overlay` para mejor UX
+- **Reset CSS Optimizado**: Eliminación de `margin: 0` universal que causaba desalineaciones
+
+### Mejoras en Tasks (/app/tasks)
+- Eliminado bloque "Estado rápido" redundante
+- Botón único "Nueva Tarea" en header
+- Modal limpio sin títulos duplicados
+- Stats cards mantenidas para métricas rápidas
+
+### Mejoras en Contacts (/app/contacts)
+- Agregado botón "Nuevo Contacto" en header
+- Modal reestructurado: header con título + cerrar, body con formulario, footer con acciones
+- Eliminados elementos duplicados (títulos y botones)
+- Diseño consistente con tasks modal
+
+### Assets
+- Build exitoso con Vite 6
+- CSS minificado y optimizado
+- Soporte completo para modo oscuro
+
+---
 
 ```
 starcho/
