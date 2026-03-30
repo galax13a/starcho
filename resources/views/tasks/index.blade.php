@@ -1,35 +1,105 @@
 <x-layouts::app :title="'Mis Tareas'">
-
-    {{-- Header --}}
-    <div class="mb-6">
-        <flux:heading size="xl" level="1" class="mb-0.5">Mis Tareas</flux:heading>
-        <flux:text class="text-zinc-500">Gestiona tus tareas personales</flux:text>
+    <div class="sa-page">
+        <div class="sa-page-header">
+            <div class="sa-page-header-left">
+                <h1>Mis Tareas</h1>
+                <p>Gestiona tus tareas personales y de equipo con estilo admin en /app.</p>
+            </div>
+            <div class="sa-page-header-right">
+                <button onclick="Livewire.dispatch('openTask', {id:0})" class="sa-btn sa-btn-primary">
+                    <i class="fas fa-plus"></i> Nueva Tarea
+                </button>
+            </div>
+        </div>
     </div>
 
-    {{-- Stats Cards --}}
+    {{-- ── TikTok stat cards ────────────────────────────────────── --}}
     @php
         $uid = auth()->id();
-        $cards = [
-            ['label' => 'Total',       'value' => \App\Models\Task::where('created_by', $uid)->count(),                                                                         'border' => 'border-zinc-200 dark:border-zinc-700',       'bg' => 'bg-white dark:bg-zinc-800',            'text' => 'text-zinc-800 dark:text-zinc-100',  'label_color' => 'text-zinc-500 dark:text-zinc-400'],
-            ['label' => 'Pendientes',  'value' => \App\Models\Task::where('created_by', $uid)->where('status', 'pending')->count(),                                              'border' => 'border-zinc-200 dark:border-zinc-700',       'bg' => 'bg-white dark:bg-zinc-800',            'text' => 'text-zinc-500',                    'label_color' => 'text-zinc-500 dark:text-zinc-400'],
-            ['label' => 'En progreso', 'value' => \App\Models\Task::where('created_by', $uid)->where('status', 'in_progress')->count(),                                          'border' => 'border-blue-200 dark:border-blue-800/50',    'bg' => 'bg-blue-50 dark:bg-blue-900/20',       'text' => 'text-blue-600 dark:text-blue-400',  'label_color' => 'text-blue-600 dark:text-blue-400'],
-            ['label' => 'Completadas', 'value' => \App\Models\Task::where('created_by', $uid)->where('status', 'completed')->count(),                                            'border' => 'border-emerald-200 dark:border-emerald-800/50', 'bg' => 'bg-emerald-50 dark:bg-emerald-900/20', 'text' => 'text-emerald-600 dark:text-emerald-400', 'label_color' => 'text-emerald-600 dark:text-emerald-400'],
-            ['label' => 'Vencidas',    'value' => \App\Models\Task::where('created_by', $uid)->whereNotIn('status', ['completed','cancelled'])->whereNotNull('due_date')->where('due_date', '<', today())->count(), 'border' => 'border-red-200 dark:border-red-800/50', 'bg' => 'bg-red-50 dark:bg-red-900/20', 'text' => 'text-red-600 dark:text-red-400', 'label_color' => 'text-red-600 dark:text-red-400'],
-            ['label' => 'Vencen hoy',  'value' => \App\Models\Task::where('created_by', $uid)->whereNotIn('status', ['completed','cancelled'])->whereNotNull('due_date')->whereDate('due_date', today())->count(),  'border' => 'border-violet-200 dark:border-violet-800/50', 'bg' => 'bg-violet-50 dark:bg-violet-900/20', 'text' => 'text-violet-600 dark:text-violet-400', 'label_color' => 'text-violet-600 dark:text-violet-400'],
+        $stats = [
+            [
+                'label' => 'Total',
+                'value' => \App\Models\Task::where('user_id', $uid)->count(),
+                'icon'  => 'fas fa-layer-group',
+                'icon_bg' => 'rgba(255,255,255,.07)',
+                'icon_color' => '#fff',
+                'color' => 'sc-tt-total',
+            ],
+            [
+                'label' => 'Pendientes',
+                'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'pending')->count(),
+                'icon'  => 'fas fa-clock',
+                'icon_bg' => 'rgba(160,160,160,.12)',
+                'icon_color' => '#a0a0a0',
+                'color' => 'sc-tt-pending',
+            ],
+            [
+                'label' => 'En progreso',
+                'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'in_progress')->count(),
+                'icon'  => 'fas fa-spinner',
+                'icon_bg' => 'rgba(37,244,238,.1)',
+                'icon_color' => '#25f4ee',
+                'color' => 'sc-tt-progress',
+            ],
+            [
+                'label' => 'Completadas',
+                'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'completed')->count(),
+                'icon'  => 'fas fa-check-circle',
+                'icon_bg' => 'rgba(83,252,24,.1)',
+                'icon_color' => '#53fc18',
+                'color' => 'sc-tt-done',
+            ],
+            [
+                'label' => 'Vencidas',
+                'value' => \App\Models\Task::where('user_id', $uid)
+                    ->whereNotIn('status', ['completed','cancelled'])
+                    ->whereNotNull('due_date')
+                    ->where('due_date', '<', today())
+                    ->count(),
+                'icon'  => 'fas fa-exclamation-triangle',
+                'icon_bg' => 'rgba(254,44,85,.12)',
+                'icon_color' => '#fe2c55',
+                'color' => 'sc-tt-late',
+            ],
+            [
+                'label' => 'Vencen hoy',
+                'value' => \App\Models\Task::where('user_id', $uid)
+                    ->whereNotIn('status', ['completed','cancelled'])
+                    ->whereNotNull('due_date')
+                    ->whereDate('due_date', today())
+                    ->count(),
+                'icon'  => 'fas fa-calendar-day',
+                'icon_bg' => 'rgba(245,158,11,.12)',
+                'icon_color' => '#f59e0b',
+                'color' => 'sc-tt-today',
+            ],
         ];
     @endphp
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @foreach($cards as $card)
-            <div class="rounded-xl border {{ $card['border'] }} {{ $card['bg'] }} p-4 flex flex-col gap-1 shadow-sm">
-                <span class="text-xs font-medium {{ $card['label_color'] }} uppercase tracking-wider">{{ $card['label'] }}</span>
-                <span class="text-3xl font-bold {{ $card['text'] }}">{{ $card['value'] }}</span>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;"
+         class="stats-grid-tasks">
+        @foreach($stats as $s)
+        <div class="sc-card sc-card-tt sc-stat-tt">
+            <div class="sc-stat-icon" style="background:{{ $s['icon_bg'] }};color:{{ $s['icon_color'] }};">
+                <i class="{{ $s['icon'] }}"></i>
             </div>
+            <div class="sc-stat-label">{{ $s['label'] }}</div>
+            <div class="sc-stat-value {{ $s['color'] }}">{{ $s['value'] }}</div>
+        </div>
         @endforeach
     </div>
 
-    {{-- Table --}}
+    {{-- ── PowerGrid table ───────────────────────────────────────── --}}
     <livewire:tasks.user-tasks-table />
     <livewire:admin.task-modal />
 
 </x-layouts::app>
+
+<style>
+@media (max-width: 900px) {
+    .stats-grid-tasks { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 540px) {
+    .stats-grid-tasks { grid-template-columns: repeat(2, 1fr) !important; }
+}
+</style>

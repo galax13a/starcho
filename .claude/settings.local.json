@@ -17,7 +17,17 @@
       "Bash(grep -o \".\\\\{0,50\\\\}z-index.\\\\{0,50\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
       "Bash(grep -o \".\\\\{0,30\\\\}data-flux-modal.\\\\{0,80\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
       "Bash(grep -o \".\\\\{0,20\\\\}color-accent.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
-      "Bash(grep -o \".\\\\{0,60\\\\}accent-foreground.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)"
+      "Bash(grep -o \".\\\\{0,60\\\\}accent-foreground.\\\\{0,60\\\\}\" c:/AplicacionesLaravel13/starcho/vendor/livewire/flux/dist/flux.css)",
+      "Bash(where.exe php:*)",
+      "Bash(\"C:/xampp/php/php.exe\" artisan:*)",
+      "Bash(cmd /c \"php artisan migrate --force 2>&1\")",
+      "Bash(cmd /c \"cd /d c:\\\\AplicacionesLaravel13\\\\starcho && php artisan migrate --force && php artisan db:seed --class=AdminSeeder --force\")",
+      "Bash(cmd /c \"cd /d c:\\\\AplicacionesLaravel13\\\\starcho && php artisan migrate --force > migrate_out.txt 2>&1\")",
+      "Bash(cmd /c \"cd /d c:\\\\AplicacionesLaravel13\\\\starcho && php artisan migrate --force 1>c:\\\\AplicacionesLaravel13\\\\starcho\\\\tmp_migrate.txt 2>&1 & echo done\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\AplicacionesLaravel13\\\\starcho''; php artisan migrate --force 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\AplicacionesLaravel13\\\\starcho''; php artisan db:seed --class=MenuSeeder --force 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\AplicacionesLaravel13\\\\starcho''; php artisan db:seed --class=StarchoSeeder --force 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\AplicacionesLaravel13\\\\starcho''; php artisan cache:clear 2>&1\")"
     ]
   }
 }

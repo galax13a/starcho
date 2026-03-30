@@ -67,90 +67,123 @@ new class extends Component {
         if ($this->taskId > 0) {
             Task::findOrFail($this->taskId)->update($data);
         } else {
-            $data['created_by'] = auth()->id();
+            $data['user_id'] = auth()->id();
             Task::create($data);
         }
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-task'}}))");
-        // Refresca ambas tablas (admin tasks-table y app user-tasks-table) si están presentes
         $this->dispatch('pg:eventRefresh-tasks-table');
         $this->dispatch('pg:eventRefresh-user-tasks-table');
     }
 }; ?>
 
 <div>
-    <flux:modal name="modal-task" class="md:w-[620px]" focusable>
-        <form wire:submit="saveTask" class="space-y-5">
-            <flux:heading size="lg">{{ $taskId > 0 ? 'Editar Tarea' : 'Nueva Tarea' }}</flux:heading>
+    <flux:modal name="modal-task" class="md:w-[640px] !p-0 app-popup-card" focusable>
 
-            {{-- Título --}}
-            <flux:field>
-                <flux:label>Título <flux:badge size="sm" color="red">*</flux:badge></flux:label>
-                <flux:input wire:model="taskTitle" placeholder="Título de la tarea" />
-                <flux:error name="taskTitle" />
-            </flux:field>
+        <div class="sc-modal-kick">
 
-            {{-- Descripción --}}
-            <flux:field>
-                <flux:label>Descripción</flux:label>
-                <flux:textarea wire:model="taskDesc" placeholder="Descripción opcional..." rows="3" />
-                <flux:error name="taskDesc" />
-            </flux:field>
-
-            {{-- Estado / Prioridad --}}
-            <div class="grid grid-cols-2 gap-4">
-                <flux:field>
-                    <flux:label>Estado</flux:label>
-                    <flux:select wire:model="taskStatus">
-                        <option value="pending">Pendiente</option>
-                        <option value="in_progress">En progreso</option>
-                        <option value="completed">Completada</option>
-                        <option value="cancelled">Cancelada</option>
-                    </flux:select>
-                    <flux:error name="taskStatus" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Prioridad</flux:label>
-                    <flux:select wire:model="taskPriority">
-                        <option value="low">🟢 Baja</option>
-                        <option value="medium">🟡 Media</option>
-                        <option value="high">🟠 Alta</option>
-                        <option value="urgent">🔴 Urgente</option>
-                    </flux:select>
-                    <flux:error name="taskPriority" />
-                </flux:field>
+            {{-- Header ── Kick style ── --}}
+            <div class="sc-modal-kick-header">
+                <div style="width:32px;height:32px;border-radius:5px;background:rgba(83,252,24,.12);border:1px solid rgba(83,252,24,.25);display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-clipboard-list" style="color:#53fc18;font-size:13px;"></i>
+                </div>
+                <div>
+                    <div class="sc-modal-kick-title">
+                        {!! $taskId > 0 ? '<span>Editar</span> Tarea' : '<span>Nueva</span> Tarea' !!}
+                    </div>
+                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">Sistema de gestión de tareas</div>
+                </div>
             </div>
 
-            {{-- Fecha / Asignado --}}
-            <div class="grid grid-cols-2 gap-4">
-                <flux:field>
-                    <flux:label>Fecha de vencimiento</flux:label>
-                    <flux:input wire:model="taskDueDate" type="date" />
-                    <flux:error name="taskDueDate" />
-                </flux:field>
+            {{-- Body ── Kick style inputs ── --}}
+            <form wire:submit="saveTask">
+                <div class="sc-modal-kick-body" style="display:flex;flex-direction:column;gap:16px;">
 
-                <flux:field>
-                    <flux:label>Asignar a</flux:label>
-                    <flux:select wire:model="taskAssigned">
-                        <option value="0">Sin asignar</option>
-                        @foreach($this->allUsers as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </flux:select>
-                    <flux:error name="taskAssigned" />
-                </flux:field>
-            </div>
+                    {{-- Título --}}
+                    <div class="sc-field">
+                        <label class="sc-label sc-label-kick">Título <span style="color:#ff4242">*</span></label>
+                        <input wire:model="taskTitle" type="text" placeholder="Nombre de la tarea…"
+                               class="sc-input sc-input-kick">
+                        @error('taskTitle')
+                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-            <div class="flex justify-end gap-2 pt-1">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveTask">Guardar</span>
-                    <span wire:loading wire:target="saveTask">Guardando…</span>
-                </flux:button>
-            </div>
-        </form>
+                    {{-- Descripción --}}
+                    <div class="sc-field">
+                        <label class="sc-label sc-label-kick">Descripción</label>
+                        <textarea wire:model="taskDesc" placeholder="Descripción opcional…" rows="3"
+                                  class="sc-textarea sc-textarea-kick"></textarea>
+                        @error('taskDesc')
+                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    {{-- Estado + Prioridad --}}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="sc-field">
+                            <label class="sc-label sc-label-kick">Estado</label>
+                            <select wire:model="taskStatus" class="sc-select sc-select-kick app-select">
+                                <option value="pending">⬜ Pendiente</option>
+                                <option value="in_progress">🔵 En progreso</option>
+                                <option value="completed">✅ Completada</option>
+                                <option value="cancelled">❌ Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="sc-field">
+                            <label class="sc-label sc-label-kick">Prioridad</label>
+                            <select wire:model="taskPriority" class="sc-select sc-select-kick app-select">
+                                <option value="low">🟢 Baja</option>
+                                <option value="medium">🟡 Media</option>
+                                <option value="high">🟠 Alta</option>
+                                <option value="urgent">🔴 Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Fecha + Asignado --}}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="sc-field">
+                            <label class="sc-label sc-label-kick">Fecha de vencimiento</label>
+                            <input wire:model="taskDueDate" type="date"
+                                   class="sc-input sc-input-kick"
+                                   style="color-scheme: dark;">
+                            @error('taskDueDate')
+                            <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="sc-field">
+                            <label class="sc-label sc-label-kick">Asignar a</label>
+                            <select wire:model="taskAssigned" class="sc-select sc-select-kick app-select">
+                                <option value="0">Sin asignar</option>
+                                @foreach($this->allUsers as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- Footer --}}
+                <div class="sc-modal-kick-footer">
+                    <flux:modal.close>
+                        <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">
+                            Cancelar
+                        </button>
+                    </flux:modal.close>
+                    <button type="submit" class="sc-btn sc-btn-kick"
+                            wire:loading.attr="disabled"
+                            wire:loading.class="opacity-60">
+                        <span wire:loading.remove wire:target="saveTask">
+                            <i class="fas fa-bolt" style="font-size:11px;"></i>
+                            {{ $taskId > 0 ? 'Actualizar' : 'Crear Tarea' }}
+                        </span>
+                        <span wire:loading wire:target="saveTask">Guardando…</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
     </flux:modal>
 </div>

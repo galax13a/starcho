@@ -1,0 +1,601 @@
+/*
+ * starcho-components.css — Design System
+ * ========================================
+ * 3 themes: Kick · Stripe · TikTok
+ *
+ *  Buttons   : .sc-btn  + .sc-btn-{kick|stripe|tt}  + .sc-btn-{sm|lg|icon}
+ *  Inputs    : .sc-input + theme class
+ *  Selects   : .sc-select + theme class
+ *  Textareas : .sc-textarea + theme class
+ *  Checks    : .sc-check + theme class (wrapper + input)
+ *  Radios    : .sc-radio  + theme class
+ *  Cards     : .sc-card   + .sc-card-{kick|stripe|tt}
+ *  Labels    : .sc-label  + .sc-label-{kick|stripe|tt}
+ *  Form group: .sc-field
+ */
+
+/* ════════════════════════════════════════════════════════════════
+   THEME TOKENS
+   ════════════════════════════════════════════════════════════════ */
+
+/* Kick (Kick.com - gaming, neon green) */
+:root {
+    --kick-bg     : #0a0f09;
+    --kick-bg2    : #111a10;
+    --kick-card   : #131d12;
+    --kick-green  : #53fc18;
+    --kick-green2 : #3bdb00;
+    --kick-border : #1e2e1c;
+    --kick-text   : #e8f5e6;
+    --kick-text2  : #8dab8a;
+    --kick-glow   : rgba(83,252,24,.18);
+    --kick-radius : 5px;
+    --kick-font   : 'DM Sans', sans-serif;
+}
+
+/* Stripe (Stripe.com - clean, indigo/violet) */
+:root {
+    --stripe-bg     : #ffffff;
+    --stripe-bg2    : #f6f9fc;
+    --stripe-card   : #ffffff;
+    --stripe-purple : #635bff;
+    --stripe-purple2: #4f46e5;
+    --stripe-border : #d1d9e0;
+    --stripe-text   : #0a2540;
+    --stripe-text2  : #425466;
+    --stripe-glow   : rgba(99,91,255,.15);
+    --stripe-radius : 8px;
+    --stripe-shadow : 0 2px 8px rgba(50,50,93,.06), 0 1px 3px rgba(0,0,0,.08);
+    --stripe-shadow-hover: 0 7px 14px rgba(50,50,93,.10), 0 3px 6px rgba(0,0,0,.08);
+}
+.dark {
+    --stripe-bg     : #1a1a2e;
+    --stripe-bg2    : #16213e;
+    --stripe-card   : #1a1a2e;
+    --stripe-border : #2c3a50;
+    --stripe-text   : #e2e8f0;
+    --stripe-text2  : #94a3b8;
+}
+
+/* TikTok (pink + cyan) — light-first tokens */
+:root {
+    --tt-bg     : #f5f5f7;
+    --tt-bg2    : #ffffff;
+    --tt-card   : #ffffff;
+    --tt-pink   : #fe2c55;
+    --tt-cyan   : #25f4ee;
+    --tt-border : #e4e4ee;
+    --tt-text   : #1a1a2e;
+    --tt-text2  : #777790;
+    --tt-grad   : linear-gradient(135deg, #fe2c55 0%, #c02040 50%, #25f4ee 100%);
+    --tt-grad2  : linear-gradient(90deg, #fe2c55, #25f4ee);
+    --tt-glow-p : rgba(254,44,85,.25);
+    --tt-glow-c : rgba(37,244,238,.20);
+    --tt-radius : 12px;
+}
+.dark {
+    --tt-bg     : #010101;
+    --tt-bg2    : #121212;
+    --tt-card   : #161616;
+    --tt-border : #2a2a2a;
+    --tt-text   : #ffffff;
+    --tt-text2  : #aaaaaa;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   BASE BUTTON
+   ════════════════════════════════════════════════════════════════ */
+.sc-btn {
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    gap            : 7px;
+    padding        : 0 18px;
+    height         : 40px;
+    border         : none;
+    border-radius  : 8px;
+    font-family    : var(--font);
+    font-size      : 13.5px;
+    font-weight    : 700;
+    cursor         : pointer;
+    text-decoration: none;
+    white-space    : nowrap;
+    transition     : all .2s cubic-bezier(.4,0,.2,1);
+    position       : relative;
+    overflow       : hidden;
+    letter-spacing : .01em;
+}
+.sc-btn:active    { transform: scale(.97); }
+.sc-btn-sm        { height: 32px; padding: 0 12px; font-size: 12px; border-radius: 6px; }
+.sc-btn-lg        { height: 48px; padding: 0 26px; font-size: 15px; }
+.sc-btn-icon      { width: 40px; padding: 0; gap: 0; }
+.sc-btn-sm.sc-btn-icon { width: 32px; }
+
+/* ── KICK BUTTON ───────────────────────────────────────────── */
+.sc-btn-kick {
+    background   : var(--kick-green);
+    color        : #050f04;
+    border-radius: var(--kick-radius);
+    font-weight  : 900;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size    : 12px;
+    box-shadow   : 0 0 0 0 var(--kick-glow);
+}
+.sc-btn-kick:hover {
+    background : var(--kick-green2);
+    box-shadow : 0 0 20px var(--kick-glow), 0 4px 12px rgba(83,252,24,.3);
+    transform  : translateY(-1px);
+}
+.sc-btn-kick.sc-btn-outline {
+    background   : transparent;
+    border       : 1.5px solid var(--kick-green);
+    color        : var(--kick-green);
+    box-shadow   : inset 0 0 0 0 var(--kick-glow);
+}
+.sc-btn-kick.sc-btn-outline:hover {
+    background : var(--kick-glow);
+    box-shadow : 0 0 12px var(--kick-glow);
+}
+.sc-btn-kick.sc-btn-ghost {
+    background   : transparent;
+    color        : var(--kick-text2);
+    border-radius: var(--kick-radius);
+}
+.sc-btn-kick.sc-btn-ghost:hover { color: var(--kick-green); background: rgba(83,252,24,.07); }
+
+/* ── STRIPE BUTTON ──────────────────────────────────────────── */
+.sc-btn-stripe {
+    background   : var(--stripe-purple);
+    color        : #fff;
+    border-radius: var(--stripe-radius);
+    box-shadow   : var(--stripe-shadow);
+}
+.sc-btn-stripe:hover {
+    background : var(--stripe-purple2);
+    box-shadow : var(--stripe-shadow-hover);
+    transform  : translateY(-1px);
+}
+.sc-btn-stripe.sc-btn-outline {
+    background   : var(--stripe-bg);
+    border       : 1.5px solid var(--stripe-border);
+    color        : var(--stripe-text);
+    box-shadow   : var(--stripe-shadow);
+}
+.sc-btn-stripe.sc-btn-outline:hover {
+    border-color : var(--stripe-purple);
+    color        : var(--stripe-purple);
+    box-shadow   : var(--stripe-shadow-hover);
+}
+.sc-btn-stripe.sc-btn-ghost {
+    background   : transparent;
+    color        : var(--stripe-text2);
+}
+.sc-btn-stripe.sc-btn-ghost:hover { background: var(--stripe-bg2); color: var(--stripe-text); }
+
+/* ── TIKTOK BUTTON ──────────────────────────────────────────── */
+.sc-btn-tt {
+    background   : var(--tt-pink);
+    color        : #fff;
+    border-radius: var(--tt-radius);
+    font-weight  : 800;
+    position     : relative;
+    overflow     : hidden;
+}
+.sc-btn-tt::before {
+    content   : '';
+    position  : absolute;
+    inset     : 0;
+    background: var(--tt-grad2);
+    opacity   : 0;
+    transition: opacity .25s;
+}
+.sc-btn-tt:hover::before { opacity: 1; }
+.sc-btn-tt:hover {
+    box-shadow : 0 0 20px var(--tt-glow-p), 0 4px 14px rgba(254,44,85,.3);
+    transform  : translateY(-1px);
+}
+.sc-btn-tt span, .sc-btn-tt i { position: relative; z-index: 1; }
+.sc-btn-tt.sc-btn-outline {
+    background   : transparent;
+    border       : 1.5px solid var(--tt-pink);
+    color        : var(--tt-pink);
+}
+.sc-btn-tt.sc-btn-outline:hover {
+    background : rgba(254,44,85,.08);
+    box-shadow : 0 0 14px var(--tt-glow-p);
+}
+.sc-btn-tt.sc-btn-ghost {
+    background: transparent;
+    color     : var(--tt-text2);
+}
+.sc-btn-tt.sc-btn-ghost:hover { color: var(--tt-pink); background: rgba(254,44,85,.06); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   BASE INPUT / SELECT / TEXTAREA
+   ════════════════════════════════════════════════════════════════ */
+.sc-input, .sc-select, .sc-textarea {
+    display      : block;
+    width        : 100%;
+    padding      : 10px 14px;
+    font-family  : var(--font);
+    font-size    : 13.5px;
+    outline      : none;
+    transition         : all .2s cubic-bezier(.4,0,.2,1);
+    -webkit-appearance : none;
+    appearance         : none;
+}
+.sc-textarea { min-height: 100px; resize: vertical; }
+.sc-select   { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+
+/* ── KICK INPUT ─────────────────────────────────────────────── */
+.sc-input-kick, .sc-select-kick, .sc-textarea-kick {
+    background   : var(--kick-bg2);
+    border       : 1.5px solid var(--kick-border);
+    border-radius: var(--kick-radius);
+    color        : var(--kick-text);
+    caret-color  : var(--kick-green);
+}
+.sc-input-kick::placeholder, .sc-textarea-kick::placeholder { color: var(--kick-text2); }
+.sc-input-kick:focus, .sc-select-kick:focus, .sc-textarea-kick:focus {
+    border-color : var(--kick-green);
+    box-shadow   : 0 0 0 3px var(--kick-glow), inset 0 0 10px rgba(83,252,24,.04);
+}
+.sc-select-kick { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2353fc18' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+
+/* ── STRIPE INPUT ───────────────────────────────────────────── */
+.sc-input-stripe, .sc-select-stripe, .sc-textarea-stripe {
+    background   : var(--stripe-bg);
+    border       : 1.5px solid var(--stripe-border);
+    border-radius: var(--stripe-radius);
+    color        : var(--stripe-text);
+    box-shadow   : 0 1px 3px rgba(50,50,93,.04);
+}
+.sc-input-stripe::placeholder, .sc-textarea-stripe::placeholder { color: #8898aa; }
+.sc-input-stripe:focus, .sc-select-stripe:focus, .sc-textarea-stripe:focus {
+    border-color : var(--stripe-purple);
+    box-shadow   : 0 0 0 3px var(--stripe-glow), 0 1px 3px rgba(50,50,93,.04);
+}
+.sc-select-stripe { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23635bff' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+
+/* ── TIKTOK INPUT ───────────────────────────────────────────── */
+.sc-input-tt, .sc-select-tt, .sc-textarea-tt {
+    background   : var(--tt-bg2);
+    border       : 1.5px solid var(--tt-border);
+    border-radius: var(--tt-radius);
+    color        : var(--tt-text);
+    caret-color  : var(--tt-pink);
+}
+.sc-input-tt::placeholder, .sc-textarea-tt::placeholder { color: var(--tt-text2); }
+.sc-input-tt:focus, .sc-select-tt:focus, .sc-textarea-tt:focus {
+    border-color : var(--tt-pink);
+    box-shadow   : 0 0 0 3px var(--tt-glow-p);
+}
+.sc-select-tt { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fe2c55' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   CHECKBOXES & RADIOS
+   ════════════════════════════════════════════════════════════════ */
+
+/* Base wrapper */
+.sc-check-wrap, .sc-radio-wrap {
+    display    : inline-flex;
+    align-items: center;
+    gap        : 8px;
+    cursor            : pointer;
+    -webkit-user-select: none;
+    user-select       : none;
+}
+
+/* Hidden native input */
+.sc-check-wrap input[type="checkbox"],
+.sc-radio-wrap  input[type="radio"] {
+    position: absolute;
+    opacity : 0;
+    width   : 0;
+    height  : 0;
+}
+
+/* Custom indicator */
+.sc-check-box, .sc-radio-dot {
+    width          : 18px;
+    height         : 18px;
+    border         : 2px solid;
+    flex-shrink    : 0;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    transition     : all .18s ease;
+    position       : relative;
+}
+.sc-check-box  { border-radius: 4px; }
+.sc-radio-dot  { border-radius: 50%; }
+
+/* Checkmark SVG */
+.sc-check-box::after {
+    content   : '';
+    width     : 4px;
+    height    : 8px;
+    border-right : 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    transform : rotate(45deg) translate(-1px,-1px);
+    transition: border-color .15s;
+}
+
+/* Radio dot */
+.sc-radio-dot::after {
+    content      : '';
+    width        : 7px;
+    height       : 7px;
+    border-radius: 50%;
+    background   : transparent;
+    transition   : background .15s;
+}
+
+/* Label text */
+.sc-check-lbl, .sc-radio-lbl {
+    font-size  : 13.5px;
+    font-weight: 500;
+    transition : color .15s;
+}
+
+/* ── KICK CHECK/RADIO ──────────────────────────────────────── */
+.sc-check-kick .sc-check-box {
+    border-color: var(--kick-border);
+    background  : var(--kick-bg2);
+}
+.sc-check-kick .sc-check-lbl  { color: var(--kick-text2); }
+.sc-check-kick:hover .sc-check-box { border-color: var(--kick-green); box-shadow: 0 0 6px var(--kick-glow); }
+.sc-check-kick input:checked ~ .sc-check-box {
+    background  : var(--kick-green);
+    border-color: var(--kick-green);
+    box-shadow  : 0 0 10px var(--kick-glow);
+}
+.sc-check-kick input:checked ~ .sc-check-box::after { border-color: #050f04; }
+.sc-check-kick input:checked ~ .sc-check-lbl { color: var(--kick-green); }
+
+.sc-radio-kick .sc-radio-dot { border-color: var(--kick-border); background: var(--kick-bg2); }
+.sc-radio-kick .sc-radio-lbl { color: var(--kick-text2); }
+.sc-radio-kick:hover .sc-radio-dot { border-color: var(--kick-green); box-shadow: 0 0 6px var(--kick-glow); }
+.sc-radio-kick input:checked ~ .sc-radio-dot { border-color: var(--kick-green); box-shadow: 0 0 10px var(--kick-glow); }
+.sc-radio-kick input:checked ~ .sc-radio-dot::after { background: var(--kick-green); }
+.sc-radio-kick input:checked ~ .sc-radio-lbl { color: var(--kick-green); }
+
+/* ── STRIPE CHECK/RADIO ─────────────────────────────────────── */
+.sc-check-stripe .sc-check-box {
+    border-color: var(--stripe-border);
+    background  : var(--stripe-bg);
+    border-radius: 5px;
+}
+.sc-check-stripe .sc-check-lbl { color: var(--stripe-text2); }
+.sc-check-stripe:hover .sc-check-box { border-color: var(--stripe-purple); }
+.sc-check-stripe input:checked ~ .sc-check-box {
+    background  : var(--stripe-purple);
+    border-color: var(--stripe-purple);
+    box-shadow  : 0 0 0 3px var(--stripe-glow);
+}
+.sc-check-stripe input:checked ~ .sc-check-box::after { border-color: #fff; }
+.sc-check-stripe input:checked ~ .sc-check-lbl { color: var(--stripe-text); }
+
+.sc-radio-stripe .sc-radio-dot { border-color: var(--stripe-border); background: var(--stripe-bg); }
+.sc-radio-stripe .sc-radio-lbl { color: var(--stripe-text2); }
+.sc-radio-stripe:hover .sc-radio-dot { border-color: var(--stripe-purple); }
+.sc-radio-stripe input:checked ~ .sc-radio-dot { border-color: var(--stripe-purple); box-shadow: 0 0 0 3px var(--stripe-glow); }
+.sc-radio-stripe input:checked ~ .sc-radio-dot::after { background: var(--stripe-purple); }
+.sc-radio-stripe input:checked ~ .sc-radio-lbl { color: var(--stripe-text); }
+
+/* ── TIKTOK CHECK/RADIO ─────────────────────────────────────── */
+.sc-check-tt .sc-check-box {
+    border-color: var(--tt-border);
+    background  : var(--tt-bg2);
+    border-radius: 5px;
+}
+.sc-check-tt .sc-check-lbl { color: var(--tt-text2); }
+.sc-check-tt:hover .sc-check-box { border-color: var(--tt-pink); box-shadow: 0 0 8px var(--tt-glow-p); }
+.sc-check-tt input:checked ~ .sc-check-box {
+    background  : var(--tt-pink);
+    border-color: var(--tt-pink);
+    box-shadow  : 0 0 12px var(--tt-glow-p);
+}
+.sc-check-tt input:checked ~ .sc-check-box::after { border-color: #fff; }
+.sc-check-tt input:checked ~ .sc-check-lbl { color: var(--tt-text); }
+
+.sc-radio-tt .sc-radio-dot { border-color: var(--tt-border); background: var(--tt-bg2); }
+.sc-radio-tt .sc-radio-lbl { color: var(--tt-text2); }
+.sc-radio-tt:hover .sc-radio-dot { border-color: var(--tt-pink); box-shadow: 0 0 8px var(--tt-glow-p); }
+.sc-radio-tt input:checked ~ .sc-radio-dot { border-color: var(--tt-pink); box-shadow: 0 0 12px var(--tt-glow-p); }
+.sc-radio-tt input:checked ~ .sc-radio-dot::after { background: var(--tt-pink); }
+.sc-radio-tt input:checked ~ .sc-radio-lbl { color: var(--tt-text); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   CARDS
+   ════════════════════════════════════════════════════════════════ */
+.sc-card {
+    border-radius: 14px;
+    overflow     : hidden;
+    position     : relative;
+    transition   : all .22s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── KICK CARD ──────────────────────────────────────────────── */
+.sc-card-kick {
+    background   : var(--kick-card);
+    border       : 1px solid var(--kick-border);
+    border-radius: var(--kick-radius);
+}
+.sc-card-kick::before {
+    content   : '';
+    position  : absolute;
+    top       : 0; left: 0; right: 0;
+    height    : 2px;
+    background: var(--kick-green);
+    opacity   : 0;
+    transition: opacity .2s;
+}
+.sc-card-kick:hover {
+    border-color: var(--kick-green);
+    box-shadow  : 0 0 18px var(--kick-glow), 0 4px 20px rgba(0,0,0,.6);
+    transform   : translateY(-2px);
+}
+.sc-card-kick:hover::before { opacity: 1; }
+
+/* ── STRIPE CARD ────────────────────────────────────────────── */
+.sc-card-stripe {
+    background   : var(--stripe-card);
+    border       : 1px solid var(--stripe-border);
+    border-radius: 10px;
+    box-shadow   : var(--stripe-shadow);
+}
+.sc-card-stripe:hover {
+    box-shadow : var(--stripe-shadow-hover);
+    transform  : translateY(-2px);
+}
+
+/* ── TIKTOK CARD ────────────────────────────────────────────── */
+.sc-card-tt {
+    background   : var(--tt-card);
+    border-radius: var(--tt-radius);
+    position     : relative;
+}
+.sc-card-tt::before {
+    content      : '';
+    position     : absolute;
+    inset        : 0;
+    border-radius: inherit;
+    padding      : 1.5px;
+    background           : var(--tt-grad2);
+    -webkit-mask         : linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask                 : linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite       : exclude;
+    opacity      : .3;
+    transition   : opacity .2s;
+}
+.sc-card-tt:hover::before { opacity: 1; }
+.sc-card-tt:hover {
+    box-shadow : 0 0 24px var(--tt-glow-p), 0 8px 16px rgba(0,0,0,.10);
+    transform  : translateY(-2px);
+}
+.dark .sc-card-tt:hover {
+    box-shadow : 0 0 24px var(--tt-glow-p), 0 8px 30px rgba(0,0,0,.60);
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   LABELS
+   ════════════════════════════════════════════════════════════════ */
+.sc-label {
+    display       : block;
+    font-size     : 11px;
+    font-weight   : 700;
+    margin-bottom : 6px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+}
+.sc-label-kick   { color: var(--kick-green); }
+.sc-label-stripe { color: var(--stripe-text2); }
+.sc-label-tt     { color: var(--tt-text2); letter-spacing: .05em; }
+
+/* ════════════════════════════════════════════════════════════════
+   FORM FIELD WRAPPER
+   ════════════════════════════════════════════════════════════════ */
+.sc-field { display: flex; flex-direction: column; gap: 0; }
+
+.sc-field-error {
+    font-size  : 11.5px;
+    margin-top : 5px;
+    font-weight: 500;
+}
+.sc-field-error-kick   { color: #ff4242; }
+.sc-field-error-stripe { color: #e25950; }
+.sc-field-error-tt     { color: var(--tt-pink); }
+
+/* Stripe selects — dark mode override */
+.dark .sc-input-stripe, .dark .sc-select-stripe, .dark .sc-textarea-stripe {
+    background  : var(--stripe-bg2);
+    border-color: var(--stripe-border);
+    color       : var(--stripe-text);
+}
+.dark .sc-select-stripe {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23635bff' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ════════════════════════════════════════════════════════════════
+   KICK MODAL WRAPPER  (apply dark bg to entire dialog area)
+   ════════════════════════════════════════════════════════════════ */
+.sc-modal-kick {
+    background   : var(--kick-bg);
+    border       : 1px solid var(--kick-border);
+    border-radius: 8px;
+    box-shadow   : 0 0 0 1px var(--kick-border), 0 20px 60px rgba(0,0,0,.8), 0 0 40px var(--kick-glow);
+}
+.sc-modal-kick-header {
+    padding      : 20px 24px;
+    border-bottom: 1px solid var(--kick-border);
+    display      : flex;
+    align-items  : center;
+    gap          : 10px;
+}
+.sc-modal-kick-title {
+    font-size  : 15px;
+    font-weight: 900;
+    color      : var(--kick-text);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+.sc-modal-kick-title span {
+    color: var(--kick-green);
+}
+.sc-modal-kick-body   { padding: 24px; }
+.sc-modal-kick-footer {
+    padding   : 16px 24px;
+    border-top: 1px solid var(--kick-border);
+    display   : flex;
+    justify-content: flex-end;
+    gap       : 10px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STAT CARDS (TikTok style)
+   ════════════════════════════════════════════════════════════════ */
+.sc-stat-tt {
+    padding      : 20px;
+    display      : flex;
+    flex-direction: column;
+    gap          : 6px;
+}
+.sc-stat-tt .sc-stat-label {
+    font-size  : 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color      : var(--tt-text2);
+}
+.sc-stat-tt .sc-stat-value {
+    font-size  : 32px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -.02em;
+}
+.sc-stat-tt .sc-stat-icon {
+    font-size   : 16px;
+    width       : 34px;
+    height      : 34px;
+    border-radius: 8px;
+    display     : flex;
+    align-items : center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+/* TikTok stat value colors */
+.sc-tt-total   { color: #ffffff; }
+.sc-tt-pending { color: #a0a0a0; }
+.sc-tt-progress{ color: #25f4ee; }
+.sc-tt-done    { color: #53fc18; }
+.sc-tt-late    { color: #fe2c55; }
+.sc-tt-today   { color: #f59e0b; }

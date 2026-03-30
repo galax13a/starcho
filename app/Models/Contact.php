@@ -9,12 +9,12 @@ class Contact extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'company', 'email', 'phone', 'status', 'notes', 'created_by'];
+    protected $fillable = ['name', 'company', 'email', 'phone', 'status', 'notes', 'user_id'];
 
     const STATUSES = ['lead', 'prospect', 'customer', 'churned'];
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

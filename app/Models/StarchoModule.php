@@ -31,33 +31,33 @@ class StarchoModule extends Model
     public function createMenuItems(): void
     {
         $menuConfig = $this->config['menu_items'] ?? [];
-        
+
         if (empty($menuConfig)) {
             return;
         }
 
         foreach ($menuConfig as $item) {
-            // Evitar rutas inválidas/placeholder (ej. route: 'app') que rompen el menú
             if (empty($item['route']) || $item['route'] === 'app') {
                 continue;
             }
 
-            // Verificar si ya existe un item con la misma ruta para este módulo
             $existingItem = StarchoMenuItem::where('module_key', $this->key)
-                ->where('route', $item['route'] ?? null)
+                ->where('route', $item['route'])
                 ->first();
 
             if (!$existingItem) {
                 $nameData = $item['name'] ?? $item['label'] ?? null;
 
                 $menuItem = new StarchoMenuItem([
+                    'panel'      => $item['panel'] ?? 'app',
                     'module_key' => $this->key,
-                    'icon' => $item['icon'] ?? null,
-                    'route' => $item['route'] ?? null,
-                    'url' => $item['url'] ?? null,
+                    'section'    => $item['section'] ?? null,
+                    'icon'       => $item['icon'] ?? null,
+                    'route'      => $item['route'],
+                    'url'        => $item['url'] ?? null,
                     'sort_order' => $item['sort_order'] ?? 0,
-                    'active' => true,
-                    'target' => $item['target'] ?? '_self',
+                    'active'     => true,
+                    'target'     => $item['target'] ?? '_self',
                 ]);
 
                 if (is_array($nameData)) {
@@ -70,7 +70,6 @@ class StarchoModule extends Model
 
                 $menuItem->save();
             } else {
-                // Si existe, asegurarse de que esté activo
                 $existingItem->update(['active' => true]);
             }
         }

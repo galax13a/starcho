@@ -1,3 +1,13 @@
+@php
+    /* ── DB-driven admin menu ─────────────────────────────────────── */
+    try {
+        $adminMenu     = \App\Models\StarchoMenuItem::getCachedMenu('admin');
+        $adminSections = $adminMenu->groupBy('section');
+    } catch (\Throwable) {
+        $adminMenu     = collect();
+        $adminSections = collect();
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -31,69 +41,56 @@
         {{-- Nav --}}
         <nav class="sa-sb-nav">
 
-            {{-- ACCESO --}}
+            @forelse($adminSections as $sectionName => $sectionItems)
+            <div class="sa-sb-section">
+                @if($sectionName)
+                <div class="sa-sb-label">{{ $sectionName }}</div>
+                @endif
+
+                @foreach($sectionItems as $item)
+                <a href="{{ $item->resolved_url ?? '#' }}"
+                   @if($item->target !== '_blank') wire:navigate @endif
+                   target="{{ $item->target }}"
+                   class="sa-menu-link {{ $item->isCurrentRoute() ? 'active' : '' }}">
+                    <i class="{{ $item->icon ?? 'fas fa-circle' }}"></i>
+                    <span class="sa-lbl">{{ $item->display_name }}</span>
+                </a>
+                @endforeach
+            </div>
+            @empty
+            {{-- Fallback: menú estático si la DB no tiene datos --}}
             <div class="sa-sb-section">
                 <div class="sa-sb-label">Acceso</div>
-
                 <a href="{{ route('admin.roles.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                     <i class="fas fa-shield-alt"></i>
                     <span class="sa-lbl">Roles</span>
                 </a>
-
                 <a href="{{ route('admin.permissions.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
                     <i class="fas fa-key"></i>
                     <span class="sa-lbl">Permisos</span>
                 </a>
-
                 <a href="{{ route('admin.users.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-users"></i>
                     <span class="sa-lbl">Usuarios</span>
                 </a>
-
-                @if(\App\Models\StarchoModule::isActive('tasks'))
-                <a href="{{ route('admin.tasks.index') }}" wire:navigate
-                   class="sa-menu-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span class="sa-lbl">Tareas</span>
-                </a>
-                @endif
             </div>
-
-            {{-- SISTEMA --}}
             <div class="sa-sb-section">
                 <div class="sa-sb-label">Sistema</div>
-
                 <a href="{{ route('admin.modules.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.modules.*') ? 'active' : '' }}">
                     <i class="fas fa-puzzle-piece"></i>
                     <span class="sa-lbl">Módulos</span>
                 </a>
-
-                <a href="{{ route('admin.menu.index') }}" wire:navigate
-                   class="sa-menu-link {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">
-                    <i class="fas fa-bars"></i>
-                    <span class="sa-lbl">Menú lateral</span>
-                </a>
-
                 <a href="{{ route('admin.cache.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.cache.*') ? 'active' : '' }}">
                     <i class="fas fa-sync-alt"></i>
                     <span class="sa-lbl">Caché</span>
                 </a>
             </div>
-
-            {{-- APP --}}
-            <div class="sa-sb-section">
-                <div class="sa-sb-label">App</div>
-
-                <a href="{{ route('app.dashboard') }}" wire:navigate class="sa-menu-link">
-                    <i class="fas fa-home"></i>
-                    <span class="sa-lbl">Panel App</span>
-                </a>
-            </div>
+            @endforelse
 
         </nav>
 
@@ -157,10 +154,6 @@
 
         {{-- Topbar --}}
         <div class="sa-topbar">
-            {{-- Collapse toggle (desktop) --}}
-            <button class="sa-tb-btn" @click="collapsed = !collapsed" :title="collapsed ? 'Expandir' : 'Colapsar'">
-                <i :class="collapsed ? 'fas fa-indent' : 'fas fa-outdent'"></i>
-            </button>
             {{-- Hamburger (mobile) --}}
             <button class="sa-tb-btn sa-mob-btn" @click="mobOpen = !mobOpen" title="Abrir menú">
                 <i class="fas fa-bars"></i>

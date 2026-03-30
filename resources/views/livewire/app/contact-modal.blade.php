@@ -33,7 +33,7 @@ new class extends Component
         $this->contactId = $id;
 
         if ($id) {
-            $contact = Contact::where('id', $id)->where('created_by', auth()->id())->firstOrFail();
+            $contact = Contact::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
             $this->name    = $contact->name;
             $this->company = $contact->company ?? '';
             $this->email   = $contact->email ?? '';
@@ -50,13 +50,13 @@ new class extends Component
         $this->validate();
 
         $data = [
-            'name'       => $this->name,
-            'company'    => $this->company ?: null,
-            'email'      => $this->email ?: null,
-            'phone'      => $this->phone ?: null,
-            'status'     => $this->status,
-            'notes'      => $this->notes ?: null,
-            'created_by' => auth()->id(),
+            'name'    => $this->name,
+            'company' => $this->company ?: null,
+            'email'   => $this->email ?: null,
+            'phone'   => $this->phone ?: null,
+            'status'  => $this->status,
+            'notes'   => $this->notes ?: null,
+            'user_id' => auth()->id(),
         ];
 
         if ($this->contactId) {
@@ -77,10 +77,10 @@ new class extends Component
 ?>
 
 <div x-show="$wire.show" x-data>
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" wire:click="close"></div>
-        <div class="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-lg border border-zinc-200 dark:border-zinc-700">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+    <div class="app-popup-overlay">
+        <div class="absolute inset-0 bg-black/60" wire:click="close"></div>
+        <div class="app-popup-card">
+            <div class="app-popup-header">
                 <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
                     {{ $contactId ? 'Editar Contacto' : 'Nuevo Contacto' }}
                 </h2>
@@ -90,59 +90,60 @@ new class extends Component
                     </svg>
                 </button>
             </div>
+            <div class="app-popup-body">
+                <form wire:submit="save" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nombre *</label>
+                            <input wire:model="name" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Nombre completo">
+                            @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
 
-            <form wire:submit="save" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nombre *</label>
-                        <input wire:model="name" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Nombre completo">
-                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Empresa</label>
+                            <input wire:model="company" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Empresa">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Estado</label>
+                            <select wire:model="status" class="app-select w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                                <option value="lead">Lead</option>
+                                <option value="prospect">Prospecto</option>
+                                <option value="customer">Cliente</option>
+                                <option value="churned">Perdido</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
+                            <input wire:model="email" type="email" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="email@ejemplo.com">
+                            @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Teléfono</label>
+                            <input wire:model="phone" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="+34 600 000 000">
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Notas</label>
+                            <textarea wire:model="notes" rows="3" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" placeholder="Notas sobre este contacto..."></textarea>
+                        </div>
                     </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Empresa</label>
-                    <input wire:model="company" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Empresa">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Estado</label>
-                    <select wire:model="status" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="lead">Lead</option>
-                        <option value="prospect">Prospecto</option>
-                        <option value="customer">Cliente</option>
-                        <option value="churned">Perdido</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
-                    <input wire:model="email" type="email" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="email@ejemplo.com">
-                    @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Teléfono</label>
-                    <input wire:model="phone" type="text" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="+34 600 000 000">
-                </div>
-
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Notas</label>
-                    <textarea wire:model="notes" rows="3" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" placeholder="Notas sobre este contacto..."></textarea>
-                </div>
+                </form>
             </div>
 
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="app-popup-footer">
                 <button type="button" wire:click="close"
                     class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
                     Cancelar
                 </button>
-                <button type="submit"
+                <button type="submit" wire:click="save"
                     class="px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition">
-                    <span wire:loading.remove wire:target="save">{{ $contactId ? 'Guardar cambios' : 'Crear contacto' }}</span>
+                    <span wire:loading.remove wire:target="save">{{ $contactId ? 'Actualizar' : 'Crear' }}</span>
                     <span wire:loading wire:target="save">Guardando…</span>
                 </button>
             </div>
-        </form>
     </div>
 </div>
 </div>
