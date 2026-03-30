@@ -10,6 +10,81 @@ El sistema de módulos de Starcho permite:
 
 ---
 
+## Estructura recomendada de un módulo
+
+Esta sección define el contrato mínimo para crear módulos consistentes en `/app` o `/admin`.
+
+### Módulo orientado a `/app`
+
+```text
+app/Livewire/App/
+    └── <Modulo>Table.php
+
+resources/views/<modulo>/
+    └── index.blade.php
+
+resources/views/livewire/app/
+    └── <modulo>-modal.blade.php
+
+routes/app.php
+lang/es/<modulo>.php
+lang/en/<modulo>.php
+lang/pt_BR/<modulo>.php (opcional recomendado)
+```
+
+Convenciones:
+- Layout: usar `<x-layouts::app ...>` en la vista principal.
+- Tabla: PowerGrid con `Column::action('Acciones')` para editar/eliminar.
+- Modal: `flux:modal` + evento Livewire `open<Modulo>` para crear/editar.
+- Botón header: `Livewire.dispatch('open<Modulo>', {id: 0})` para crear.
+- Traducciones: no hardcodear textos de UI; usar `__('...')`.
+
+### Módulo orientado a `/admin`
+
+```text
+app/Livewire/Admin/
+    └── <Modulo>Table.php
+
+resources/views/admin/<modulo>/
+    ├── index.blade.php
+    └── pg-header.blade.php
+
+resources/views/livewire/admin/
+    └── <modulo>-modal.blade.php
+
+routes/admin.php
+lang/es/<modulo>.php
+lang/en/<modulo>.php
+lang/pt_BR/<modulo>.php (opcional recomendado)
+```
+
+Convenciones:
+- Layout: usar `<x-layouts::admin ...>`.
+- Acciones en tabla: ícono editar + ícono eliminar.
+- Editar: preferir `->dispatch('open<AdminModulo>', ['id' => $row->id])` en PowerGrid.
+- Eliminar: usar `starchoDelete(..., 'delete<AdminModulo>', '<componente-powergrid>')`.
+- Modal admin: mismo patrón Flux que permisos (`flux:heading`, `flux:field`, `flux:input`, `flux:error`, `flux:button`, `flux:modal.close`).
+
+### Patrón de eventos recomendado
+
+```text
+openXxx           -> abre modal en modo crear/editar
+saveXxx           -> valida y persiste
+deleteXxx         -> elimina desde acción de tabla
+pg:eventRefresh-* -> refresca la tabla PowerGrid correspondiente
+```
+
+### Checklist mínimo antes de publicar un módulo
+
+1. Ruta registrada en `routes/app.php` o `routes/admin.php`.
+2. Ítem de menú declarado en `starcho_modules.config.menu_items`.
+3. Vista index con tabla y modal montado.
+4. Acción de crear y editar funcionales desde UI.
+5. Textos externalizados a `lang/*`.
+6. `php artisan view:clear` y `npm run build` ejecutados sin errores.
+
+---
+
 ## Arquitectura
 
 ### Tablas de Base de Datos

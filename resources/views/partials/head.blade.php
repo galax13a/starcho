@@ -14,4 +14,25 @@
 
 {{-- Tailwind + Flux base (compartido entre /app y /admin) --}}
 @vite(['resources/css/app.css'])
+
+@php
+    $starchoLang = [
+        'confirm_title'   => __('js.confirm.title'),
+        'confirm_message' => __('js.confirm.message'),
+        'confirm_ok'      => __('js.confirm.ok'),
+        'confirm_cancel'  => __('js.confirm.cancel'),
+        'delete_title'    => __('js.delete.title'),
+        'delete_message'  => __('js.delete.message'),
+        'delete_ok'       => __('js.delete.ok'),
+        'toast_success'   => __('js.toasts.success'),
+        'toast_warning'   => __('js.toasts.warning'),
+        'toast_error'     => __('js.toasts.error'),
+        'toast_default'   => __('js.toasts.default'),
+    ];
+@endphp
+
+<script>
+    window.StarchoLang = @json($starchoLang);
+</script>
+
 @fluxAppearance

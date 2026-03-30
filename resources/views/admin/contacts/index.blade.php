@@ -28,5 +28,6 @@
     </div>
 
     <livewire:admin.contacts-table />
+    <livewire:admin.contact-modal />
 
 </x-layouts::admin>
