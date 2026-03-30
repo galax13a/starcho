@@ -3,21 +3,21 @@
     {{-- Filtro estado — Stripe input --}}
     <select wire:model.live="filterStatus" class="sc-select sc-select-stripe"
             style="height:36px;font-size:12.5px;padding:0 34px 0 12px;width:auto;">
-        <option value="">Todos los estados</option>
-        <option value="pending">⬜ Pendiente</option>
-        <option value="in_progress">🔵 En progreso</option>
-        <option value="completed">✅ Completada</option>
-        <option value="cancelled">❌ Cancelada</option>
+        <option value="">{{ __('tasks.filter_all_statuses') }}</option>
+        <option value="pending">⬜ {{ __('tasks.status_pending') }}</option>
+        <option value="in_progress">🔵 {{ __('tasks.status_in_progress') }}</option>
+        <option value="completed">✅ {{ __('tasks.status_completed') }}</option>
+        <option value="cancelled">❌ {{ __('tasks.status_cancelled') }}</option>
     </select>
 
     {{-- Filtro prioridad — Stripe input --}}
     <select wire:model.live="filterPriority" class="sc-select sc-select-stripe"
             style="height:36px;font-size:12.5px;padding:0 34px 0 12px;width:auto;">
-        <option value="">Todas las prioridades</option>
-        <option value="low">🟢 Baja</option>
-        <option value="medium">🟡 Media</option>
-        <option value="high">🟠 Alta</option>
-        <option value="urgent">🔴 Urgente</option>
+        <option value="">{{ __('tasks.filter_all_priorities') }}</option>
+        <option value="low">🟢 {{ __('tasks.priority_low') }}</option>
+        <option value="medium">🟡 {{ __('tasks.priority_medium') }}</option>
+        <option value="high">🟠 {{ __('tasks.priority_high') }}</option>
+        <option value="urgent">🔴 {{ __('tasks.priority_urgent') }}</option>
     </select>
 
 </div>

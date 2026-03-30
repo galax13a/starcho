@@ -39,7 +39,7 @@ class ModulesManager extends Component
         $module->install();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'success', message: "Módulo «{$module->name}» instalado y activado.");
+        $this->dispatch('notify', type: 'success', message: __('admin_ui.modules.notify.installed_activated', ['name' => $module->name]));
     }
 
     public function uninstall(int $id): void
@@ -48,7 +48,7 @@ class ModulesManager extends Component
         $module->uninstall();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'warning', message: "Módulo «{$module->name}» desinstalado.");
+        $this->dispatch('notify', type: 'warning', message: __('admin_ui.modules.notify.uninstalled', ['name' => $module->name]));
     }
 
     public function activate(int $id): void
@@ -57,7 +57,7 @@ class ModulesManager extends Component
         $module->activate();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'success', message: "Módulo «{$module->name}» activado.");
+        $this->dispatch('notify', type: 'success', message: __('admin_ui.modules.notify.activated', ['name' => $module->name]));
     }
 
     public function deactivate(int $id): void
@@ -66,7 +66,7 @@ class ModulesManager extends Component
         $module->deactivate();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'warning', message: "Módulo «{$module->name}» desactivado.");
+        $this->dispatch('notify', type: 'warning', message: __('admin_ui.modules.notify.deactivated', ['name' => $module->name]));
     }
 
     public function render()

@@ -162,18 +162,18 @@ new class extends Component {
     {{-- ── Modal: Rol ──────────────────────────────────────────────────── --}}
     <flux:modal name="modal-role" class="md:w-[560px]" focusable>
         <form wire:submit="saveRole" class="space-y-5">
-            <flux:heading size="lg">{{ $roleId > 0 ? 'Editar Rol' : 'Nuevo Rol' }}</flux:heading>
+            <flux:heading size="lg">{{ $roleId > 0 ? __('admin_ui.modals.role.edit') : __('admin_ui.modals.role.new') }}</flux:heading>
 
             <flux:field>
-                <flux:label>Nombre del rol</flux:label>
-                <flux:input wire:model="roleName" placeholder="Nombre del rol"
+                <flux:label>{{ __('admin_ui.modals.role.name_label') }}</flux:label>
+                <flux:input wire:model="roleName" placeholder="{{ __('admin_ui.modals.role.name_placeholder') }}"
                     :disabled="$roleId > 0 && $roleName === 'admin'" />
                 <flux:error name="roleName" />
             </flux:field>
 
             @if ($this->allPermissions->count())
                 <div>
-                    <flux:label class="mb-2 block">Permisos asignados</flux:label>
+                    <flux:label class="mb-2 block">{{ __('admin_ui.modals.role.assigned_permissions') }}</flux:label>
                     <div class="grid grid-cols-2 gap-1 max-h-52 overflow-y-auto p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
                         @foreach ($this->allPermissions as $perm)
                             <label class="flex items-center gap-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded px-2 py-1 transition">
@@ -188,11 +188,11 @@ new class extends Component {
 
             <div class="flex justify-end gap-2 pt-1">
                 <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
+                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveRole">Guardar</span>
-                    <span wire:loading wire:target="saveRole">Guardando…</span>
+                    <span wire:loading.remove wire:target="saveRole">{{ __('admin_ui.common.save') }}</span>
+                    <span wire:loading wire:target="saveRole">{{ __('admin_ui.common.saving') }}</span>
                 </flux:button>
             </div>
         </form>
@@ -201,22 +201,22 @@ new class extends Component {
     {{-- ── Modal: Permiso ──────────────────────────────────────────────── --}}
     <flux:modal name="modal-permission" class="md:w-96" focusable>
         <form wire:submit="savePermission" class="space-y-5">
-            <flux:heading size="lg">{{ $permissionId > 0 ? 'Editar Permiso' : 'Nuevo Permiso' }}</flux:heading>
+            <flux:heading size="lg">{{ $permissionId > 0 ? __('admin_ui.modals.permission.edit') : __('admin_ui.modals.permission.new') }}</flux:heading>
 
             <flux:field>
-                <flux:label>Nombre del permiso</flux:label>
-                <flux:description>Formato kebab-case. Ej: <code>ver-usuarios</code></flux:description>
-                <flux:input wire:model="permissionName" placeholder="nombre-del-permiso" class="font-mono" />
+                <flux:label>{{ __('admin_ui.modals.permission.name_label') }}</flux:label>
+                <flux:description>{{ __('admin_ui.modals.permission.kebab_hint') }} <code>{{ __('admin_ui.modals.permission.kebab_example') }}</code></flux:description>
+                <flux:input wire:model="permissionName" placeholder="{{ __('admin_ui.modals.permission.name_placeholder') }}" class="font-mono" />
                 <flux:error name="permissionName" />
             </flux:field>
 
             <div class="flex justify-end gap-2 pt-1">
                 <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
+                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="savePermission">Guardar</span>
-                    <span wire:loading wire:target="savePermission">Guardando…</span>
+                    <span wire:loading.remove wire:target="savePermission">{{ __('admin_ui.common.save') }}</span>
+                    <span wire:loading wire:target="savePermission">{{ __('admin_ui.common.saving') }}</span>
                 </flux:button>
             </div>
         </form>
@@ -225,36 +225,36 @@ new class extends Component {
     {{-- ── Modal: Usuario ──────────────────────────────────────────────── --}}
     <flux:modal name="modal-user" class="md:w-[580px]" focusable>
         <form wire:submit="saveUser" class="space-y-5">
-            <flux:heading size="lg">{{ $userId > 0 ? 'Editar Usuario' : 'Nuevo Usuario' }}</flux:heading>
+            <flux:heading size="lg">{{ $userId > 0 ? __('admin_ui.modals.user.edit') : __('admin_ui.modals.user.new') }}</flux:heading>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <flux:field>
-                    <flux:label>Nombre</flux:label>
-                    <flux:input wire:model="userName" placeholder="Nombre completo" />
+                    <flux:label>{{ __('admin_ui.modals.user.name_label') }}</flux:label>
+                    <flux:input wire:model="userName" placeholder="{{ __('admin_ui.modals.user.name_placeholder') }}" />
                     <flux:error name="userName" />
                 </flux:field>
                 <flux:field>
-                    <flux:label>Email</flux:label>
-                    <flux:input wire:model="userEmail" type="email" placeholder="email@ejemplo.com" />
+                    <flux:label>{{ __('admin_ui.modals.user.email_label') }}</flux:label>
+                    <flux:input wire:model="userEmail" type="email" placeholder="{{ __('admin_ui.modals.user.email_placeholder') }}" />
                     <flux:error name="userEmail" />
                 </flux:field>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <flux:field>
-                    <flux:label>{{ $userId > 0 ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</flux:label>
+                    <flux:label>{{ $userId > 0 ? __('admin_ui.modals.user.new_password_optional') : __('admin_ui.modals.user.password_label') }}</flux:label>
                     <flux:input wire:model="userPassword" type="password" viewable />
                     <flux:error name="userPassword" />
                 </flux:field>
                 <flux:field>
-                    <flux:label>Confirmar contraseña</flux:label>
+                    <flux:label>{{ __('admin_ui.modals.user.confirm_password_label') }}</flux:label>
                     <flux:input wire:model="userPasswordConfirmation" type="password" viewable />
                 </flux:field>
             </div>
 
             @if ($this->allRoles->count())
                 <div>
-                    <flux:label class="mb-2 block">Roles</flux:label>
+                    <flux:label class="mb-2 block">{{ __('admin_ui.modals.user.roles_label') }}</flux:label>
                     <div class="grid grid-cols-2 gap-1 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
                         @foreach ($this->allRoles as $role)
                             <label class="flex items-center gap-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded px-2 py-1 transition">
@@ -269,11 +269,11 @@ new class extends Component {
 
             <div class="flex justify-end gap-2 pt-1">
                 <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
+                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveUser">Guardar</span>
-                    <span wire:loading wire:target="saveUser">Guardando…</span>
+                    <span wire:loading.remove wire:target="saveUser">{{ __('admin_ui.common.save') }}</span>
+                    <span wire:loading wire:target="saveUser">{{ __('admin_ui.common.saving') }}</span>
                 </flux:button>
             </div>
         </form>

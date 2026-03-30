@@ -10,7 +10,7 @@
         icon="plus"
         size="sm"
     >
-        Nueva Tarea
+        {{ __('admin_ui.tasks.new') }}
     </flux:button>
 
     <flux:button
@@ -19,27 +19,27 @@
         icon="arrow-down-tray"
         size="sm"
     >
-        Exportar Excel
+        {{ __('admin_ui.tasks.export_excel') }}
     </flux:button>
 
     {{-- Filtro estado --}}
     <select wire:model.live="filterStatus"
         class="h-8 rounded-lg border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700/50 text-xs text-zinc-700 dark:text-zinc-200 px-3 focus:outline-none focus:ring-2 focus:ring-violet-400/30 transition-colors cursor-pointer">
-        <option value="">Todos los estados</option>
-        <option value="pending">Pendiente</option>
-        <option value="in_progress">En progreso</option>
-        <option value="completed">Completada</option>
-        <option value="cancelled">Cancelada</option>
+        <option value="">{{ __('admin_ui.tasks.filters.all_statuses') }}</option>
+        <option value="pending">{{ __('admin_ui.tasks.status.pending') }}</option>
+        <option value="in_progress">{{ __('admin_ui.tasks.status.in_progress') }}</option>
+        <option value="completed">{{ __('admin_ui.tasks.status.completed') }}</option>
+        <option value="cancelled">{{ __('admin_ui.tasks.status.cancelled') }}</option>
     </select>
 
     {{-- Filtro prioridad --}}
     <select wire:model.live="filterPriority"
         class="h-8 rounded-lg border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700/50 text-xs text-zinc-700 dark:text-zinc-200 px-3 focus:outline-none focus:ring-2 focus:ring-violet-400/30 transition-colors cursor-pointer">
-        <option value="">Todas las prioridades</option>
-        <option value="low">Baja</option>
-        <option value="medium">Media</option>
-        <option value="high">Alta</option>
-        <option value="urgent">Urgente</option>
+        <option value="">{{ __('admin_ui.tasks.filters.all_priorities') }}</option>
+        <option value="low">{{ __('admin_ui.tasks.priority.low') }}</option>
+        <option value="medium">{{ __('admin_ui.tasks.priority.medium') }}</option>
+        <option value="high">{{ __('admin_ui.tasks.priority.high') }}</option>
+        <option value="urgent">{{ __('admin_ui.tasks.priority.urgent') }}</option>
     </select>
 
     {{-- Feature toggle --}}
@@ -49,6 +49,6 @@
         icon="{{ $tasksEnabled ? 'eye' : 'eye-slash' }}"
         size="sm"
     >
-        {{ $tasksEnabled ? 'Visible en Dashboard' : 'Oculto en Dashboard' }}
+        {{ $tasksEnabled ? __('admin_ui.tasks.feature.visible') : __('admin_ui.tasks.feature.hidden') }}
     </flux:button>
 </div>

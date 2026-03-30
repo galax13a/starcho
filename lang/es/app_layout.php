@@ -12,9 +12,15 @@ return [
     // Menú de usuario
     'my_profile'   => 'Mi perfil',
     'appearance'   => 'Apariencia',
+    'go_to_app'    => 'Ir a la app',
+    'role_admin'   => 'admin',
+    'role_user'    => 'user',
+    'admin_badge'  => 'ADMIN',
     'logout'       => 'Cerrar sesión',
 
     // Topbar
+    'open_menu'          => 'Abrir menú',
+    'search_in_panel'    => 'Buscar en el panel…',
     'search_placeholder' => 'Buscar…',
 
     // Notificaciones

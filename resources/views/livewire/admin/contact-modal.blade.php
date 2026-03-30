@@ -77,60 +77,60 @@ new class extends Component {
 <div>
     <flux:modal name="modal-admin-contact" class="md:w-[680px]" focusable>
         <form wire:submit="saveContact" class="space-y-5">
-            <flux:heading size="lg">{{ $contactId > 0 ? 'Editar Contacto' : 'Nuevo Contacto' }}</flux:heading>
+            <flux:heading size="lg">{{ $contactId > 0 ? __('admin_ui.contacts.modal.edit') : __('admin_ui.contacts.modal.new') }}</flux:heading>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <flux:field>
-                    <flux:label>Nombre</flux:label>
-                    <flux:input wire:model="name" placeholder="Nombre completo" />
+                    <flux:label>{{ __('admin_ui.contacts.modal.name') }}</flux:label>
+                    <flux:input wire:model="name" placeholder="{{ __('admin_ui.contacts.modal.name_placeholder') }}" />
                     <flux:error name="name" />
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>Empresa</flux:label>
-                    <flux:input wire:model="company" placeholder="Empresa del contacto" />
+                    <flux:label>{{ __('admin_ui.contacts.modal.company') }}</flux:label>
+                    <flux:input wire:model="company" placeholder="{{ __('admin_ui.contacts.modal.company_placeholder') }}" />
                     <flux:error name="company" />
                 </flux:field>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <flux:field>
-                    <flux:label>Email</flux:label>
-                    <flux:input wire:model="email" type="email" placeholder="email@ejemplo.com" />
+                    <flux:label>{{ __('admin_ui.contacts.modal.email') }}</flux:label>
+                    <flux:input wire:model="email" type="email" placeholder="{{ __('admin_ui.contacts.modal.email_placeholder') }}" />
                     <flux:error name="email" />
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>Telefono</flux:label>
-                    <flux:input wire:model="phone" placeholder="+34 600 000 000" />
+                    <flux:label>{{ __('admin_ui.contacts.modal.phone') }}</flux:label>
+                    <flux:input wire:model="phone" placeholder="{{ __('admin_ui.contacts.modal.phone_placeholder') }}" />
                     <flux:error name="phone" />
                 </flux:field>
             </div>
 
             <flux:field>
-                <flux:label>Estado</flux:label>
+                <flux:label>{{ __('admin_ui.contacts.modal.status') }}</flux:label>
                 <flux:select wire:model="status">
-                    <flux:select.option value="lead">Lead</flux:select.option>
-                    <flux:select.option value="prospect">Prospecto</flux:select.option>
-                    <flux:select.option value="customer">Cliente</flux:select.option>
-                    <flux:select.option value="churned">Perdido</flux:select.option>
+                    <flux:select.option value="lead">{{ __('admin_ui.contacts.status.lead') }}</flux:select.option>
+                    <flux:select.option value="prospect">{{ __('admin_ui.contacts.status.prospect') }}</flux:select.option>
+                    <flux:select.option value="customer">{{ __('admin_ui.contacts.status.customer') }}</flux:select.option>
+                    <flux:select.option value="churned">{{ __('admin_ui.contacts.status.churned') }}</flux:select.option>
                 </flux:select>
                 <flux:error name="status" />
             </flux:field>
 
             <flux:field>
-                <flux:label>Notas</flux:label>
-                <flux:textarea wire:model="notes" rows="3" placeholder="Notas sobre este contacto" />
+                <flux:label>{{ __('admin_ui.contacts.modal.notes') }}</flux:label>
+                <flux:textarea wire:model="notes" rows="3" placeholder="{{ __('admin_ui.contacts.modal.notes_placeholder') }}" />
                 <flux:error name="notes" />
             </flux:field>
 
             <div class="flex justify-end gap-2 pt-1">
                 <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
+                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveContact">{{ $contactId > 0 ? 'Actualizar' : 'Guardar' }}</span>
-                    <span wire:loading wire:target="saveContact">Guardando…</span>
+                    <span wire:loading.remove wire:target="saveContact">{{ $contactId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save') }}</span>
+                    <span wire:loading wire:target="saveContact">{{ __('admin_ui.common.saving') }}</span>
                 </flux:button>
             </div>
         </form>

@@ -50,12 +50,12 @@ final class PermissionsTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Permiso', 'name')->sortable()->searchable(),
-            Column::make('Guard', 'guard_name')->sortable()->hidden(),
-            Column::make('Roles', 'roles_count')->sortable(),
-            Column::make('Creado', 'created_at_formatted', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('admin_ui.permissions.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.permissions.columns.permission'), 'name')->sortable()->searchable(),
+            Column::make(__('admin_ui.permissions.columns.guard'), 'guard_name')->sortable()->hidden(),
+            Column::make(__('admin_ui.permissions.columns.roles'), 'roles_count')->sortable(),
+            Column::make(__('admin_ui.permissions.columns.created'), 'created_at_formatted', 'created_at')->sortable(),
+            Column::action(__('admin_ui.permissions.columns.actions')),
         ];
     }
 

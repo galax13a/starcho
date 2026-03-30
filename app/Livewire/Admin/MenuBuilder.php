@@ -134,7 +134,7 @@ class MenuBuilder extends Component
         $this->showModal = false;
         $this->resetForm();
         $this->loadItems();
-        $this->dispatch('notify', type: 'success', message: 'Ítem guardado.');
+        $this->dispatch('notify', type: 'success', message: __('admin_ui.menu.notify.item_saved'));
     }
 
     public function delete(int $id): void
@@ -144,7 +144,7 @@ class MenuBuilder extends Component
         $item->delete();
         StarchoMenuItem::clearMenuCache();
         $this->loadItems();
-        $this->dispatch('notify', type: 'warning', message: 'Ítem eliminado.');
+        $this->dispatch('notify', type: 'warning', message: __('admin_ui.menu.notify.item_deleted'));
     }
 
     public function toggleActive(int $id): void

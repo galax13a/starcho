@@ -1576,3 +1576,108 @@ table .badge {
     .db-kpi-rate   { grid-column: span 2; }
     .db-username   { font-size: 22px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   12. APP/CONTACTS - STARCHO STRIPE X
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.starcho-stripeX .starcho-stripeX-header {
+    background: linear-gradient(135deg, rgba(99,91,255,.08), rgba(79,70,229,.03));
+    border-color: rgba(99,91,255,.22);
+}
+
+.starcho-stripeX .starcho-stripeX-btn {
+    min-width: 152px;
+}
+
+.starcho-stripeX .starcho-stripeX-card {
+    border-color: rgba(99,91,255,.18);
+}
+
+.starcho-stripeX .starcho-stripeX-filter {
+    min-width: 180px;
+}
+
+.starcho-stripeX-modal {
+    background   : var(--stripe-card);
+    border       : 1px solid var(--stripe-border);
+    border-radius: 12px;
+    box-shadow   : var(--stripe-shadow-hover);
+    overflow     : hidden;
+}
+
+.starcho-stripeX-modal-header {
+    padding      : 18px 22px;
+    border-bottom: 1px solid var(--stripe-border);
+    display      : flex;
+    align-items  : center;
+    gap          : 10px;
+    background   : linear-gradient(135deg, rgba(99,91,255,.08), rgba(79,70,229,.03));
+}
+
+.starcho-stripeX-modal-icon {
+    width          : 32px;
+    height         : 32px;
+    border-radius  : 8px;
+    border         : 1px solid rgba(99,91,255,.25);
+    background     : rgba(99,91,255,.12);
+    color          : var(--stripe-purple);
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    font-size      : 13px;
+}
+
+.starcho-stripeX-modal-title {
+    font-size     : 14px;
+    font-weight   : 900;
+    color         : var(--stripe-text);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.starcho-stripeX-modal-title span {
+    color: var(--stripe-purple);
+}
+
+.starcho-stripeX-modal-subtitle {
+    font-size : 11px;
+    color     : var(--stripe-text2);
+    margin-top: 1px;
+}
+
+.starcho-stripeX-modal-body {
+    padding: 22px;
+}
+
+.starcho-stripeX-modal-footer {
+    padding      : 14px 22px;
+    border-top   : 1px solid var(--stripe-border);
+    background   : var(--stripe-bg2);
+    display      : flex;
+    justify-content: flex-end;
+    gap          : 10px;
+}
+
+.dark .starcho-stripeX .starcho-stripeX-header {
+    background: linear-gradient(135deg, rgba(99,91,255,.16), rgba(79,70,229,.08));
+    border-color: rgba(129,140,248,.30);
+}
+
+.dark .starcho-stripeX .starcho-stripeX-card {
+    border-color: rgba(129,140,248,.22);
+}
+
+.dark .starcho-stripeX-modal {
+    border-color: var(--stripe-border);
+}
+
+.dark .starcho-stripeX-modal-header {
+    background: linear-gradient(135deg, rgba(99,91,255,.20), rgba(79,70,229,.08));
+}
+
+.dark .starcho-stripeX-modal-icon {
+    border-color: rgba(165,180,252,.32);
+    background: rgba(99,91,255,.22);
+    color: #c7d2fe;
+}

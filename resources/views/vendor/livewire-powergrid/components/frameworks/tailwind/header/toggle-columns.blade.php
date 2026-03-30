@@ -4,7 +4,7 @@
         <button
             data-cy="toggle-columns-{{ $tableName }}"
             @click.prevent="open = !open"
-            title="Mostrar/ocultar columnas"
+            title="{{ __('admin_ui.powergrid.toggle_columns') }}"
             class="
                 inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium
                 border border-zinc-200 dark:border-zinc-600
@@ -17,7 +17,7 @@
             "
         >
             <x-livewire-powergrid::icons.eye-off class="w-4 h-4" />
-            Columnas
+            {{ __('admin_ui.powergrid.columns') }}
         </button>
 
         <div

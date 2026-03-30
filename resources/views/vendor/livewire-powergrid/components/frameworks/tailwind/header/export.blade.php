@@ -6,7 +6,7 @@
 >
     <button
         @click.prevent="open = !open"
-        title="Exportar datos"
+        title="{{ __('admin_ui.powergrid.export_data') }}"
         class="
             inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium
             border border-zinc-200 dark:border-zinc-600
@@ -19,7 +19,7 @@
         "
     >
         <x-livewire-powergrid::icons.download class="w-4 h-4" />
-        Exportar
+        {{ __('admin_ui.powergrid.export') }}
     </button>
 
     <div

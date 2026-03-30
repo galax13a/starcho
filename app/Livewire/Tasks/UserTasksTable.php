@@ -48,27 +48,41 @@ final class UserTasksTable extends PowerGridComponent
 
     public function fields(): PowerGridFields
     {
+        $statusLabels = [
+            'pending' => __('tasks.status_pending'),
+            'in_progress' => __('tasks.status_in_progress'),
+            'completed' => __('tasks.status_completed'),
+            'cancelled' => __('tasks.status_cancelled'),
+        ];
+
+        $priorityLabels = [
+            'low' => __('tasks.priority_low'),
+            'medium' => __('tasks.priority_medium'),
+            'high' => __('tasks.priority_high'),
+            'urgent' => __('tasks.priority_urgent'),
+        ];
+
         return PowerGrid::fields()
             ->add('id')
             ->add('title')
-            ->add('status_label', fn (Task $t) => Task::STATUS[$t->status] ?? $t->status)
-            ->add('priority_label', fn (Task $t) => Task::PRIORITY[$t->priority] ?? $t->priority)
+            ->add('status_label', fn (Task $t) => $statusLabels[$t->status] ?? $t->status)
+            ->add('priority_label', fn (Task $t) => $priorityLabels[$t->priority] ?? $t->priority)
             ->add('due_date_formatted', fn (Task $t) => $t->due_date?->format('d/m/Y') ?? '—')
-            ->add('assigned_name', fn (Task $t) => $t->assignedUser?->name ?? 'Sin asignar')
+            ->add('assigned_name', fn (Task $t) => $t->assignedUser?->name ?? __('tasks.field_unassigned'))
             ->add('created_at_formatted', fn (Task $t) => Carbon::parse($t->created_at)->format('d/m/Y'));
     }
 
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Título', 'title')->sortable()->searchable(),
-            Column::make('Estado', 'status_label'),
-            Column::make('Prioridad', 'priority_label'),
-            Column::make('Vencimiento', 'due_date_formatted', 'due_date')->sortable(),
-            Column::make('Asignado a', 'assigned_name'),
-            Column::make('Creado', 'created_at_formatted', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('tasks.col_id'), 'id')->sortable(),
+            Column::make(__('tasks.col_title'), 'title')->sortable()->searchable(),
+            Column::make(__('tasks.col_status'), 'status_label'),
+            Column::make(__('tasks.col_priority'), 'priority_label'),
+            Column::make(__('tasks.col_due_date'), 'due_date_formatted', 'due_date')->sortable(),
+            Column::make(__('tasks.col_assigned_to'), 'assigned_name'),
+            Column::make(__('tasks.col_created'), 'created_at_formatted', 'created_at')->sortable(),
+            Column::action(__('tasks.col_actions')),
         ];
     }
 

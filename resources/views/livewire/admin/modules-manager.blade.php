@@ -34,11 +34,11 @@
                     <div class="flex items-center gap-2">
                         <h3 class="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{{ $module['name'] }}</h3>
                         @if($module['installed'] && $module['active'])
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Activo</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{{ __('admin_ui.modules.status.active') }}</span>
                         @elseif($module['installed'])
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Instalado</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">{{ __('admin_ui.modules.status.installed') }}</span>
                         @else
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">No instalado</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">{{ __('admin_ui.modules.status.not_installed') }}</span>
                         @endif
                     </div>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $module['description'] }}</p>
@@ -50,24 +50,24 @@
                 @if(!$module['installed'])
                     <button wire:click="install({{ $module['id'] }})" wire:loading.attr="disabled"
                             class="flex-1 text-xs font-semibold py-1.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition">
-                        <span wire:loading.remove wire:target="install({{ $module['id'] }})">Instalar</span>
-                        <span wire:loading wire:target="install({{ $module['id'] }})">Instalando…</span>
+                        <span wire:loading.remove wire:target="install({{ $module['id'] }})">{{ __('admin_ui.modules.actions.install') }}</span>
+                        <span wire:loading wire:target="install({{ $module['id'] }})">{{ __('admin_ui.modules.actions.installing') }}</span>
                     </button>
                 @else
                     @if($module['active'])
                         <button wire:click="deactivate({{ $module['id'] }})"
                                 class="flex-1 text-xs font-semibold py-1.5 px-3 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-700 transition">
-                            Desactivar
+                            {{ __('admin_ui.modules.actions.deactivate') }}
                         </button>
                     @else
                         <button wire:click="activate({{ $module['id'] }})"
                                 class="flex-1 text-xs font-semibold py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 transition">
-                            Activar
+                            {{ __('admin_ui.modules.actions.activate') }}
                         </button>
                     @endif
                     <button wire:click="uninstall({{ $module['id'] }})"
                             class="text-xs font-semibold py-1.5 px-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 border border-red-200 dark:border-red-700 transition">
-                        Desinstalar
+                        {{ __('admin_ui.modules.actions.uninstall') }}
                     </button>
                 @endif
             </div>

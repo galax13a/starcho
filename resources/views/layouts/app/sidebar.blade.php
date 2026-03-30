@@ -196,9 +196,9 @@
                         <div class="um-name">{{ $userName }}</div>
                         <div class="um-email">{{ $userEmail }}</div>
                         @if($isAdmin)
-                        <span class="role-badge r-admin" style="display:inline-block;margin-top:4px">admin</span>
+                        <span class="role-badge r-admin" style="display:inline-block;margin-top:4px">{{ __('app_layout.role_admin') }}</span>
                         @else
-                        <span class="role-badge r-user" style="display:inline-block;margin-top:4px">user</span>
+                        <span class="role-badge r-user" style="display:inline-block;margin-top:4px">{{ __('app_layout.role_user') }}</span>
                         @endif
                     </div>
                 </div>
@@ -223,7 +223,7 @@
                 </div>
                 <div class="sb-user-info">
                     <div class="sb-user-name">{{ $userName }}</div>
-                    <div class="sb-user-role">{{ $isAdmin ? 'admin' : 'user' }}</div>
+                    <div class="sb-user-role">{{ $isAdmin ? __('app_layout.role_admin') : __('app_layout.role_user') }}</div>
                 </div>
                 <i class="fas fa-chevron-up user-chevron"
                    style="font-size:10px;color:var(--text4);margin-left:auto;transition:transform .3s"
@@ -256,7 +256,7 @@
             <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
 
                 @if($isAdmin)
-                <span class="role-badge r-admin" style="padding:5px 12px;font-size:11px">ADMIN</span>
+                <span class="role-badge r-admin" style="padding:5px 12px;font-size:11px">{{ __('app_layout.admin_badge') }}</span>
                 @endif
 
                 {{-- Notifications --}}
