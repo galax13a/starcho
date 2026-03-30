@@ -43,10 +43,10 @@ final class ContactsTable extends PowerGridComponent
     public function fields(): PowerGridFields
     {
         $statusLabels = [
-            'lead'     => 'Lead',
-            'prospect' => 'Prospecto',
-            'customer' => 'Cliente',
-            'churned'  => 'Perdido',
+            'lead'     => __('admin_ui.contacts.status.lead'),
+            'prospect' => __('admin_ui.contacts.status.prospect'),
+            'customer' => __('admin_ui.contacts.status.customer'),
+            'churned'  => __('admin_ui.contacts.status.churned'),
         ];
 
         return PowerGrid::fields()
@@ -63,15 +63,15 @@ final class ContactsTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Nombre', 'name')->sortable()->searchable(),
-            Column::make('Empresa', 'company')->sortable()->searchable(),
-            Column::make('Email', 'email')->sortable()->searchable(),
-            Column::make('Teléfono', 'phone'),
-            Column::make('Estado', 'status_label', 'status')->sortable(),
-            Column::make('Creado por', 'creator_name'),
-            Column::make('Fecha', 'created_at_fmt', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('admin_ui.contacts.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.contacts.columns.name'), 'name')->sortable()->searchable(),
+            Column::make(__('admin_ui.contacts.columns.company'), 'company')->sortable()->searchable(),
+            Column::make(__('admin_ui.contacts.columns.email'), 'email')->sortable()->searchable(),
+            Column::make(__('admin_ui.contacts.columns.phone'), 'phone'),
+            Column::make(__('admin_ui.contacts.columns.status'), 'status_label', 'status')->sortable(),
+            Column::make(__('admin_ui.contacts.columns.created_by'), 'creator_name'),
+            Column::make(__('admin_ui.contacts.columns.date'), 'created_at_fmt', 'created_at')->sortable(),
+            Column::action(__('admin_ui.contacts.columns.actions')),
         ];
     }
 

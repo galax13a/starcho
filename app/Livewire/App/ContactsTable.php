@@ -44,10 +44,10 @@ final class ContactsTable extends PowerGridComponent
     public function fields(): PowerGridFields
     {
         $statusLabels = [
-            'lead'     => 'Lead',
-            'prospect' => 'Prospecto',
-            'customer' => 'Cliente',
-            'churned'  => 'Perdido',
+            'lead'     => __('contacts.status_lead'),
+            'prospect' => __('contacts.status_prospect'),
+            'customer' => __('contacts.status_customer'),
+            'churned'  => __('contacts.status_churned'),
         ];
 
         return PowerGrid::fields()
@@ -63,22 +63,29 @@ final class ContactsTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Nombre', 'name')->sortable()->searchable(),
-            Column::make('Empresa', 'company')->sortable()->searchable(),
-            Column::make('Email', 'email')->sortable()->searchable(),
-            Column::make('Teléfono', 'phone'),
-            Column::make('Estado', 'status_label', 'status')->sortable(),
-            Column::make('Creado', 'created_at_fmt', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('contacts.col_id'), 'id')->sortable(),
+            Column::make(__('contacts.col_name'), 'name')->sortable()->searchable(),
+            Column::make(__('contacts.col_company'), 'company')->sortable()->searchable(),
+            Column::make(__('contacts.col_email'), 'email')->sortable()->searchable(),
+            Column::make(__('contacts.col_phone'), 'phone'),
+            Column::make(__('contacts.col_status'), 'status_label', 'status')->sortable(),
+            Column::make(__('contacts.col_created'), 'created_at_fmt', 'created_at')->sortable(),
+            Column::action(__('contacts.col_actions')),
         ];
     }
 
     public function filters(): array
     {
+        $statusLabels = [
+            'lead' => __('contacts.status_lead'),
+            'prospect' => __('contacts.status_prospect'),
+            'customer' => __('contacts.status_customer'),
+            'churned' => __('contacts.status_churned'),
+        ];
+
         return [
             Filter::select('status_label', 'status')
-                ->dataSource(collect(Contact::STATUSES)->map(fn ($s) => ['status' => $s, 'label' => ucfirst($s)])->toArray())
+                ->dataSource(collect(Contact::STATUSES)->map(fn ($s) => ['status' => $s, 'label' => $statusLabels[$s] ?? ucfirst($s)])->toArray())
                 ->optionLabel('label')
                 ->optionValue('status'),
         ];

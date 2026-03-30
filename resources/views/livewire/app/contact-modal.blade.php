@@ -74,99 +74,99 @@ new class extends Component {
 <div>
     <flux:modal name="modal-contact" class="md:w-[640px] !p-0 app-popup-card" focusable>
 
-        <div class="sc-modal-kick">
+        <div class="starcho-stripeX-modal">
 
-            {{-- Header ── Kick style ── --}}
-            <div class="sc-modal-kick-header">
-                <div style="width:32px;height:32px;border-radius:5px;background:rgba(37,244,238,.12);border:1px solid rgba(37,244,238,.25);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-users" style="color:#25f4ee;font-size:13px;"></i>
+            {{-- Header ── Stripe style ── --}}
+            <div class="starcho-stripeX-modal-header">
+                <div class="starcho-stripeX-modal-icon">
+                    <i class="fas fa-users"></i>
                 </div>
                 <div>
-                    <div class="sc-modal-kick-title">
+                    <div class="starcho-stripeX-modal-title">
                         {!! $contactId > 0 ? '<span>'.__('contacts.modal_title_edit').'</span> '.__('contacts.modal_contact') : '<span>'.__('contacts.modal_title_new').'</span> '.__('contacts.modal_contact') !!}
                     </div>
-                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">{{ __('contacts.modal_subtitle') }}</div>
+                    <div class="starcho-stripeX-modal-subtitle">{{ __('contacts.modal_subtitle') }}</div>
                 </div>
             </div>
 
-            {{-- Body ── Kick style inputs ── --}}
+            {{-- Body ── Stripe style inputs ── --}}
             <form wire:submit="saveContact">
-                <div class="sc-modal-kick-body" style="display:flex;flex-direction:column;gap:16px;">
+                <div class="starcho-stripeX-modal-body" style="display:flex;flex-direction:column;gap:16px;">
 
                     {{-- Nombre --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('contacts.field_name') }} <span style="color:#ff4242">*</span></label>
+                           <label class="sc-label sc-label-stripe">{{ __('contacts.field_name') }} <span style="color:#ef4444">*</span></label>
                         <input wire:model="name" type="text" placeholder="{{ __('contacts.field_name_ph') }}"
-                               class="sc-input sc-input-kick">
+                               class="sc-input sc-input-stripe">
                         @error('name')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                           <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
                     </div>
 
                     {{-- Empresa --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('contacts.field_company') }}</label>
+                           <label class="sc-label sc-label-stripe">{{ __('contacts.field_company') }}</label>
                         <input wire:model="company" type="text" placeholder="{{ __('contacts.field_company_ph') }}"
-                               class="sc-input sc-input-kick">
+                               class="sc-input sc-input-stripe">
                         @error('company')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                           <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
                     </div>
 
                     {{-- Email + Teléfono --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('contacts.field_email') }}</label>
+                            <label class="sc-label sc-label-stripe">{{ __('contacts.field_email') }}</label>
                             <input wire:model="email" type="email" placeholder="{{ __('contacts.field_email_ph') }}"
-                                   class="sc-input sc-input-kick">
+                                class="sc-input sc-input-stripe">
                             @error('email')
-                            <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                            <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">{{ __('contacts.field_phone') }}</label>
+                            <label class="sc-label sc-label-stripe">{{ __('contacts.field_phone') }}</label>
                             <input wire:model="phone" type="text" placeholder="{{ __('contacts.field_phone_ph') }}"
-                                   class="sc-input sc-input-kick">
+                                class="sc-input sc-input-stripe">
                             @error('phone')
-                            <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                            <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
 
                     {{-- Estado --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('contacts.field_status') }}</label>
-                        <select wire:model="status" class="sc-select sc-select-kick app-select">
+                        <label class="sc-label sc-label-stripe">{{ __('contacts.field_status') }}</label>
+                        <select wire:model="status" class="sc-select sc-select-stripe app-select">
                             <option value="lead">👥 {{ __('contacts.status_lead') }}</option>
                             <option value="prospect">🎯 {{ __('contacts.status_prospect') }}</option>
                             <option value="customer">💼 {{ __('contacts.status_customer') }}</option>
                             <option value="churned">❌ {{ __('contacts.status_churned') }}</option>
                         </select>
                         @error('status')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                        <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
                     </div>
 
                     {{-- Notas --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">{{ __('contacts.field_notes') }}</label>
+                        <label class="sc-label sc-label-stripe">{{ __('contacts.field_notes') }}</label>
                         <textarea wire:model="notes" placeholder="{{ __('contacts.field_notes_ph') }}" rows="3"
-                                  class="sc-textarea sc-textarea-kick"></textarea>
+                                  class="sc-textarea sc-textarea-stripe"></textarea>
                         @error('notes')
-                        <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
+                        <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
                     </div>
 
                 </div>
 
-                {{-- Footer ── Kick style ── --}}
-                <div class="sc-modal-kick-footer">
+                {{-- Footer ── Stripe style ── --}}
+                <div class="starcho-stripeX-modal-footer">
                     <flux:modal.close>
-                        <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">
+                        <button type="button" class="sc-btn sc-btn-stripe sc-btn-ghost">
                             {{ __('contacts.btn_cancel') }}
                         </button>
                     </flux:modal.close>
-                    <button type="submit" class="sc-btn sc-btn-kick" wire:loading.attr="disabled" wire:loading.class="opacity-60">
+                    <button type="submit" class="sc-btn sc-btn-stripe" wire:loading.attr="disabled" wire:loading.class="opacity-60">
                         <span wire:loading.remove="" wire:target="saveContact">
                             <i class="fas fa-bolt" style="font-size:11px;"></i>
                             {{ $contactId > 0 ? __('contacts.btn_update') : __('contacts.btn_save') }}

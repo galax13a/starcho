@@ -1,8 +1,8 @@
-<x-layouts::admin :title="'Menú lateral'">
+<x-layouts::admin :title="__('admin_pages.menu_index')">
 
     <div class="mb-6">
-        <flux:heading size="xl" level="1" class="mb-0.5">Administrador de menú</flux:heading>
-        <flux:text class="text-zinc-500">Gestiona los ítems del menú lateral de la aplicación. Los cambios se reflejan de inmediato.</flux:text>
+        <flux:heading size="xl" level="1" class="mb-0.5">{{ __('admin_ui.menu.heading') }}</flux:heading>
+        <flux:text class="text-zinc-500">{{ __('admin_ui.menu.description') }}</flux:text>
     </div>
 
     <livewire:admin.menu-builder />

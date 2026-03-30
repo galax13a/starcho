@@ -24,34 +24,34 @@
                     <span class="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">{{ $item['module_key'] }}</span>
                 @endif
                 @if($depth > 0)
-                    <span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">sub-{{ $depth }}</span>
+                    <span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">{{ __('admin_ui.menu.sub_level', ['depth' => $depth]) }}</span>
                 @endif
             </div>
             <p class="text-xs text-zinc-400 mt-0.5">
-                @if($item['route']) route: <code class="font-mono">{{ $item['route'] }}</code>
-                @elseif($item['url']) url: {{ $item['url'] }}
-                @else <span class="italic">sin ruta</span>
+                @if($item['route']) {{ __('admin_ui.menu.route_label') }}: <code class="font-mono">{{ $item['route'] }}</code>
+                @elseif($item['url']) {{ __('admin_ui.menu.url_label') }}: {{ $item['url'] }}
+                @else <span class="italic">{{ __('admin_ui.menu.no_route') }}</span>
                 @endif
-                &middot; orden: {{ $item['sort_order'] }}
+                &middot; {{ __('admin_ui.menu.order_label') }}: {{ $item['sort_order'] }}
             </p>
         </div>
 
         {{-- Actions --}}
         <div class="flex items-center gap-1 flex-shrink-0">
-            <button wire:click="moveUp({{ $item['id'] }})" title="Subir"
+            <button wire:click="moveUp({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.move_up') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75 12 8.25l7.5 7.5"/>
                 </svg>
             </button>
-            <button wire:click="moveDown({{ $item['id'] }})" title="Bajar"
+            <button wire:click="moveDown({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.move_down') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
                 </svg>
             </button>
 
-            <button wire:click="toggleActive({{ $item['id'] }})" title="{{ $item['active'] ? 'Desactivar' : 'Activar' }}"
+            <button wire:click="toggleActive({{ $item['id'] }})" title="{{ $item['active'] ? __('admin_ui.menu.actions.deactivate') : __('admin_ui.menu.actions.activate') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg transition
                     {{ $item['active'] ? 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30' : 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -59,14 +59,14 @@
                 </svg>
             </button>
 
-            <button wire:click="openCreate({{ $item['id'] }})" title="Agregar hijo"
+            <button wire:click="openCreate({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.add_child') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
             </button>
 
-            <button wire:click="openEdit({{ $item['id'] }})" title="Editar"
+            <button wire:click="openEdit({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.edit') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
@@ -79,8 +79,8 @@
                     ?? ($item['label'] ?? '—');
             @endphp
             <button wire:click="delete({{ $item['id'] }})"
-                    onclick="return confirm('¿Eliminar ítem «{{ addslashes($itemLabel) }}»?')"
-                    title="Eliminar"
+                    onclick="return confirm('{{ __('admin_ui.menu.delete_confirm', ['name' => addslashes($itemLabel)]) }}')"
+                    title="{{ __('admin_ui.menu.actions.delete') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>

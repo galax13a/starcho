@@ -5,7 +5,7 @@
         icon="key"
         size="sm"
     >
-        Nuevo Permiso
+        {{ __('admin_ui.permissions.new') }}
     </flux:button>
 
     <flux:button
@@ -14,7 +14,7 @@
         icon="arrow-up-tray"
         size="sm"
     >
-        Importar JSON
+        {{ __('admin_ui.permissions.import_json') }}
     </flux:button>
 
     <flux:button
@@ -23,6 +23,6 @@
         icon="arrow-down-tray"
         size="sm"
     >
-        Exportar JSON
+        {{ __('admin_ui.permissions.export_json') }}
     </flux:button>
 </div>

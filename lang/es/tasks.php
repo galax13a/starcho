@@ -15,6 +15,20 @@ return [
     'stat_overdue'     => 'Vencidas',
     'stat_due_today'   => 'Vencen hoy',
 
+    // Filtros tabla
+    'filter_all_statuses'   => 'Todos los estados',
+    'filter_all_priorities' => 'Todas las prioridades',
+
+    // Columnas tabla
+    'col_id'          => 'ID',
+    'col_title'       => 'Título',
+    'col_status'      => 'Estado',
+    'col_priority'    => 'Prioridad',
+    'col_due_date'    => 'Vencimiento',
+    'col_assigned_to' => 'Asignado a',
+    'col_created'     => 'Creado',
+    'col_actions'     => 'Acciones',
+
     // Modal
     'modal_subtitle'   => 'Sistema de gestión de tareas',
     'modal_title_new'  => 'Nueva',

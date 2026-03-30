@@ -15,6 +15,19 @@ return [
     'stat_churned'    => 'Perdidos',
     'stat_with_email' => 'Con Email',
 
+    // Filtros tabla
+    'filter_all_statuses' => 'Todos los estados',
+
+    // Columnas tabla
+    'col_id'      => 'ID',
+    'col_name'    => 'Nombre',
+    'col_company' => 'Empresa',
+    'col_email'   => 'Email',
+    'col_phone'   => 'Teléfono',
+    'col_status'  => 'Estado',
+    'col_created' => 'Creado',
+    'col_actions' => 'Acciones',
+
     // Modal
     'modal_subtitle'   => 'Sistema de gestión de contactos',
     'modal_title_new'  => 'Nuevo',

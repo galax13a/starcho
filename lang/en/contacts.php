@@ -15,6 +15,19 @@ return [
     'stat_churned'    => 'Churned',
     'stat_with_email' => 'With Email',
 
+    // Table filters
+    'filter_all_statuses' => 'All statuses',
+
+    // Table columns
+    'col_id'      => 'ID',
+    'col_name'    => 'Name',
+    'col_company' => 'Company',
+    'col_email'   => 'Email',
+    'col_phone'   => 'Phone',
+    'col_status'  => 'Status',
+    'col_created' => 'Created',
+    'col_actions' => 'Actions',
+
     // Modal
     'modal_subtitle'   => 'Contact management system',
     'modal_title_new'  => 'New',

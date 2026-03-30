@@ -15,6 +15,20 @@ return [
     'stat_overdue'     => 'Overdue',
     'stat_due_today'   => 'Due Today',
 
+    // Table filters
+    'filter_all_statuses'   => 'All statuses',
+    'filter_all_priorities' => 'All priorities',
+
+    // Table columns
+    'col_id'          => 'ID',
+    'col_title'       => 'Title',
+    'col_status'      => 'Status',
+    'col_priority'    => 'Priority',
+    'col_due_date'    => 'Due date',
+    'col_assigned_to' => 'Assigned to',
+    'col_created'     => 'Created',
+    'col_actions'     => 'Actions',
+
     // Modal
     'modal_subtitle'   => 'Task management system',
     'modal_title_new'  => 'New',

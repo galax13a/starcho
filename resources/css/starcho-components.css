@@ -599,3 +599,53 @@
 .sc-tt-done    { color: #53fc18; }
 .sc-tt-late    { color: #fe2c55; }
 .sc-tt-today   { color: #f59e0b; }
+
+/* ════════════════════════════════════════════════════════════════
+   STAT CARDS (Stripe style)
+   ════════════════════════════════════════════════════════════════ */
+.sc-stat-stripe {
+    padding      : 18px;
+    display      : flex;
+    flex-direction: column;
+    gap          : 6px;
+}
+
+.sc-stat-stripe .sc-stat-label {
+    font-size      : 10px;
+    font-weight    : 700;
+    text-transform : uppercase;
+    letter-spacing : .08em;
+    color          : var(--stripe-text2);
+}
+
+.sc-stat-stripe .sc-stat-value {
+    font-size      : 30px;
+    font-weight    : 900;
+    line-height    : 1;
+    letter-spacing : -.02em;
+}
+
+.sc-stat-stripe .sc-stat-icon {
+    font-size       : 16px;
+    width           : 34px;
+    height          : 34px;
+    border-radius   : 8px;
+    display         : flex;
+    align-items     : center;
+    justify-content : center;
+    margin-bottom   : 4px;
+}
+
+.sc-stripe-total     { color: #635bff; }
+.sc-stripe-leads     { color: #2563eb; }
+.sc-stripe-prospects { color: #0284c7; }
+.sc-stripe-customers { color: #059669; }
+.sc-stripe-churned   { color: #dc2626; }
+.sc-stripe-email     { color: #d97706; }
+
+.dark .sc-stripe-total     { color: #a5b4fc; }
+.dark .sc-stripe-leads     { color: #93c5fd; }
+.dark .sc-stripe-prospects { color: #7dd3fc; }
+.dark .sc-stripe-customers { color: #6ee7b7; }
+.dark .sc-stripe-churned   { color: #fca5a5; }
+.dark .sc-stripe-email     { color: #fcd34d; }

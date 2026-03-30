@@ -1,10 +1,10 @@
-<x-layouts::admin :title="'Editar Permiso'">
+<x-layouts::admin :title="__('admin_pages.permissions_edit')">
 
     <div class="flex items-center gap-3 mb-6">
         <flux:button href="{{ route('admin.permissions.index') }}" variant="ghost" icon="arrow-left" size="sm" wire:navigate>
-            Volver
+            {{ __('admin_ui.common.back') }}
         </flux:button>
-        <flux:heading size="xl" level="1">Editar Permiso</flux:heading>
+        <flux:heading size="xl" level="1">{{ __('admin_ui.permissions.edit_title') }}</flux:heading>
     </div>
 
     @include('admin.partials.alerts')
@@ -14,12 +14,12 @@
         @method('PUT')
 
         <flux:field>
-            <flux:label>Nombre del permiso</flux:label>
-            <flux:description>Usa formato kebab-case. Ej: <code>ver-usuarios</code>, <code>editar-posts</code></flux:description>
+            <flux:label>{{ __('admin_ui.permissions.name_label') }}</flux:label>
+            <flux:description>{{ __('admin_ui.permissions.kebab_help') }} <code>{{ __('admin_ui.permissions.kebab_example_1') }}</code>, <code>{{ __('admin_ui.permissions.kebab_example_2') }}</code></flux:description>
             <flux:input
                 name="name"
                 value="{{ old('name', $permission->name) }}"
-                placeholder="Nombre del permiso"
+                placeholder="{{ __('admin_ui.permissions.name_label') }}"
                 required
                 autofocus
                 class="font-mono"
@@ -28,8 +28,8 @@
         </flux:field>
 
         <div class="flex gap-3 pt-2">
-            <flux:button type="submit" variant="primary">Guardar cambios</flux:button>
-            <flux:button href="{{ route('admin.permissions.index') }}" variant="ghost" wire:navigate>Cancelar</flux:button>
+            <flux:button type="submit" variant="primary">{{ __('admin_ui.common.save_changes') }}</flux:button>
+            <flux:button href="{{ route('admin.permissions.index') }}" variant="ghost" wire:navigate>{{ __('admin_ui.common.cancel') }}</flux:button>
         </div>
     </form>
 

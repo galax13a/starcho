@@ -43,21 +43,21 @@ final class UsersTable extends PowerGridComponent
             ->add('id')
             ->add('name')
             ->add('email')
-            ->add('roles_list', fn (User $user) => $user->roles->pluck('name')->join(', ') ?: 'Sin rol')
-            ->add('email_verified_label', fn (User $user) => $user->email_verified_at ? 'Verificado' : 'Sin verificar')
+            ->add('roles_list', fn (User $user) => $user->roles->pluck('name')->join(', ') ?: __('admin_ui.users.no_role'))
+            ->add('email_verified_label', fn (User $user) => $user->email_verified_at ? __('admin_ui.users.verified') : __('admin_ui.users.unverified'))
             ->add('created_at_formatted', fn (User $user) => Carbon::parse($user->created_at)->format('d/m/Y'));
     }
 
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Nombre', 'name')->sortable()->searchable(),
-            Column::make('Email', 'email')->sortable()->searchable(),
-            Column::make('Roles', 'roles_list'),
-            Column::make('Verificación', 'email_verified_label'),
-            Column::make('Registro', 'created_at_formatted', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('admin_ui.users.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.users.columns.name'), 'name')->sortable()->searchable(),
+            Column::make(__('admin_ui.users.columns.email'), 'email')->sortable()->searchable(),
+            Column::make(__('admin_ui.users.columns.roles'), 'roles_list'),
+            Column::make(__('admin_ui.users.columns.verification'), 'email_verified_label'),
+            Column::make(__('admin_ui.users.columns.registered'), 'created_at_formatted', 'created_at')->sortable(),
+            Column::action(__('admin_ui.users.columns.actions')),
         ];
     }
 

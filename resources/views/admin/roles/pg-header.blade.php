@@ -5,7 +5,7 @@
         icon="shield-check"
         size="sm"
     >
-        Nuevo Rol
+        {{ __('admin_ui.roles.new') }}
     </flux:button>
 
     <flux:button
@@ -14,7 +14,7 @@
         icon="arrow-up-tray"
         size="sm"
     >
-        Importar JSON
+        {{ __('admin_ui.roles.import_json') }}
     </flux:button>
 
     <flux:button
@@ -23,6 +23,6 @@
         icon="arrow-down-tray"
         size="sm"
     >
-        Exportar JSON
+        {{ __('admin_ui.roles.export_json') }}
     </flux:button>
 </div>

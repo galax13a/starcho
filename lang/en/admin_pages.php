@@ -1,0 +1,22 @@
+<?php
+
+return [
+    'contacts_index'        => 'Contacts',
+    'tasks_index'           => 'Tasks',
+    'tasks_create'          => 'New Task',
+    'tasks_edit'            => 'Edit Task',
+    'roles_index'           => 'Roles',
+    'roles_create'          => 'Create Role',
+    'roles_import'          => 'Import Roles',
+    'roles_edit_named'      => 'Edit Role: :name',
+    'permissions_index'     => 'Permissions',
+    'permissions_create'    => 'Create Permission',
+    'permissions_import'    => 'Import Permissions',
+    'permissions_edit'      => 'Edit Permission',
+    'users_index'           => 'Users',
+    'users_create'          => 'Create User',
+    'users_edit_roles'      => 'Roles of :name',
+    'modules_index'         => 'Modules',
+    'menu_index'            => 'Sidebar Menu',
+    'cache_index'           => 'Cache Management',
+];

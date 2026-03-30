@@ -5,6 +5,6 @@
         icon="user-plus"
         size="sm"
     >
-        Nuevo Usuario
+        {{ __('admin_ui.users.new') }}
     </flux:button>
 </div>

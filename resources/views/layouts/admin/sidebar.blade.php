@@ -109,19 +109,19 @@
                     </div>
                 </div>
                 <a href="{{ route('profile.edit') }}" wire:navigate class="sa-um-item" @click="userMenuOpen = false">
-                    <i class="fas fa-user-circle"></i> Mi perfil
+                    <i class="fas fa-user-circle"></i> {{ __('app_layout.my_profile') }}
                 </a>
                 <a href="{{ route('appearance.edit') }}" wire:navigate class="sa-um-item" @click="userMenuOpen = false">
-                    <i class="fas fa-palette"></i> Apariencia
+                    <i class="fas fa-palette"></i> {{ __('app_layout.appearance') }}
                 </a>
                 <a href="{{ route('app.dashboard') }}" wire:navigate class="sa-um-item" @click="userMenuOpen = false">
-                    <i class="fas fa-home"></i> Ir a la app
+                    <i class="fas fa-home"></i> {{ __('app_layout.go_to_app') }}
                 </a>
                 <div class="sa-um-divider"></div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="sa-um-item sa-um-danger">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                        <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout') }}
                     </button>
                 </form>
             </div>
@@ -155,25 +155,25 @@
         {{-- Topbar --}}
         <div class="sa-topbar">
             {{-- Hamburger (mobile) --}}
-            <button class="sa-tb-btn sa-mob-btn" @click="mobOpen = !mobOpen" title="Abrir menú">
+            <button class="sa-tb-btn sa-mob-btn" @click="mobOpen = !mobOpen" title="{{ __('app_layout.open_menu') }}">
                 <i class="fas fa-bars"></i>
             </button>
 
             {{-- Search --}}
             <div class="sa-search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar en el panel…">
+                <input type="text" placeholder="{{ __('app_layout.search_in_panel') }}">
             </div>
 
             <div class="sa-topbar-end">
                 {{-- Back to app --}}
-                <a href="{{ route('app.dashboard') }}" wire:navigate class="sa-tb-btn" title="Ir a la app">
+                <a href="{{ route('app.dashboard') }}" wire:navigate class="sa-tb-btn" title="{{ __('app_layout.go_to_app') }}">
                     <i class="fas fa-home"></i>
                 </a>
                 {{-- Logout --}}
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="sa-tb-btn" title="Cerrar sesión">
+                    <button type="submit" class="sa-tb-btn" title="{{ __('app_layout.logout') }}">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </form>

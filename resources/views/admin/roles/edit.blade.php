@@ -1,4 +1,4 @@
-<x-layouts::admin :title="'Editar Rol: ' . $role->name">
+<x-layouts::admin :title="__('admin_pages.roles_edit_named', ['name' => $role->name])">
 
     <div class="flex items-center gap-3 mb-6">
         <flux:button href="{{ route('admin.roles.index') }}" variant="ghost" icon="arrow-left" size="sm" wire:navigate>

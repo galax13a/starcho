@@ -50,12 +50,12 @@ final class RolesTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')->sortable(),
-            Column::make('Nombre', 'name')->sortable()->searchable(),
-            Column::make('Guard', 'guard_name')->sortable()->hidden(),
-            Column::make('Permisos', 'permissions_count')->sortable(),
-            Column::make('Creado', 'created_at_formatted', 'created_at')->sortable(),
-            Column::action('Acciones'),
+            Column::make(__('admin_ui.roles.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.roles.columns.name'), 'name')->sortable()->searchable(),
+            Column::make(__('admin_ui.roles.columns.guard'), 'guard_name')->sortable()->hidden(),
+            Column::make(__('admin_ui.roles.columns.permissions'), 'permissions_count')->sortable(),
+            Column::make(__('admin_ui.roles.columns.created'), 'created_at_formatted', 'created_at')->sortable(),
+            Column::action(__('admin_ui.roles.columns.actions')),
         ];
     }
 

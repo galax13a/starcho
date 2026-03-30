@@ -9,7 +9,7 @@
                 count(data_get($setUp, 'footer.perPageValues')) > 1 &&
                 blank(data_get($setUp, 'footer.pagination')))
             <div class="flex items-center gap-2 px-4 py-3 shrink-0">
-                <span class="text-xs text-zinc-400 dark:text-zinc-500 whitespace-nowrap">Por página</span>
+                <span class="text-xs text-zinc-400 dark:text-zinc-500 whitespace-nowrap">{{ trans('livewire-powergrid::datatable.labels.results_per_page') }}</span>
                 <div class="relative">
                     <select
                         wire:model.live="setUp.footer.perPage"
