@@ -1,28 +1,18 @@
-import '../../vendor/power-components/livewire-powergrid/dist/powergrid.js';
-import Notiflix from 'notiflix';
+/**
+ * app.js — Entry point del área /app
+ * ====================================
+ * Cargado exclusivamente en layouts/app/sidebar.blade.php.
+ *
+ * Responsabilidades:
+ *   1. Importar la librería compartida starcho.js (Starcho.confirm, Starcho.notify,
+ *      starchoApp Alpine component, window.starchoDelete, etc.)
+ *   2. Inicializar PowerGrid para las tablas del área /app.
+ *
+ * NO incluye código específico de /admin.
+ */
 
-window.starchoDelete = function (recordId, name, livewireEvent, componentName) {
-    Notiflix.Confirm.show(
-        'Confirmar eliminación',
-        '¿Eliminar "' + name + '"? Esta acción no se puede deshacer.',
-        'Sí, eliminar',
-        'Cancelar',
-        function () {
-            Livewire.dispatchTo(componentName, livewireEvent, { id: recordId });
-        },
-        function () {},
-        {
-            backOverlayColor: 'rgba(0,0,10,0.5)',
-            cssAnimationStyle: 'zoom',
-            textColor: '#fff',
-            backgroundColor: '#520281',
-            cssAnimation: true,
-            messageColor: '#56c080',
-            okButtonBackground: '#f7086b',
-            onReady: function () {
-                var btn = document.querySelector('#NXConfirmButtonOk');
-                if (btn) { btn.tabIndex = 0; btn.focus(); }
-            },
-        }
-    );
-};
+// ── Librería compartida ────────────────────────────────────────────────────
+import './starcho.js';
+
+// ── PowerGrid — tablas reactivas (ContactsTable, UserTasksTable) ───────────
+import '../../vendor/power-components/livewire-powergrid/dist/powergrid.js';

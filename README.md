@@ -1,231 +1,525 @@
-# Starcho CRM — Laravel 13 Rapid Starter Kit
+# Starcho — Laravel Starter Kit
 
-> **The ultimate starter kit for Laravel 13 + Livewire 4 + PowerGrid 6.**
-> Full admin panel, Tasks module, multi-language, Excel export, roles & permissions — ready to customize and ship.
-
----
-
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Laravel 13 |
-| Reactive UI | Livewire 4 + Flux UI v2 |
-| Data tables | PowerGrid 6 (custom `StarchoTheme`) |
-| Roles & Permissions | Spatie Laravel Permission v7 |
-| Export | Maatwebsite Excel v3 |
-| Auth | Laravel Fortify + Livewire starter kit |
-| Page routing | Laravel Folio v1 |
-| Frontend | Tailwind CSS + Alpine.js |
-| Languages | ES · EN · PT-BR |
+Starter kit modular construido sobre **Laravel 13 + Livewire 4 + Flux UI v2**.
+Incluye panel de administración (`/admin`), área de usuario (`/app`), sistema de módulos gestionable desde el admin y arquitectura de assets separada por área.
 
 ---
 
-## Features
+## Stack tecnológico
 
-### Landing page (`/`)
-- Built with **Laravel Folio** — file-based routing from `resources/views/pages/`
-- Fully responsive dark/light mode with Alpine.js
-- Language switcher (ES / EN / PT-BR) — persisted server-side via session
-- Auto-detects if user is logged in: replaces Login/Register buttons with **"Go to app"**
-- Sections: Hero · Marquee · Features · CRUD demo · Included · Demo · Pricing · Testimonials · CTA · Footer
-
-### App (`/app`)
-- Authenticated area for regular users
-- **Dashboard** — `GET /app/`
-- **My Tasks** — `GET /app/tasks` — personal task management with 6 stat cards, create/edit/delete via popup modal
-- Feature-flag controlled: admin can hide Tasks from app sidebar
-
-### Admin panel (`/admin`) — requires `admin` role
-| Route | Module |
-|---|---|
-| `/admin/roles` | Roles CRUD + JSON import/export |
-| `/admin/permissions` | Permissions CRUD + JSON import/export |
-| `/admin/users` | Users management with role assignment |
-| `/admin/tasks` | Task admin dashboard with ApexCharts + Excel export |
-| `/admin/cache` | Cache management (clear all, views, routes, config, permissions, optimize) |
-
-### Tasks module
-- Admin view: 7 stat cards, 3 ApexCharts (donut by status, bar last 7 days, area last 6 months), full table with filters
-- User view: 6 personal stat cards, table filtered to own tasks only
-- Popup modals for create/edit (shared between admin and user pages)
-- Soft deletes, status & priority enums, due dates, assignment to users
-- Excel export via Maatwebsite Excel
-- Feature flag (`AppSetting::get('tasks_enabled')`) to toggle Tasks visibility in app sidebar
-
-### Multi-language
-- Supported: `es` (Spanish) · `en` (English) · `pt_BR` (Portuguese)
-- Session-based via `SetLocale` middleware
-- User locale persisted to `users.locale` column
-- Switch via `GET /language/{locale}`
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Laravel 13, PHP 8.3+ |
+| Frontend reactividad | Livewire 4 + Alpine.js 3 |
+| UI components | Flux UI v2 (área `/admin`) |
+| Tablas reactivas | PowerGrid v6 |
+| Estilos base | Tailwind CSS v4 (Vite plugin) |
+| Build tool | Vite 6 |
+| Autenticación | Laravel Breeze / Livewire starter kit |
+| Roles y permisos | Spatie Laravel Permission v7 |
+| Notificaciones JS | Notiflix |
+| Tipografía `/app` | DM Sans + Space Mono (Google Fonts CDN) |
+| Iconos `/app` | Font Awesome 6.5 (CDN) |
+| Iconos `/admin` | Heroicons (Flux integrado) |
 
 ---
 
-## Requirements
-
-- PHP 8.3+
-- Composer 2
-- Node.js 20+
-- MySQL 8+ or SQLite
-
----
-
-## Installation
+## Instalación
 
 ```bash
-# 1. Clone
-git clone https://github.com/galax13a/starcho.git
+git clone <repo>
 cd starcho
-
-# 2. Install PHP dependencies
 composer install
-
-# 3. Install Node dependencies & build assets
-npm install && npm run build
-
-# 4. Environment
+npm install
 cp .env.example .env
 php artisan key:generate
 
-# 5. Configure database in .env, then migrate + seed
-php artisan migrate
-php artisan db:seed --class=AdminSeeder
-
-# 6. Serve
-php artisan serve
+# Configurar base de datos en .env, luego:
+php artisan migrate --seed
+npm run dev
 ```
 
-The seeder creates:
-- **Admin user** — `admin@starcho.test` / `password` — role `admin`
-- All permissions and roles pre-configured
+El seeder crea:
+- Usuario administrador: `admin@starcho.com` / `password`
+- Rol `admin` asignado al usuario
+- Permisos básicos de roles/permisos/usuarios
+- Módulo `tasks` (instalado y activo)
+- Módulo `contacts` (disponible, no instalado)
+- Ítems de menú para `/app`: Dashboard, Mis Tareas, Contactos
 
 ---
 
-## Route Structure
+## Estructura de directorios relevante
 
 ```
-/                       Landing page (Folio — resources/views/pages/index.blade.php)
-/language/{locale}      Switch locale (es | en | pt_BR)
-/login                  Fortify authentication
-/register               Fortify registration
-
-/app                    Dashboard (auth + verified)
-/app/tasks              My Tasks (auth + verified)
-
-/admin                  → redirects to /admin/roles
-/admin/roles            Roles management
-/admin/permissions      Permissions management
-/admin/users            Users management
-/admin/tasks            Tasks admin dashboard
-/admin/tasks/export     Excel export
-/admin/cache            Cache management
-```
-
----
-
-## Project Structure
-
-```
-app/
-├── Exports/
-│   └── TasksExport.php          # Maatwebsite Excel export
-├── Http/
-│   ├── Controllers/
+starcho/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/
+│   │   │   │   ├── CacheController.php     — Limpieza de caché
+│   │   │   │   ├── MenuController.php      — Constructor de menú
+│   │   │   │   ├── ModuleController.php    — CRUD de módulos
+│   │   │   │   ├── PermissionController.php
+│   │   │   │   ├── RoleController.php
+│   │   │   │   ├── TaskController.php
+│   │   │   │   └── UserController.php
+│   │   │   └── LanguageController.php      — Cambio de idioma (es/en/pt-BR)
+│   │   └── Middleware/
+│   │       └── SetLocale.php               — Aplica locale del usuario
+│   ├── Livewire/
 │   │   ├── Admin/
-│   │   │   ├── CacheController.php
-│   │   │   ├── PermissionController.php
-│   │   │   ├── RoleController.php
-│   │   │   ├── TaskController.php
-│   │   │   └── UserController.php
-│   │   └── LanguageController.php
-│   └── Middleware/
-│       └── SetLocale.php
-├── Livewire/
-│   ├── Admin/
-│   │   ├── PermissionsTable.php
-│   │   ├── RolesTable.php
-│   │   ├── TasksTable.php       # PowerGrid — admin tasks
-│   │   └── UsersTable.php
-│   └── Tasks/
-│       └── UserTasksTable.php   # PowerGrid — user tasks
-├── Models/
-│   ├── AppSetting.php           # Feature flags with cache
-│   ├── Task.php                 # Tasks model (SoftDeletes)
-│   └── User.php
-└── PowerGrid/
-    └── StarchoTheme.php         # Custom PowerGrid theme
-
-resources/views/
-├── pages/
-│   └── index.blade.php          # Landing page (Folio)
-├── admin/
-│   ├── roles/                   # Roles views + PowerGrid header
-│   ├── permissions/             # Permissions views + PowerGrid header
-│   ├── users/                   # Users views + PowerGrid header
-│   ├── tasks/                   # Tasks admin dashboard
-│   └── cache/
-├── layouts/
-│   ├── admin.blade.php          # Admin layout wrapper
-│   ├── admin/sidebar.blade.php  # Admin sidebar
-│   └── app/sidebar.blade.php    # App sidebar
-├── livewire/admin/
-│   └── task-modal.blade.php     # Volt modal — create/edit tasks
-└── tasks/
-    └── index.blade.php          # User tasks page
-
-routes/
-├── web.php      # Home + language switch + settings
-├── app.php      # /app routes (auth required)
-└── admin.php    # /admin routes (admin role required)
+│   │   │   ├── MenuBuilder.php             — Árbol CRUD de ítems de menú
+│   │   │   ├── ModulesManager.php          — Instalar/desinstalar módulos
+│   │   │   ├── PermissionsTable.php        — PowerGrid de permisos
+│   │   │   ├── RolesTable.php              — PowerGrid de roles
+│   │   │   └── UsersTable.php              — PowerGrid de usuarios
+│   │   └── App/
+│   │       └── ContactsTable.php           — PowerGrid de contactos
+│   ├── Models/
+│   │   ├── Contact.php                     — SoftDeletes, statuses
+│   │   ├── StarchoMenuItem.php             — Árbol de menú con caché
+│   │   ├── StarchoModule.php               — Módulos instalables
+│   │   └── User.php                        — HasRoles (Spatie)
+│   └── PowerGrid/                          — Clases PowerGrid legacy
+│
+├── database/
+│   ├── migrations/
+│   │   ├── ..._create_starcho_modules_table.php
+│   │   ├── ..._create_starcho_menu_items_table.php
+│   │   └── ..._create_contacts_table.php
+│   └── seeders/
+│       ├── AdminSeeder.php                 — Usuario admin + roles
+│       └── StarchoSeeder.php               — Módulos + menú inicial
+│
+├── resources/
+│   ├── css/
+│   │   ├── app.css                         — Tailwind + Flux (base compartida)
+│   │   ├── starcho-app.css                 — Estilos exclusivos de /app
+│   │   └── starcho-admin.css              — Estilos exclusivos de /admin
+│   ├── js/
+│   │   ├── starcho.js                      — Librería compartida (Starcho.*)
+│   │   ├── app.js                          — Entry point JS de /app
+│   │   └── admin.js                        — Entry point JS de /admin
+│   └── views/
+│       ├── layouts/
+│       │   ├── admin/sidebar.blade.php     — Layout Flux del /admin
+│       │   └── app/sidebar.blade.php       — Layout custom del /app
+│       ├── admin/                          — Vistas del panel admin
+│       ├── livewire/                       — Componentes Livewire
+│       └── partials/
+│           └── head.blade.php              — <head> compartido (carga app.css)
+│
+├── routes/
+│   ├── web.php                             — Rutas públicas (language switch)
+│   ├── app.php                             — Rutas /app (auth + verified)
+│   ├── admin.php                           — Rutas /admin (auth + role:admin)
+│   └── settings.php                        — Rutas de configuración de perfil
+│
+└── lang/
+    ├── es/                                 — Traducciones español
+    ├── en/                                 — Traducciones inglés
+    └── pt-BR/                              — Traducciones portugués brasileño
 ```
 
 ---
 
-## PowerGrid Custom Theme
+## Arquitectura de assets
 
-The `StarchoTheme` extends PowerGrid's Tailwind theme with:
-- Rounded inputs and pagination buttons
-- Violet active page highlight
-- Zinc border styling
-- Inline SVG search icon with magenta clear button
-- Consistent `h-8 px-3` toolbar buttons
+### Principio: un bundle por área
+
+Cada área de la aplicación carga solo sus assets. No existe un bundle monolítico.
+
+```
+partials/head.blade.php
+  └── app.css (Tailwind + Flux — base compartida, siempre presente)
+
+layouts/app/sidebar.blade.php
+  ├── starcho-app.css (layout /app, sidebar, topbar, componentes)
+  └── app.js          (starcho.js + PowerGrid)
+
+layouts/admin/sidebar.blade.php
+  ├── starcho-admin.css (overrides Flux, .sa-btn, .sa-card, .sa-stat-card)
+  └── admin.js          (starcho.js + PowerGrid + adminLayout())
+```
+
+### vite.config.js — entradas configuradas
+
+```js
+input: [
+    'resources/css/app.css',           // base Tailwind+Flux
+    'resources/css/starcho-app.css',   // /app
+    'resources/css/starcho-admin.css', // /admin
+    'resources/js/app.js',             // /app JS
+    'resources/js/admin.js',           // /admin JS
+]
+```
+
+### resources/js/starcho.js — librería compartida
+
+Código JS reutilizado entre `/app` y `/admin`. Exporta `window.Starcho` y define los componentes Alpine globales.
+
+| Exportación | Tipo | Descripción |
+|-------------|------|-------------|
+| `Starcho.confirm(opts)` | función | Diálogo de confirmación con Notiflix |
+| `Starcho.notify(type, msg)` | función | Despacha evento `notify` para toasts |
+| `Starcho.alert(type, msg)` | alias | Alias de `notify` |
+| `Starcho.dark.toggle()` | método | Alterna tema oscuro/claro |
+| `Starcho.dark.set('dark')` | método | Fuerza un tema específico |
+| `window.starchoDelete(id, name, event, component)` | función | Confirma eliminación y despacha evento Livewire |
+| `window.starchoApp(openMenuIds)` | Alpine component | Estado global del layout `/app` |
+| `window.adminLayout()` | Alpine component | Reservado para expansiones del `/admin` |
+
+**Uso desde Blade/inline JS:**
+
+```js
+// Confirmación genérica
+Starcho.confirm({
+    title: 'Borrar registro',
+    message: '¿Continuar?',
+    onConfirm: () => { /* ... */ }
+});
+
+// Toast
+Starcho.notify('success', 'Operación completada');
+
+// Eliminar registro desde PowerGrid
+starchoDelete(row.id, row.name, 'deleteRole', 'admin.roles-table');
+```
+
+### CSS custom properties
+
+**`starcho-app.css`** — prefijo `--` (heredado del template original):
+
+```css
+--primary: #fe2c55    /* rojo Starcho */
+--purple:  #7c3aed
+--cyan:    #25f4ee
+--bg, --bg2, --card   /* fondos */
+--text, --text2, --text3, --text4
+--border, --border2
+--sidebar-w: 264px
+--topbar-h:  64px
+```
+
+**`starcho-admin.css`** — prefijo `--sa-`:
+
+```css
+--sa-primary: #fe2c55
+--sa-radius:  10px
+--sa-shadow-sm, --sa-shadow-md
+```
 
 ---
 
-## AppSetting Feature Flags
+## Sistema de módulos
+
+Los módulos permiten activar/desactivar funcionalidades completas desde el panel `/admin/modules`.
+
+### Modelo `StarchoModule`
 
 ```php
-// Read (cache-backed, 1 hour TTL)
-AppSetting::get('tasks_enabled', '1');
+// Instalar: activa el módulo y sus ítems de menú, limpia caché
+$module->install();
 
-// Write (invalidates cache)
-AppSetting::set('tasks_enabled', '0');
+// Desinstalar: desactiva el módulo y oculta sus ítems de menú
+$module->uninstall();
+
+// Solo activar/desactivar (sin tocar el schema)
+$module->activate();
+$module->deactivate();
+
+// Verificar si un módulo está activo (cacheado 1h)
+StarchoModule::isActive('contacts');
 ```
 
-Available flags:
-| Key | Default | Description |
-|---|---|---|
-| `tasks_enabled` | `1` | Show/hide Tasks in app sidebar |
+### Tabla `starcho_modules`
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `key` | string unique | Identificador (`tasks`, `contacts`, ...) |
+| `name` | string | Nombre legible |
+| `description` | text | Descripción |
+| `icon` | string | Clase heroicon/fa |
+| `installed` | boolean | ¿El módulo fue instalado? |
+| `active` | boolean | ¿Aparece en el menú? |
+| `config` | json | Configuración extendida del módulo |
+
+### Ciclo de vida de un módulo
+
+```
+Disponible → [install()] → Instalado+Activo → [deactivate()] → Instalado+Inactivo
+                                    ↓                                    ↓
+                             [uninstall()]                        [activate()]
+                                    ↓
+                            Disponible de nuevo
+```
 
 ---
 
-## Commands after pulling
+## Sistema de menú lateral (`/app`)
+
+El menú de `/app` es **100% dinámico desde la base de datos**, cacheado 1 hora en Redis/file.
+
+### Tabla `starcho_menu_items`
+
+| Campo | Descripción |
+|-------|-------------|
+| `module_key` | Módulo propietario (nullable para ítems del core) |
+| `parent_id` | Auto-referencia para árbol de 3 niveles |
+| `section` | Etiqueta de sección (ej. "App", "Sistema") |
+| `label` | Texto del ítem |
+| `icon` | Nombre heroicon (mapeado a FA en el blade) |
+| `route` | Nombre de ruta Laravel (`app.tasks.index`) |
+| `url` | URL directa (para rutas externas) |
+| `target` | `_self` o `_blank` |
+| `sort_order` | Orden dentro del mismo padre |
+| `active` | Visible o no en el menú |
+
+### Caché
+
+```php
+// Obtener menú (usa cache automáticamente)
+StarchoMenuItem::getCachedMenu();
+
+// Invalidar (necesario al cambiar ítems de menú)
+StarchoMenuItem::clearMenuCache();
+// o desde el panel: POST /admin/cache/clear-menu
+```
+
+La caché del menú se invalida automáticamente al instalar/desinstalar/activar/desactivar un módulo.
+
+### Mapa de iconos heroicon → Font Awesome
+
+El layout `/app` usa Font Awesome pero la DB guarda nombres heroicon.
+La traducción ocurre en el `@php` inicial de `layouts/app/sidebar.blade.php` mediante el array `$faMap`.
+
+Para añadir iconos:
+
+```php
+// En layouts/app/sidebar.blade.php, array $faMap:
+'mi-icono-heroicon' => 'fas fa-mi-icono-fa',
+```
+
+---
+
+## Panel de administración (`/admin`)
+
+Acceso: usuarios con rol `admin`. Ruta base: `/admin`.
+
+### Secciones
+
+| Sección | Ruta | Descripción |
+|---------|------|-------------|
+| Roles | `/admin/roles` | CRUD + import/export JSON |
+| Permisos | `/admin/permissions` | CRUD + import/export JSON |
+| Usuarios | `/admin/users` | CRUD + asignación de roles |
+| Tareas | `/admin/tasks` | Listado global con PowerGrid |
+| **Módulos** | `/admin/modules` | Instalar/activar/desactivar módulos |
+| **Menú lateral** | `/admin/menu` | Árbol CRUD del menú de `/app` |
+| **Caché** | `/admin/cache` | Limpiar cachés de la aplicación |
+
+### Clases CSS del admin (`starcho-admin.css`)
+
+| Clase | Uso |
+|-------|-----|
+| `.sa-btn`, `.sa-btn-primary`, `.sa-btn-danger`, ... | Botones estandarizados |
+| `.sa-btn-sm`, `.sa-btn-icon` | Modificadores de tamaño |
+| `.sa-card`, `.sa-card-header`, `.sa-card-body` | Tarjetas de contenido |
+| `.sa-field`, `.sa-label`, `.sa-input`, `.sa-select` | Formularios |
+| `.sa-badge-success`, `.sa-badge-danger`, ... | Estados y etiquetas |
+| `.sa-dot-success`, `.sa-dot-danger` | Indicadores de punto |
+| `.sa-page-header`, `.sa-page-header-actions` | Cabeceras de página |
+| `.sa-stat-card`, `.sa-stats-grid` | Cards de métricas |
+| `.sa-pg-action`, `.sa-pg-action-danger` | Botones de acción en PowerGrid |
+| `.sa-toast-stack`, `.sa-toast-success`, ... | Sistema de toasts del admin |
+
+---
+
+## Área de usuario (`/app`)
+
+Acceso: usuarios autenticados y verificados. Ruta base: `/app`.
+
+### Layout (`layouts/app/sidebar.blade.php`)
+
+- **Sidebar collapsible** (264px expandido / 68px colapsado) con persistencia en `localStorage`
+- **Menú de 3 niveles** con animación smooth y conectores visuales
+- **Topbar** sin botón de colapso: hamburger móvil, búsqueda, dark mode, notificaciones, logout
+- **Popup de usuario** en el footer del sidebar (se abre hacia arriba)
+- **Modal de logout** con confirmación
+- **Toasts** mediante evento `@notify.window`
+- **Dark mode** persistido en `localStorage['starcho_theme']`
+
+### Componente Alpine `starchoApp(openMenuIds)`
+
+Se monta en `<html x-data="starchoApp({!! json_encode($openMenuIds) !!})">`.
+El array `openMenuIds` es calculado server-side para abrir automáticamente el menú padre de la ruta activa.
+
+| Propiedad | Descripción |
+|-----------|-------------|
+| `isDark` | Tema oscuro activo |
+| `sidebarCollapsed` | Sidebar en modo icónico |
+| `mobOpen` | Sidebar visible en móvil |
+| `showLogout` | Modal de confirmación de logout visible |
+| `search` | Valor del campo de búsqueda |
+| `openMenus` | IDs de submenús abiertos |
+
+### Módulos del área /app
+
+| Módulo | Ruta | Estado por defecto |
+|--------|------|--------------------|
+| Core (dashboard) | `/app` | Siempre activo |
+| Tasks | `/app/tasks` | Instalado + activo |
+| Contacts | `/app/contacts` | Disponible (no instalado) |
+
+---
+
+## Internacionalización
+
+Idiomas disponibles: **Español** (default), **English**, **Português (BR)**.
+
+Cambiar idioma:
+```
+GET /language/{locale}   ← locale: es | en | pt-BR
+```
+
+El locale se persiste en `users.locale` y se aplica vía `SetLocale` middleware en `bootstrap/app.php`.
+
+---
+
+## PowerGrid — tablas reactivas
+
+### Componentes existentes
+
+| Componente | Área | Modelo |
+|-----------|------|--------|
+| `Admin\RolesTable` | /admin | Role (Spatie) |
+| `Admin\PermissionsTable` | /admin | Permission (Spatie) |
+| `Admin\UsersTable` | /admin | User |
+| `App\ContactsTable` | /app | Contact |
+
+### Confirmación de eliminación en PowerGrid
+
+```php
+// En columns() del componente PowerGrid:
+->button('delete')
+    ->attributes([
+        'onclick' => "starchoDelete({id}, '{name}', 'deleteRole', 'admin.roles-table')"
+    ])
+
+// En el componente Livewire:
+#[On('deleteRole')]
+public function deleteRole(int $id): void
+{
+    Role::findOrFail($id)->delete();
+    $this->dispatch('notify', type: 'success', message: 'Rol eliminado');
+}
+```
+
+---
+
+## Toasts / Notificaciones
+
+**Desde JS:**
+```js
+Starcho.notify('success', 'Operación completada');
+Starcho.notify('warning', 'Atención requerida');
+Starcho.notify('error', 'Error al procesar');
+```
+
+**Desde Livewire:**
+```php
+$this->dispatch('notify', type: 'success', message: 'Guardado correctamente');
+```
+
+Tipos válidos: `success`, `warning`, `error`. Duración: 4 segundos.
+
+---
+
+## Gestión de caché
+
+| Caché | Clave | TTL | Panel admin |
+|-------|-------|-----|-------------|
+| Menú lateral | `starcho_menu_items` | 1h | `/admin/cache` → Menú lateral |
+| Estado de módulo | `starcho_module_{key}` | 1h | Se invalida automáticamente |
+| Permisos Spatie | interna Spatie | sesión | `/admin/cache` → Permisos |
+| App/rutas/config | `php artisan optimize` | — | `/admin/cache` → Optimizar |
+
+---
+
+## Añadir un nuevo módulo
+
+1. **Registrar en `starcho_modules`** (via seeder o desde el panel):
+   ```php
+   StarchoModule::create([
+       'key'         => 'mi-modulo',
+       'name'        => 'Mi Módulo',
+       'description' => 'Descripción breve',
+       'icon'        => 'puzzle-piece',
+       'installed'   => false,
+       'active'      => false,
+   ]);
+   ```
+
+2. **Crear ítems de menú** en `starcho_menu_items`:
+   ```php
+   StarchoMenuItem::create([
+       'module_key' => 'mi-modulo',
+       'label'      => 'Mi Módulo',
+       'icon'       => 'star',
+       'route'      => 'app.mi-modulo.index',
+       'sort_order' => 10,
+       'active'     => false,
+   ]);
+   ```
+
+3. **Crear las rutas** en `routes/app.php`:
+   ```php
+   Route::view('mi-modulo', 'mi-modulo.index')->name('mi-modulo.index');
+   ```
+
+4. **Instalar desde el panel**: `/admin/modules` → botón "Instalar".
+
+---
+
+## Convenciones de código
+
+### Blade / Livewire
+- Área `/admin`: layout `x-layouts::admin`
+- Área `/app`: layout `x-layouts::app`
+- Componentes Livewire en `app/Livewire/{Area}/`
+- Vistas Livewire en `resources/views/livewire/{area}/`
+
+### CSS
+- `/app`: clases sin prefijo (`.sidebar`, `.menu-link`, `.btn`) — namespace implícito por layout
+- `/admin`: prefijo `.sa-` para evitar colisiones con clases Flux/Tailwind
+- No usar `@apply` en CSS custom — solo reglas CSS nativas
+- No duplicar propiedades ya definidas en `app.css` (Tailwind base)
+
+### JS
+- Código reutilizable → `starcho.js`
+- Código específico de `/app` → `app.js`
+- Código específico de `/admin` → `admin.js`
+- Datos server-side a Alpine: `x-data="starchoApp({!! json_encode($data) !!})"`
+
+---
+
+## Comandos útiles
 
 ```bash
-composer install
-npm install && npm run build
-php artisan migrate
-php artisan route:clear
-php artisan view:clear
-php artisan config:clear
+# Desarrollo con hot reload
+npm run dev
+
+# Producción
+npm run build
+
+# Reset completo de BD
+php artisan migrate:fresh --seed
+
+# Limpiar todo el caché
+php artisan cache:clear && php artisan view:clear && php artisan config:clear
+
+# Rutas registradas
+php artisan route:list --path=admin
+php artisan route:list --path=app
 ```
-
----
-
-## License
-
-MIT — free for personal and commercial use.
-
----
-
-*Built with [live4crud-tailwind](https://packagist.org/packages/galax13a/live4crud-tailwind) · Laravel 13 · Livewire 4 · PowerGrid 6*

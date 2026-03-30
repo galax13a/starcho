@@ -72,6 +72,7 @@ new class extends Component {
         }
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-task'}}))");
+        // Refresca ambas tablas (admin tasks-table y app user-tasks-table) si están presentes
         $this->dispatch('pg:eventRefresh-tasks-table');
         $this->dispatch('pg:eventRefresh-user-tasks-table');
     }

@@ -98,6 +98,42 @@
             </form>
         </div>
 
+        {{-- Caché del menú lateral --}}
+        <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
+            <div class="flex items-start gap-3 mb-3">
+                <div class="p-2 rounded-lg bg-violet-100 dark:bg-violet-900">
+                    <flux:icon.bars-3 class="size-5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                    <flux:heading size="md">Caché del menú lateral</flux:heading>
+                    <flux:text class="text-zinc-500 text-sm">Invalida el menú de navegación de <code>/app</code> cacheado en memoria (1 h TTL).</flux:text>
+                </div>
+            </div>
+            <flux:text size="sm" class="font-mono text-zinc-400 mb-3">Cache::forget('starcho_menu_items')</flux:text>
+            <form method="POST" action="{{ route('admin.cache.clear-menu') }}">
+                @csrf
+                <flux:button type="submit" variant="ghost" size="sm" icon="arrow-path">Limpiar</flux:button>
+            </form>
+        </div>
+
+        {{-- Caché de permisos --}}
+        <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
+            <div class="flex items-start gap-3 mb-3">
+                <div class="p-2 rounded-lg bg-rose-100 dark:bg-rose-900">
+                    <flux:icon.shield-check class="size-5 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                    <flux:heading size="md">Caché de permisos (Spatie)</flux:heading>
+                    <flux:text class="text-zinc-500 text-sm">Invalida la caché interna de Spatie Laravel Permission.</flux:text>
+                </div>
+            </div>
+            <flux:text size="sm" class="font-mono text-zinc-400 mb-3">PermissionRegistrar::forgetCached()</flux:text>
+            <form method="POST" action="{{ route('admin.cache.clear-permissions') }}">
+                @csrf
+                <flux:button type="submit" variant="ghost" size="sm" icon="arrow-path">Limpiar</flux:button>
+            </form>
+        </div>
+
     </div>
 
     {{-- Optimizar --}}

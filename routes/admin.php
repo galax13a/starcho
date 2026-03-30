@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TaskController;
@@ -38,6 +40,16 @@ Route::prefix('admin')
         Route::get('tasks',         [TaskController::class, 'index'])->name('tasks.index');
         Route::get('tasks/export',  [TaskController::class, 'export'])->name('tasks.export');
 
+        // ── Modules ──────────────────────────────────────────────────────────────
+        Route::get('modules',                    [ModuleController::class, 'index'])->name('modules.index');
+        Route::post('modules/{module}/install',  [ModuleController::class, 'install'])->name('modules.install');
+        Route::post('modules/{module}/uninstall',[ModuleController::class, 'uninstall'])->name('modules.uninstall');
+        Route::post('modules/{module}/activate', [ModuleController::class, 'activate'])->name('modules.activate');
+        Route::post('modules/{module}/deactivate',[ModuleController::class, 'deactivate'])->name('modules.deactivate');
+
+        // ── Menu Builder ─────────────────────────────────────────────────────────
+        Route::get('menu', [MenuController::class, 'index'])->name('menu.index');
+
         // ── Cache ─────────────────────────────────────────────────────────────────
         Route::get('cache',                    [CacheController::class, 'index'])->name('cache.index');
         Route::post('cache/clear-all',         [CacheController::class, 'clearAll'])->name('cache.clear-all');
@@ -46,5 +58,6 @@ Route::prefix('admin')
         Route::post('cache/clear-config',      [CacheController::class, 'clearConfig'])->name('cache.clear-config');
         Route::post('cache/clear-views',       [CacheController::class, 'clearViews'])->name('cache.clear-views');
         Route::post('cache/clear-permissions', [CacheController::class, 'clearPermissions'])->name('cache.clear-permissions');
+        Route::post('cache/clear-menu',        [CacheController::class, 'clearMenu'])->name('cache.clear-menu');
         Route::post('cache/optimize',          [CacheController::class, 'optimize'])->name('cache.optimize');
     });
