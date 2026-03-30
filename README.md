@@ -83,6 +83,10 @@ La interfaz de `/app` ya no depende de textos hardcodeados en Blade para tareas,
 - Textos de búsqueda, notificaciones, perfil y cierre de sesión extraídos a archivos de idioma
 - Modal de logout traducible por locale
 
+### Estructura de módulos (/app y /admin)
+- Se documentó el estándar de implementación en `MODULES_AND_MENU.md`.
+- Incluye estructura de archivos, convención de eventos Livewire, patrón de modales Flux y checklist de publicación.
+
 ---
 
 ```

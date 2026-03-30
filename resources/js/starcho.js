@@ -13,6 +13,10 @@
 
 import Notiflix from 'notiflix';
 
+function tr(key, fallback) {
+    return window.StarchoLang?.[key] ?? fallback;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECCIÓN 1 · CONFIRMACIONES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,10 +34,10 @@ import Notiflix from 'notiflix';
  */
 function confirm(opts) {
     Notiflix.Confirm.show(
-        opts.title   ?? 'Confirmar acción',
-        opts.message ?? '¿Estás seguro? Esta acción no se puede deshacer.',
-        opts.okText     ?? 'Sí, continuar',
-        opts.cancelText ?? 'Cancelar',
+        opts.title   ?? tr('confirm_title', 'Confirm action'),
+        opts.message ?? tr('confirm_message', 'Are you sure? This action cannot be undone.'),
+        opts.okText     ?? tr('confirm_ok', 'Yes, continue'),
+        opts.cancelText ?? tr('confirm_cancel', 'Cancel'),
         opts.onConfirm  ?? function () {},
         opts.onCancel   ?? function () {},
         {
@@ -67,8 +71,16 @@ function confirm(opts) {
  * @param {string}                      message  Texto a mostrar.
  */
 function notify(type, message) {
+    const fallbackByType = {
+        success: tr('toast_success', 'Success'),
+        warning: tr('toast_warning', 'Warning'),
+        error  : tr('toast_error', 'Error'),
+    };
+
+    const finalMessage = message || fallbackByType[type] || tr('toast_default', 'Operation completed.');
+
     window.dispatchEvent(
-        new CustomEvent('notify', { detail: { type, message } })
+        new CustomEvent('notify', { detail: { type, message: finalMessage } })
     );
 }
 
@@ -199,10 +211,12 @@ const dark = {
  * @param {string} componentName   Nombre del componente destino   (p.ej. 'admin.roles-table').
  */
 window.starchoDelete = function (recordId, name, livewireEvent, componentName) {
+    const deleteMessageTemplate = tr('delete_message', 'Delete ":name"? This action cannot be undone.');
+
     confirm({
-        title  : 'Confirmar eliminación',
-        message: `¿Eliminar "${name}"? Esta acción no se puede deshacer.`,
-        okText : 'Sí, eliminar',
+        title  : tr('delete_title', 'Confirm deletion'),
+        message: deleteMessageTemplate.replace(':name', name),
+        okText : tr('delete_ok', 'Yes, delete'),
         onConfirm() {
             Livewire.dispatchTo(componentName, livewireEvent, { id: recordId });
         },
