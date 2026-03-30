@@ -8,7 +8,7 @@
             <div class="sa-page-header-right">
                 <flux:modal.trigger modal="modal-contact">
                     <button class="sa-btn sa-btn-primary">
-                        <i class="fas fa-plus"></i> Nuevo Contacto
+                        <i class="fas fa-plus"></i> {{ __('New Contact') }}
                     </button>
                 </flux:modal.trigger>
             </div>
