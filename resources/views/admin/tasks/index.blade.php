@@ -60,7 +60,12 @@
                 init() {
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#a1a1aa' : '#71717a';
-                    new ApexCharts(this.$refs.donut, {
+                    const el = this.$refs.donut;
+                    if (el._apexChart) {
+                        el._apexChart.destroy();
+                    }
+                    el.innerHTML = '';
+                    el._apexChart = new ApexCharts(el, {
                         series: @js($byStatus->values()),
                         labels: @js($byStatus->keys()),
                         chart: { type: 'donut', height: 240, background: 'transparent', toolbar: { show: false } },
@@ -70,7 +75,8 @@
                         plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: '{{ __('admin_ui.tasks.stats.total') }}', color: textColor } } } } },
                         stroke: { width: 0 },
                         theme: { mode: isDark ? 'dark' : 'light' }
-                    }).render();
+                    });
+                    el._apexChart.render();
                 }
              }" x-init="init">
             <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{{ __('admin_ui.tasks.chart.by_status') }}</h3>
@@ -84,7 +90,12 @@
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#a1a1aa' : '#71717a';
                     const gridColor = isDark ? '#3f3f46' : '#f4f4f5';
-                    new ApexCharts(this.$refs.bar, {
+                    const el = this.$refs.bar;
+                    if (el._apexChart) {
+                        el._apexChart.destroy();
+                    }
+                    el.innerHTML = '';
+                    el._apexChart = new ApexCharts(el, {
                         series: [{ name: '{{ __('admin_ui.tasks.heading') }}', data: @js($dailyCounts) }],
                         chart: { type: 'bar', height: 240, background: 'transparent', toolbar: { show: false } },
                         xaxis: { categories: @js($dailyLabels), labels: { style: { colors: textColor } } },
@@ -95,7 +106,8 @@
                         grid: { borderColor: gridColor },
                         fill: { type: 'gradient', gradient: { shade: 'dark', type: 'vertical', shadeIntensity: 0.3, gradientToColors: ['#a855f7'], opacityFrom: 1, opacityTo: 0.8 } },
                         theme: { mode: isDark ? 'dark' : 'light' }
-                    }).render();
+                    });
+                    el._apexChart.render();
                 }
              }" x-init="init">
             <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{{ __('admin_ui.tasks.chart.created_last_7_days') }}</h3>
@@ -109,7 +121,12 @@
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#a1a1aa' : '#71717a';
                     const gridColor = isDark ? '#3f3f46' : '#f4f4f5';
-                    new ApexCharts(this.$refs.area, {
+                    const el = this.$refs.area;
+                    if (el._apexChart) {
+                        el._apexChart.destroy();
+                    }
+                    el.innerHTML = '';
+                    el._apexChart = new ApexCharts(el, {
                         series: [{ name: '{{ __('admin_ui.tasks.heading') }}', data: @js($monthlyCounts) }],
                         chart: { type: 'area', height: 240, background: 'transparent', toolbar: { show: false }, sparkline: { enabled: false } },
                         xaxis: { categories: @js($monthlyLabels), labels: { style: { colors: textColor } } },
@@ -121,7 +138,8 @@
                         grid: { borderColor: gridColor },
                         markers: { size: 4, colors: ['#ff00c8'], strokeColors: '#fff', strokeWidth: 2 },
                         theme: { mode: isDark ? 'dark' : 'light' }
-                    }).render();
+                    });
+                    el._apexChart.render();
                 }
              }" x-init="init">
             <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{{ __('admin_ui.tasks.chart.created_last_6_months') }}</h3>
