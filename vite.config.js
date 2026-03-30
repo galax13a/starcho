@@ -22,6 +22,9 @@ export default defineConfig({
 
                 // JS de /admin: starcho.js + PowerGrid + adminLayout()
                 'resources/js/admin.js',
+
+                // JS dedicado del editor visual aislado (sin Alpine)
+                'resources/js/starcho-editor-page.js',
             ],
             refresh: true,
         }),

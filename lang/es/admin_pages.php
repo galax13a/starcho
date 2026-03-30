@@ -17,6 +17,8 @@ return [
     'users_create'          => 'Crear Usuario',
     'users_edit_roles'      => 'Roles de :name',
     'modules_index'         => 'Módulos',
+    'site_index'            => 'Sitio web',
+    'site_page_editor'      => 'Editor visual de página',
     'menu_index'            => 'Menú lateral',
     'cache_index'           => 'Gestión de Caché',
 ];

@@ -84,6 +84,11 @@
                     <i class="fas fa-puzzle-piece"></i>
                     <span class="sa-lbl">Módulos</span>
                 </a>
+                <a href="{{ route('admin.site.index') }}" wire:navigate
+                   class="sa-menu-link {{ request()->routeIs('admin.site.*') ? 'active' : '' }}">
+                    <i class="fas fa-globe"></i>
+                    <span class="sa-lbl">Sitio web</span>
+                </a>
                 <a href="{{ route('admin.cache.index') }}" wire:navigate
                    class="sa-menu-link {{ request()->routeIs('admin.cache.*') ? 'active' : '' }}">
                     <i class="fas fa-sync-alt"></i>

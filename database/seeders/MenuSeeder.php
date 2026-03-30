@@ -109,6 +109,16 @@ class MenuSeeder extends Seeder
             ],
             [
                 'panel'      => 'admin',
+                'module_key' => 'site',
+                'section'    => 'Sistema',
+                'name'       => ['es' => 'Sitio web', 'en' => 'Website', 'pt_BR' => 'Site'],
+                'icon'       => 'fas fa-globe',
+                'route'      => 'admin.site.index',
+                'sort_order' => 65,
+                'active'     => false,
+            ],
+            [
+                'panel'      => 'admin',
                 'module_key' => null,
                 'section'    => 'Sistema',
                 'name'       => ['es' => 'Menú lateral', 'en' => 'Side Menu'],

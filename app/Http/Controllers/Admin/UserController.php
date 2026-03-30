@@ -39,7 +39,16 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $user->syncRoles($request->roles ?? []);
+        $roleIds = $request->input('roles', []);
+
+        if (empty($roleIds)) {
+            $defaultRole = Role::where('name', 'user')->first();
+            if ($defaultRole) {
+                $roleIds = [$defaultRole->id];
+            }
+        }
+
+        $user->syncRoles($roleIds);
 
         return redirect()->route('admin.users.index')
             ->with('success', "Usuario '{$user->name}' creado correctamente.");

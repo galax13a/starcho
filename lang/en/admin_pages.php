@@ -17,6 +17,8 @@ return [
     'users_create'          => 'Create User',
     'users_edit_roles'      => 'Roles of :name',
     'modules_index'         => 'Modules',
+    'site_index'            => 'Website',
+    'site_page_editor'      => 'Visual page editor',
     'menu_index'            => 'Sidebar Menu',
     'cache_index'           => 'Cache Management',
 ];

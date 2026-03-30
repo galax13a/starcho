@@ -27,6 +27,7 @@ class ModulesManager extends Component
                 'installed' => $module->installed,
                 'active' => $module->active,
                 'config' => $module->config,
+                'settings_route' => data_get($module->config, 'settings_route') ?: ($module->key === 'site' ? 'admin.site.index' : null),
                 'created_at' => $module->created_at,
                 'updated_at' => $module->updated_at,
             ];

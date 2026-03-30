@@ -14,19 +14,21 @@ class AdminSeeder extends Seeder
     {
         // Crear permisos base
         $permissions = [
-            'ver-roles',
-            'crear-roles',
-            'editar-roles',
-            'eliminar-roles',
-            'ver-permisos',
-            'crear-permisos',
-            'editar-permisos',
-            'eliminar-permisos',
-            'ver-usuarios',
-            'crear-usuarios',
-            'editar-usuarios',
-            'eliminar-usuarios',
-            'gestionar-cache',
+            'view-admin',
+            'view-roles',
+            'create-roles',
+            'edit-roles',
+            'delete-roles',
+            'view-permissions',
+            'create-permissions',
+            'edit-permissions',
+            'delete-permissions',
+            'view-users',
+            'create-users',
+            'edit-users',
+            'delete-users',
+            'manage-cache',
+            'manage-site',
         ];
 
         foreach ($permissions as $perm) {
@@ -34,6 +36,10 @@ class AdminSeeder extends Seeder
         }
 
         // ── Roles del sistema ──────────────────────────────────────────────
+        // root: acceso total
+        $rootRole = Role::firstOrCreate(['name' => 'root', 'guard_name' => 'web']);
+        $rootRole->syncPermissions($permissions);
+
         // admin: acceso total
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $adminRole->syncPermissions($permissions);
@@ -44,7 +50,7 @@ class AdminSeeder extends Seeder
 
         // moderator: puede ver usuarios y gestionar contenido
         $modRole = Role::firstOrCreate(['name' => 'moderator', 'guard_name' => 'web']);
-        $modRole->syncPermissions(['ver-usuarios']);
+        $modRole->syncPermissions(['view-users']);
 
         // user: rol base sin permisos especiales
         Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
@@ -65,7 +71,7 @@ class AdminSeeder extends Seeder
         $admin->syncRoles('admin');
 
         $this->command->info('Admin creado: admin@starcho.com / password');
-        $this->command->info('Roles creados: admin, editor, moderator, user, guest');
+        $this->command->info('Roles creados: root, admin, editor, moderator, user, guest');
 
         $this->call(StarchoSeeder::class);
     }
