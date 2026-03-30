@@ -18,7 +18,7 @@ class Task extends Model
         'priority',
         'due_date',
         'assigned_to',
-        'created_by',
+        'user_id',
     ];
 
     protected $casts = [
@@ -62,6 +62,6 @@ class Task extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

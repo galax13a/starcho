@@ -62,8 +62,6 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="starchoApp({!! json_encode($openMenuIds) !!})">
 <head>
     @include('partials.head')
-    {{-- Breeze + Tailwind base css para app (seguridad extra) --}}
-    @vite(['resources/css/app.css'])
     {{-- Tipografía y iconos (CDN — no Vite) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

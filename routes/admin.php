@@ -40,6 +40,9 @@ Route::prefix('admin')
         Route::get('tasks',         [TaskController::class, 'index'])->name('tasks.index');
         Route::get('tasks/export',  [TaskController::class, 'export'])->name('tasks.export');
 
+        // ── Contacts (Index) ─────────────────────────────────────────────────────
+        Route::view('contacts', 'admin.contacts.index')->name('contacts.index');
+
         // ── Modules ──────────────────────────────────────────────────────────────
         Route::get('modules',                    [ModuleController::class, 'index'])->name('modules.index');
         Route::post('modules/{module}/install',  [ModuleController::class, 'install'])->name('modules.install');

@@ -12,8 +12,14 @@
 
         {{-- Info --}}
         <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ data_get($item, 'name.'.app()->getLocale()) ?? data_get($item, 'name.en') ?? ($item['name'] ?? $item['label']) }}</span>
+            <div class="flex items-center gap-2 flex-wrap">
+                @if($item['icon'])
+                <i class="{{ $item['icon'] }} text-zinc-400 text-xs w-4 text-center"></i>
+                @endif
+                <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ data_get($item, 'name.'.app()->getLocale()) ?? data_get($item, 'name.en') ?? ($item['name'] ?? $item['label'] ?? '—') }}</span>
+                @if(!empty($item['section']))
+                    <span class="text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">{{ $item['section'] }}</span>
+                @endif
                 @if($item['module_key'])
                     <span class="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">{{ $item['module_key'] }}</span>
                 @endif
@@ -27,7 +33,6 @@
                 @else <span class="italic">sin ruta</span>
                 @endif
                 &middot; orden: {{ $item['sort_order'] }}
-                @if($item['icon']) &middot; icono: {{ $item['icon'] }} @endif
             </p>
         </div>
 
@@ -68,8 +73,13 @@
                 </svg>
             </button>
 
+            @php
+                $itemLabel = data_get($item, 'name.'.app()->getLocale())
+                    ?? data_get($item, 'name.en')
+                    ?? ($item['label'] ?? '—');
+            @endphp
             <button wire:click="delete({{ $item['id'] }})"
-                    onclick="return confirm('¿Eliminar ítem «{{ addslashes($item['label']) }}»?')"
+                    onclick="return confirm('¿Eliminar ítem «{{ addslashes($itemLabel) }}»?')"
                     title="Eliminar"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

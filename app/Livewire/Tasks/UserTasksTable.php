@@ -41,7 +41,7 @@ final class UserTasksTable extends PowerGridComponent
         return Task::query()
             ->with('assignedUser')
             ->withoutTrashed()
-            ->where('created_by', auth()->id())
+            ->where('user_id', auth()->id())
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterPriority, fn($q) => $q->where('priority', $this->filterPriority));
     }
@@ -99,7 +99,7 @@ final class UserTasksTable extends PowerGridComponent
     public function deleteUserTask(int $id): void
     {
         // Only allow deleting own tasks
-        Task::where('id', $id)->where('created_by', auth()->id())->delete();
+        Task::where('id', $id)->where('user_id', auth()->id())->delete();
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

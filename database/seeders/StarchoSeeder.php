@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\StarchoMenuItem;
 use App\Models\StarchoModule;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Cache;
 
 class StarchoSeeder extends Seeder
 {
@@ -15,42 +13,56 @@ class StarchoSeeder extends Seeder
         $modules = [
             [
                 'key'         => 'tasks',
-                'name'        => 'Tareas',
-                'description' => 'Gestión de tareas personales y de equipo con estados, prioridades y fechas límite.',
+                'name'        => ['es' => 'Tareas', 'en' => 'Tasks'],
+                'description' => ['es' => 'Gestión de tareas personales y de equipo con estados, prioridades y fechas límite.', 'en' => 'Personal and team task management with statuses, priorities and due dates.'],
                 'icon'        => 'clipboard-document-list',
                 'installed'   => true,
                 'active'      => true,
                 'config'      => [
                     'menu_items' => [
                         [
-                            'name' => [
-                                'es' => 'Mis Tareas',
-                                'en' => 'My Tasks',
-                            ],
-                            'icon' => 'clipboard-document-list',
-                            'route' => 'app.tasks.index',
+                            'panel'      => 'app',
+                            'section'    => null,
+                            'name'       => ['es' => 'Mis Tareas', 'en' => 'My Tasks'],
+                            'icon'       => 'fas fa-clipboard-list',
+                            'route'      => 'app.tasks.index',
                             'sort_order' => 20,
+                        ],
+                        [
+                            'panel'      => 'admin',
+                            'section'    => 'Acceso',
+                            'name'       => ['es' => 'Tareas', 'en' => 'Tasks'],
+                            'icon'       => 'fas fa-clipboard-list',
+                            'route'      => 'admin.tasks.index',
+                            'sort_order' => 40,
                         ],
                     ],
                 ],
             ],
             [
                 'key'         => 'contacts',
-                'name'        => 'Contactos',
-                'description' => 'CRM básico para gestionar leads, prospectos y clientes.',
+                'name'        => ['es' => 'Contactos', 'en' => 'Contacts'],
+                'description' => ['es' => 'CRM básico para gestionar leads, prospectos y clientes.', 'en' => 'Basic CRM to manage leads, prospects and customers.'],
                 'icon'        => 'user-group',
                 'installed'   => false,
                 'active'      => false,
                 'config'      => [
                     'menu_items' => [
                         [
-                            'name' => [
-                                'es' => 'Contactos',
-                                'en' => 'Contacts',
-                            ],
-                            'icon' => 'user-group',
-                            'route' => 'app.contacts.index',
+                            'panel'      => 'app',
+                            'section'    => null,
+                            'name'       => ['es' => 'Contactos', 'en' => 'Contacts'],
+                            'icon'       => 'fas fa-address-book',
+                            'route'      => 'app.contacts.index',
                             'sort_order' => 30,
+                        ],
+                        [
+                            'panel'      => 'admin',
+                            'section'    => 'Acceso',
+                            'name'       => ['es' => 'Contactos', 'en' => 'Contacts'],
+                            'icon'       => 'fas fa-address-book',
+                            'route'      => 'admin.contacts.index',
+                            'sort_order' => 50,
                         ],
                     ],
                 ],
@@ -61,28 +73,8 @@ class StarchoSeeder extends Seeder
             StarchoModule::updateOrCreate(['key' => $data['key']], $data);
         }
 
-        // ── Seed core menu items (no module_key) ─────────────────────────────
-        StarchoMenuItem::updateOrCreate(
-            ['route' => 'app.dashboard', 'module_key' => null],
-            [
-                'name'      => ['en' => 'Dashboard', 'es' => 'Dashboard'],
-                'label'     => 'Dashboard',
-                'icon'       => 'home',
-                'sort_order' => 10,
-                'active'     => true,
-            ]
-        );
+        $this->call(MenuSeeder::class);
 
-        // ── Activate menu items for installed modules ────────────────────────
-        $installedModules = StarchoModule::where('installed', true)->get();
-        foreach ($installedModules as $module) {
-            $module->createMenuItems();
-        }
-
-        Cache::forget('starcho_menu_items');
-        Cache::forget('starcho_menu_items_ids');
-
-        $this->command->info('Starcho modules and menu items seeded.');
+        $this->command->info('Starcho modules seeded.');
     }
 }
-

@@ -11,7 +11,7 @@ class StarchoMenuItem extends Model
     use HasTranslations;
 
     protected $fillable = [
-        'module_key', 'parent_id', 'section', 'name',
+        'panel', 'module_key', 'parent_id', 'section', 'name',
         'icon', 'route', 'url', 'target', 'sort_order', 'active',
     ];
 
@@ -46,11 +46,14 @@ class StarchoMenuItem extends Model
 
     private const CACHE_MENU_IDS = 'starcho_menu_items_ids';
 
-    public static function getCachedMenu(): \Illuminate\Database\Eloquent\Collection
+    public static function getCachedMenu(string $panel = 'app'): \Illuminate\Database\Eloquent\Collection
     {
-        $rootIds = Cache::remember(self::CACHE_MENU_IDS, 3600, function () {
+        $cacheKey = self::CACHE_MENU_IDS . '_' . $panel;
+
+        $rootIds = Cache::remember($cacheKey, 3600, function () use ($panel) {
             return static::whereNull('parent_id')
                 ->where('active', true)
+                ->where('panel', $panel)
                 ->orderBy('sort_order')
                 ->pluck('id')
                 ->toArray();
@@ -60,8 +63,9 @@ class StarchoMenuItem extends Model
             return static::with(['children.children'])
                 ->whereNull('parent_id')
                 ->where('active', true)
+                ->where('panel', $panel)
                 ->orderBy('sort_order')
-                ->get();
+                ->get(); // sections grouped by groupBy() on collection
         }
 
         return static::with(['children.children'])
@@ -72,7 +76,10 @@ class StarchoMenuItem extends Model
 
     public static function clearMenuCache(): void
     {
-        Cache::forget(self::CACHE_MENU_IDS);
+        Cache::forget(self::CACHE_MENU_IDS . '_app');
+        Cache::forget(self::CACHE_MENU_IDS . '_admin');
+        Cache::forget(self::CACHE_MENU_IDS . '_home');
+        Cache::forget(self::CACHE_MENU_IDS); // legacy
     }
 
     public function getResolvedUrlAttribute(): ?string
