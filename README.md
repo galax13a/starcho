@@ -49,34 +49,39 @@ El seeder crea:
 
 ---
 
-## 🎨 Cambios Recientes (v1.1.0)
+## Cambios recientes
 
-### Diseño Admin-Style en /app
-Se aplicó el mismo estilo visual del panel `/admin` al área de usuario `/app`, manteniendo la separación lógica:
+### UI app alineada con admin
+El área `/app` mantiene un lenguaje visual consistente con `/admin`, pero con assets y layout propios:
 
-- **CSS Unificado**: `starcho-app.css` ahora incluye componentes admin-like (`.sa-page`, `.sa-btn`, `.app-popup-*`)
-- **Headers Consistentes**: Páginas de tasks y contacts ahora tienen botones de acción en el header
-- **Modales Limpios**: Eliminación de elementos duplicados, títulos renderizados correctamente
-- **Popups Centrados**: Flexbox centering con `modal-overlay` para mejor UX
-- **Reset CSS Optimizado**: Eliminación de `margin: 0` universal que causaba desalineaciones
+- `resources/css/starcho-app.css` contiene los componentes visuales compartidos del área app
+- Las páginas de `tasks` y `contacts` usan cabeceras homogéneas con CTA principal en el header
+- Los modales de tareas y contactos usan la variante visual `sc-modal-kick`
+- Se ajustó el ancho útil del contenido principal para aprovechar mejor el espacio horizontal
 
-### Mejoras en Tasks (/app/tasks)
-- Eliminado bloque "Estado rápido" redundante
-- Botón único "Nueva Tarea" en header
-- Modal limpio sin títulos duplicados
-- Stats cards mantenidas para métricas rápidas
+### Internacionalización aplicada a la UI de app
+La interfaz de `/app` ya no depende de textos hardcodeados en Blade para tareas, contactos y layout:
 
-### Mejoras en Contacts (/app/contacts)
-- Agregado botón "Nuevo Contacto" en header
-- Modal reestructurado: header con título + cerrar, body con formulario, footer con acciones
-- Eliminados elementos duplicados (títulos y botones)
-- **Agregadas 6 tarjetas de estadísticas**: Total, Leads, Prospectos, Clientes, Perdidos, Con Email
-- Diseño consistente con tasks modal y cards
+- `lang/es/tasks.php` y `lang/en/tasks.php` centralizan títulos, labels, placeholders, estados y botones de tareas
+- `lang/es/contacts.php` y `lang/en/contacts.php` hacen lo mismo para contactos
+- `lang/es/app_layout.php` y `lang/en/app_layout.php` cubren sidebar, topbar, notificaciones y logout
+- Las vistas Blade consumen estas claves mediante `__()` y respetan automáticamente el locale activo del usuario
 
-### Assets
-- Build exitoso con Vite 6
-- CSS minificado y optimizado
-- Soporte completo para modo oscuro
+### Tasks (/app/tasks)
+- Header internacionalizado con botón `Nueva Tarea` o `New Task`
+- Cards de métricas internacionalizadas
+- Modal admin-style con labels, estados, prioridades y acciones traducibles
+
+### Contacts (/app/contacts)
+- Header internacionalizado con botón `Nuevo Contacto` o `New Contact`
+- 6 tarjetas de estadísticas internacionalizadas
+- Modal visualmente alineado con tasks, con textos y placeholders traducibles
+- Apertura del modal mediante evento Livewire `openContact`
+
+### Layout de aplicación
+- Sidebar y topbar internacionalizados
+- Textos de búsqueda, notificaciones, perfil y cierre de sesión extraídos a archivos de idioma
+- Modal de logout traducible por locale
 
 ---
 
@@ -399,7 +404,7 @@ El array `openMenuIds` es calculado server-side para abrir automáticamente el m
 |--------|------|--------------------|
 | Core (dashboard) | `/app` | Siempre activo |
 | Tasks | `/app/tasks` | Instalado + activo |
-| Contacts | `/app/contacts` | Disponible (no instalado) |
+| Contacts | `/app/contacts` | Vista disponible en el área app |
 
 ---
 
@@ -407,12 +412,34 @@ El array `openMenuIds` es calculado server-side para abrir automáticamente el m
 
 Idiomas disponibles: **Español** (default), **English**, **Português (BR)**.
 
-Cambiar idioma:
+Cambio de idioma:
 ```
 GET /language/{locale}   ← locale: es | en | pt-BR
 ```
 
 El locale se persiste en `users.locale` y se aplica vía `SetLocale` middleware en `bootstrap/app.php`.
+
+### Archivos de traducción relevantes
+
+```text
+lang/
+├── es/
+│   ├── app_layout.php
+│   ├── contacts.php
+│   └── tasks.php
+└── en/
+    ├── app_layout.php
+    ├── contacts.php
+    └── tasks.php
+```
+
+### Cobertura actual
+
+- Sidebar, topbar, logout y notificaciones del layout `/app`
+- Títulos, subtítulos, cards y CTA de `tasks` y `contacts`
+- Labels, placeholders, opciones de select y botones de ambos modales
+
+Para añadir nuevos textos en la UI de `/app`, conviene seguir el mismo patrón por dominio funcional en lugar de ampliar `lang/es.json` o `lang/en.json`.
 
 ---
 
