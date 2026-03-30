@@ -89,9 +89,9 @@ new class extends Component {
                 </div>
                 <div>
                     <div class="sc-modal-kick-title">
-                        {!! $taskId > 0 ? '<span>Editar</span> Tarea' : '<span>Nueva</span> Tarea' !!}
+                        {!! $taskId > 0 ? '<span>'.__('tasks.modal_title_edit').'</span> '.__('tasks.modal_task') : '<span>'.__('tasks.modal_title_new').'</span> '.__('tasks.modal_task') !!}
                     </div>
-                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">Sistema de gestión de tareas</div>
+                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">{{ __('tasks.modal_subtitle') }}</div>
                 </div>
             </div>
 
@@ -101,8 +101,8 @@ new class extends Component {
 
                     {{-- Título --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Título <span style="color:#ff4242">*</span></label>
-                        <input wire:model="taskTitle" type="text" placeholder="Nombre de la tarea…"
+                        <label class="sc-label sc-label-kick">{{ __('tasks.field_title') }} <span style="color:#ff4242">*</span></label>
+                        <input wire:model="taskTitle" type="text" placeholder="{{ __('tasks.field_title_ph') }}"
                                class="sc-input sc-input-kick">
                         @error('taskTitle')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -111,8 +111,8 @@ new class extends Component {
 
                     {{-- Descripción --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Descripción</label>
-                        <textarea wire:model="taskDesc" placeholder="Descripción opcional…" rows="3"
+                        <label class="sc-label sc-label-kick">{{ __('tasks.field_desc') }}</label>
+                        <textarea wire:model="taskDesc" placeholder="{{ __('tasks.field_desc_ph') }}" rows="3"
                                   class="sc-textarea sc-textarea-kick"></textarea>
                         @error('taskDesc')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -122,21 +122,21 @@ new class extends Component {
                     {{-- Estado + Prioridad --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Estado</label>
+                            <label class="sc-label sc-label-kick">{{ __('tasks.field_status') }}</label>
                             <select wire:model="taskStatus" class="sc-select sc-select-kick app-select">
-                                <option value="pending">⬜ Pendiente</option>
-                                <option value="in_progress">🔵 En progreso</option>
-                                <option value="completed">✅ Completada</option>
-                                <option value="cancelled">❌ Cancelada</option>
+                                <option value="pending">⬜ {{ __('tasks.status_pending') }}</option>
+                                <option value="in_progress">🔵 {{ __('tasks.status_in_progress') }}</option>
+                                <option value="completed">✅ {{ __('tasks.status_completed') }}</option>
+                                <option value="cancelled">❌ {{ __('tasks.status_cancelled') }}</option>
                             </select>
                         </div>
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Prioridad</label>
+                            <label class="sc-label sc-label-kick">{{ __('tasks.field_priority') }}</label>
                             <select wire:model="taskPriority" class="sc-select sc-select-kick app-select">
-                                <option value="low">🟢 Baja</option>
-                                <option value="medium">🟡 Media</option>
-                                <option value="high">🟠 Alta</option>
-                                <option value="urgent">🔴 Urgente</option>
+                                <option value="low">🟢 {{ __('tasks.priority_low') }}</option>
+                                <option value="medium">🟡 {{ __('tasks.priority_medium') }}</option>
+                                <option value="high">🟠 {{ __('tasks.priority_high') }}</option>
+                                <option value="urgent">🔴 {{ __('tasks.priority_urgent') }}</option>
                             </select>
                         </div>
                     </div>
@@ -144,7 +144,7 @@ new class extends Component {
                     {{-- Fecha + Asignado --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Fecha de vencimiento</label>
+                            <label class="sc-label sc-label-kick">{{ __('tasks.field_due_date') }}</label>
                             <input wire:model="taskDueDate" type="date"
                                    class="sc-input sc-input-kick"
                                    style="color-scheme: dark;">
@@ -153,9 +153,9 @@ new class extends Component {
                             @enderror
                         </div>
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Asignar a</label>
+                            <label class="sc-label sc-label-kick">{{ __('tasks.field_assign') }}</label>
                             <select wire:model="taskAssigned" class="sc-select sc-select-kick app-select">
-                                <option value="0">Sin asignar</option>
+                                <option value="0">{{ __('tasks.field_unassigned') }}</option>
                                 @foreach($this->allUsers as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -169,7 +169,7 @@ new class extends Component {
                 <div class="sc-modal-kick-footer">
                     <flux:modal.close>
                         <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">
-                            Cancelar
+                            {{ __('tasks.btn_cancel') }}
                         </button>
                     </flux:modal.close>
                     <button type="submit" class="sc-btn sc-btn-kick"
@@ -177,9 +177,9 @@ new class extends Component {
                             wire:loading.class="opacity-60">
                         <span wire:loading.remove wire:target="saveTask">
                             <i class="fas fa-bolt" style="font-size:11px;"></i>
-                            {{ $taskId > 0 ? 'Actualizar' : 'Crear Tarea' }}
+                            {{ $taskId > 0 ? __('tasks.btn_update') : __('tasks.btn_save') }}
                         </span>
-                        <span wire:loading wire:target="saveTask">Guardando…</span>
+                        <span wire:loading wire:target="saveTask">{{ __('tasks.btn_saving') }}</span>
                     </button>
                 </div>
             </form>

@@ -81,7 +81,7 @@
             <div class="sb-logo"><i class="fas fa-bolt"></i></div>
             <span class="sb-title">Starcho</span>
             <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed"
-                    :title="sidebarCollapsed ? 'Expandir' : 'Colapsar'">
+                    :title="sidebarCollapsed ? '{{ __('app_layout.sidebar_expand') }}' : '{{ __('app_layout.sidebar_collapse') }}'">
                 <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
             </button>
         </div>
@@ -91,7 +91,7 @@
 
             @if($menuItems->isNotEmpty())
             <div class="sb-section">
-                <div class="sb-label">App</div>
+                <div class="sb-label">{{ __('app_layout.section_app') }}</div>
 
                 @foreach($menuItems as $item)
                 @php
@@ -168,12 +168,12 @@
 
             @if($isAdmin)
             <div class="sb-section">
-                <div class="sb-label">Sistema</div>
+                <div class="sb-label">{{ __('app_layout.section_system') }}</div>
                 <div class="menu-item">
                     <a href="{{ route('admin.index') }}"
                        class="menu-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                         <i class="fas fa-shield-alt"></i>
-                        <span class="lbl">Panel Admin</span>
+                        <span class="lbl">{{ __('app_layout.admin_panel') }}</span>
                     </a>
                 </div>
             </div>
@@ -203,15 +203,15 @@
                     </div>
                 </div>
                 <a href="{{ route('profile.edit') }}" wire:navigate @click="userMenuOpen=false" class="um-item">
-                    <i class="fas fa-user-circle"></i> Mi perfil
+                    <i class="fas fa-user-circle"></i> {{ __('app_layout.my_profile') }}
                 </a>
                 <a href="{{ route('appearance.edit') }}" wire:navigate @click="userMenuOpen=false" class="um-item">
-                    <i class="fas fa-palette"></i> Apariencia
+                    <i class="fas fa-palette"></i> {{ __('app_layout.appearance') }}
                 </a>
                 <div class="um-divider"></div>
                 <button type="button" class="um-item danger"
                         @click="userMenuOpen=false; showLogout=true">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout') }}
                 </button>
             </div>
 
@@ -249,7 +249,7 @@
             {{-- Search --}}
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="search" placeholder="Buscar…" x-model="search">
+                <input type="search" placeholder="{{ __('app_layout.search_placeholder') }}" x-model="search">
             </div>
 
             {{-- Right side --}}
@@ -266,19 +266,19 @@
                     </button>
                     <div class="notif-dropdown" x-show="open" x-transition.origin.top.right x-cloak>
                         <div class="notif-dropdown-header">
-                            <h4>Notificaciones</h4>
+                            <h4>{{ __('app_layout.notifications') }}</h4>
                         </div>
                         <div style="padding:32px 18px;text-align:center">
                             <i class="fas fa-bell-slash" style="font-size:28px;color:var(--text4);margin-bottom:10px;display:block"></i>
-                            <p style="font-size:12px;color:var(--text3)">Sin notificaciones nuevas</p>
+                            <p style="font-size:12px;color:var(--text3)">{{ __('app_layout.no_notifications') }}</p>
                         </div>
-                        <div class="notif-footer"><a @click="open=false">Ver toda la actividad</a></div>
+                        <div class="notif-footer"><a @click="open=false">{{ __('app_layout.view_all_activity') }}</a></div>
                     </div>
                 </div>
 
                 {{-- Logout button --}}
                 <button type="button" class="tb-btn" @click="showLogout = true"
-                        title="Cerrar sesión">
+                        title="{{ __('app_layout.logout') }}">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
 
@@ -298,16 +298,16 @@
     <div class="modal-overlay" @click.self="showLogout = false" x-transition>
         <div class="logout-modal" @click.stop>
             <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
-            <h3>¿Cerrar sesión?</h3>
-            <p>Estás a punto de salir de Starcho. Cualquier cambio sin guardar se perderá.</p>
+            <h3>{{ __('app_layout.logout_title') }}</h3>
+            <p>{{ __('app_layout.logout_body') }}</p>
             <div class="logout-btns">
                 <button type="button" class="btn btn-outline" @click="showLogout = false">
-                    <i class="fas fa-times"></i> Cancelar
+                    <i class="fas fa-times"></i> {{ __('app_layout.logout_cancel') }}
                 </button>
                 <form method="POST" action="{{ route('logout') }}" style="display:inline">
                     @csrf
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-sign-out-alt"></i> Sí, cerrar sesión
+                        <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout_confirm') }}
                     </button>
                 </form>
             </div>

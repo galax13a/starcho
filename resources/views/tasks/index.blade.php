@@ -1,13 +1,13 @@
-<x-layouts::app :title="'Mis Tareas'">
+<x-layouts::app :title="__('tasks.page_title')">
     <div class="sa-page">
         <div class="sa-page-header">
             <div class="sa-page-header-left">
-                <h1>Mis Tareas</h1>
-                <p>Gestiona tus tareas personales y de equipo con estilo admin en /app.</p>
+                <h1>{{ __('tasks.page_title') }}</h1>
+                <p>{{ __('tasks.page_subtitle') }}</p>
             </div>
             <div class="sa-page-header-right">
                 <button onclick="Livewire.dispatch('openTask', {id:0})" class="sa-btn sa-btn-primary">
-                    <i class="fas fa-plus"></i> Nueva Tarea
+                    <i class="fas fa-plus"></i> {{ __('tasks.new_task') }}
                 </button>
             </div>
         </div>
@@ -18,7 +18,7 @@
         $uid = auth()->id();
         $stats = [
             [
-                'label' => 'Total',
+                'label' => __('tasks.stat_total'),
                 'value' => \App\Models\Task::where('user_id', $uid)->count(),
                 'icon'  => 'fas fa-layer-group',
                 'icon_bg' => 'rgba(255,255,255,.07)',
@@ -26,7 +26,7 @@
                 'color' => 'sc-tt-total',
             ],
             [
-                'label' => 'Pendientes',
+                'label' => __('tasks.stat_pending'),
                 'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'pending')->count(),
                 'icon'  => 'fas fa-clock',
                 'icon_bg' => 'rgba(160,160,160,.12)',
@@ -34,7 +34,7 @@
                 'color' => 'sc-tt-pending',
             ],
             [
-                'label' => 'En progreso',
+                'label' => __('tasks.stat_in_progress'),
                 'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'in_progress')->count(),
                 'icon'  => 'fas fa-spinner',
                 'icon_bg' => 'rgba(37,244,238,.1)',
@@ -42,7 +42,7 @@
                 'color' => 'sc-tt-progress',
             ],
             [
-                'label' => 'Completadas',
+                'label' => __('tasks.stat_completed'),
                 'value' => \App\Models\Task::where('user_id', $uid)->where('status', 'completed')->count(),
                 'icon'  => 'fas fa-check-circle',
                 'icon_bg' => 'rgba(83,252,24,.1)',
@@ -50,7 +50,7 @@
                 'color' => 'sc-tt-done',
             ],
             [
-                'label' => 'Vencidas',
+                'label' => __('tasks.stat_overdue'),
                 'value' => \App\Models\Task::where('user_id', $uid)
                     ->whereNotIn('status', ['completed','cancelled'])
                     ->whereNotNull('due_date')
@@ -62,7 +62,7 @@
                 'color' => 'sc-tt-late',
             ],
             [
-                'label' => 'Vencen hoy',
+                'label' => __('tasks.stat_due_today'),
                 'value' => \App\Models\Task::where('user_id', $uid)
                     ->whereNotIn('status', ['completed','cancelled'])
                     ->whereNotNull('due_date')

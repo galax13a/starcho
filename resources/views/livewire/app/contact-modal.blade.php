@@ -83,9 +83,9 @@ new class extends Component {
                 </div>
                 <div>
                     <div class="sc-modal-kick-title">
-                        {!! $contactId > 0 ? '<span>Editar</span> Contacto' : '<span>Nuevo</span> Contacto' !!}
+                        {!! $contactId > 0 ? '<span>'.__('contacts.modal_title_edit').'</span> '.__('contacts.modal_contact') : '<span>'.__('contacts.modal_title_new').'</span> '.__('contacts.modal_contact') !!}
                     </div>
-                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">Sistema de gestión de contactos</div>
+                    <div style="font-size:11px;color:var(--kick-text2);margin-top:1px;">{{ __('contacts.modal_subtitle') }}</div>
                 </div>
             </div>
 
@@ -95,8 +95,8 @@ new class extends Component {
 
                     {{-- Nombre --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Nombre <span style="color:#ff4242">*</span></label>
-                        <input wire:model="name" type="text" placeholder="Nombre completo…"
+                        <label class="sc-label sc-label-kick">{{ __('contacts.field_name') }} <span style="color:#ff4242">*</span></label>
+                        <input wire:model="name" type="text" placeholder="{{ __('contacts.field_name_ph') }}"
                                class="sc-input sc-input-kick">
                         @error('name')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -105,8 +105,8 @@ new class extends Component {
 
                     {{-- Empresa --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Empresa</label>
-                        <input wire:model="company" type="text" placeholder="Empresa del contacto…"
+                        <label class="sc-label sc-label-kick">{{ __('contacts.field_company') }}</label>
+                        <input wire:model="company" type="text" placeholder="{{ __('contacts.field_company_ph') }}"
                                class="sc-input sc-input-kick">
                         @error('company')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -116,16 +116,16 @@ new class extends Component {
                     {{-- Email + Teléfono --}}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Email</label>
-                            <input wire:model="email" type="email" placeholder="email@ejemplo.com"
+                            <label class="sc-label sc-label-kick">{{ __('contacts.field_email') }}</label>
+                            <input wire:model="email" type="email" placeholder="{{ __('contacts.field_email_ph') }}"
                                    class="sc-input sc-input-kick">
                             @error('email')
                             <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="sc-field">
-                            <label class="sc-label sc-label-kick">Teléfono</label>
-                            <input wire:model="phone" type="text" placeholder="+34 600 000 000"
+                            <label class="sc-label sc-label-kick">{{ __('contacts.field_phone') }}</label>
+                            <input wire:model="phone" type="text" placeholder="{{ __('contacts.field_phone_ph') }}"
                                    class="sc-input sc-input-kick">
                             @error('phone')
                             <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -135,12 +135,12 @@ new class extends Component {
 
                     {{-- Estado --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Estado</label>
+                        <label class="sc-label sc-label-kick">{{ __('contacts.field_status') }}</label>
                         <select wire:model="status" class="sc-select sc-select-kick app-select">
-                            <option value="lead">👥 Lead</option>
-                            <option value="prospect">🎯 Prospecto</option>
-                            <option value="customer">💼 Cliente</option>
-                            <option value="churned">❌ Perdido</option>
+                            <option value="lead">👥 {{ __('contacts.status_lead') }}</option>
+                            <option value="prospect">🎯 {{ __('contacts.status_prospect') }}</option>
+                            <option value="customer">💼 {{ __('contacts.status_customer') }}</option>
+                            <option value="churned">❌ {{ __('contacts.status_churned') }}</option>
                         </select>
                         @error('status')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -149,8 +149,8 @@ new class extends Component {
 
                     {{-- Notas --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-kick">Notas</label>
-                        <textarea wire:model="notes" placeholder="Notas sobre este contacto…" rows="3"
+                        <label class="sc-label sc-label-kick">{{ __('contacts.field_notes') }}</label>
+                        <textarea wire:model="notes" placeholder="{{ __('contacts.field_notes_ph') }}" rows="3"
                                   class="sc-textarea sc-textarea-kick"></textarea>
                         @error('notes')
                         <span class="sc-field-error sc-field-error-kick">{{ $message }}</span>
@@ -163,15 +163,15 @@ new class extends Component {
                 <div class="sc-modal-kick-footer">
                     <flux:modal.close>
                         <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">
-                            Cancelar
+                            {{ __('contacts.btn_cancel') }}
                         </button>
                     </flux:modal.close>
                     <button type="submit" class="sc-btn sc-btn-kick" wire:loading.attr="disabled" wire:loading.class="opacity-60">
                         <span wire:loading.remove="" wire:target="saveContact">
                             <i class="fas fa-bolt" style="font-size:11px;"></i>
-                            {!! $contactId > 0 ? 'Actualizar Contacto' : 'Crear Contacto' !!}
+                            {{ $contactId > 0 ? __('contacts.btn_update') : __('contacts.btn_save') }}
                         </span>
-                        <span wire:loading="" wire:target="saveContact">Guardando…</span>
+                        <span wire:loading="" wire:target="saveContact">{{ __('contacts.btn_saving') }}</span>
                     </button>
                 </div>
             </form>

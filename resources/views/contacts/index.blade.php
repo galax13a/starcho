@@ -1,16 +1,14 @@
-<x-layouts::app :title="'Contactos'">
+<x-layouts::app :title="__('contacts.page_title')">
     <div class="sa-page">
         <div class="sa-page-header">
             <div class="sa-page-header-left">
-                <h1>Contactos</h1>
-                <p>Gestiona tus leads, prospectos y clientes. Idéntico look admin pero en /app.</p>
+                <h1>{{ __('contacts.page_title') }}</h1>
+                <p>{{ __('contacts.page_subtitle') }}</p>
             </div>
             <div class="sa-page-header-right">
-                <flux:modal.trigger modal="modal-contact">
-                    <button class="sa-btn sa-btn-primary">
-                        <i class="fas fa-plus"></i> {{ __('New Contact') }}
-                    </button>
-                </flux:modal.trigger>
+                <button onclick="Livewire.dispatch('openContact', {id:0})" class="sa-btn sa-btn-primary">
+                    <i class="fas fa-plus"></i> {{ __('contacts.new_contact') }}
+                </button>
             </div>
         </div>
 
@@ -19,7 +17,7 @@
             $uid = auth()->id();
             $stats = [
                 [
-                    'label' => 'Total',
+                    'label' => __('contacts.stat_total'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->count(),
                     'icon'  => 'fas fa-users',
                     'icon_bg' => 'rgba(255,255,255,.07)',
@@ -27,7 +25,7 @@
                     'color' => 'sc-tt-total',
                 ],
                 [
-                    'label' => 'Leads',
+                    'label' => __('contacts.stat_leads'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->where('status', 'lead')->count(),
                     'icon'  => 'fas fa-user-plus',
                     'icon_bg' => 'rgba(160,160,160,.12)',
@@ -35,7 +33,7 @@
                     'color' => 'sc-tt-pending',
                 ],
                 [
-                    'label' => 'Prospectos',
+                    'label' => __('contacts.stat_prospects'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->where('status', 'prospect')->count(),
                     'icon'  => 'fas fa-user-clock',
                     'icon_bg' => 'rgba(37,244,238,.1)',
@@ -43,7 +41,7 @@
                     'color' => 'sc-tt-progress',
                 ],
                 [
-                    'label' => 'Clientes',
+                    'label' => __('contacts.stat_customers'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->where('status', 'customer')->count(),
                     'icon'  => 'fas fa-user-check',
                     'icon_bg' => 'rgba(83,252,24,.1)',
@@ -51,7 +49,7 @@
                     'color' => 'sc-tt-done',
                 ],
                 [
-                    'label' => 'Perdidos',
+                    'label' => __('contacts.stat_churned'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->where('status', 'churned')->count(),
                     'icon'  => 'fas fa-user-times',
                     'icon_bg' => 'rgba(254,44,85,.12)',
@@ -59,7 +57,7 @@
                     'color' => 'sc-tt-late',
                 ],
                 [
-                    'label' => 'Con Email',
+                    'label' => __('contacts.stat_with_email'),
                     'value' => \App\Models\Contact::where('user_id', $uid)->whereNotNull('email')->count(),
                     'icon'  => 'fas fa-envelope',
                     'icon_bg' => 'rgba(245,158,11,.12)',
