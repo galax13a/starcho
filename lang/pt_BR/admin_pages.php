@@ -2,6 +2,7 @@
 
 return [
     'contacts_index'        => 'Contatos',
+    'notes_index'           => 'Notas',
     'tasks_index'           => 'Tarefas',
     'tasks_create'          => 'Nova Tarefa',
     'tasks_edit'            => 'Editar Tarefa',

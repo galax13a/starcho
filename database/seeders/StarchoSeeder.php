@@ -88,6 +88,35 @@ class StarchoSeeder extends Seeder
                     ],
                 ],
             ],
+            [
+                'key'         => 'notes',
+                'name'        => ['es' => 'Notas', 'en' => 'Notes', 'pt_BR' => 'Notas'],
+                'description' => ['es' => 'Sistema de notas con colores, filtros y métricas para app y admin.', 'en' => 'Notes system with colors, filters and stats for app and admin.', 'pt_BR' => 'Sistema de notas com cores, filtros e estatísticas para app e admin.'],
+                'icon'        => 'document-text',
+                'installed'   => false,
+                'active'      => false,
+                'config'      => [
+                    'settings_route' => 'admin.notes.index',
+                    'menu_items' => [
+                        [
+                            'panel'      => 'app',
+                            'section'    => null,
+                            'name'       => ['es' => 'Notas', 'en' => 'Notes', 'pt_BR' => 'Notas'],
+                            'icon'       => 'fas fa-note-sticky',
+                            'route'      => 'app.notes.index',
+                            'sort_order' => 35,
+                        ],
+                        [
+                            'panel'      => 'admin',
+                            'section'    => 'Acceso',
+                            'name'       => ['es' => 'Notas', 'en' => 'Notes', 'pt_BR' => 'Notas'],
+                            'icon'       => 'fas fa-note-sticky',
+                            'route'      => 'admin.notes.index',
+                            'sort_order' => 55,
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         foreach ($modules as $data) {

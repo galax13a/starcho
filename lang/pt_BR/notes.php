@@ -1,0 +1,68 @@
+<?php
+
+return [
+    'page_title' => 'Notas',
+    'page_subtitle' => 'Organize suas ideias e lembretes por cor.',
+    'new_note' => 'Nova Nota',
+    'show_calendar' => 'Ver calendario',
+
+    'stat_total' => 'Total',
+    'stat_with_content' => 'Com conteudo',
+    'stat_without_content' => 'Sem conteudo',
+    'stat_indigo' => 'Indigo',
+    'stat_green' => 'Verde',
+    'stat_red' => 'Vermelho',
+    'stat_important_date' => 'Com data importante',
+
+    'filter_all_colors' => 'Todas as cores',
+
+    'col_id' => 'ID',
+    'col_title' => 'Titulo',
+    'col_content' => 'Conteudo',
+    'col_color' => 'Cor',
+    'col_important_date' => 'Data importante',
+    'col_created' => 'Criado',
+    'col_actions' => 'Acoes',
+
+    'modal_subtitle' => 'Sistema de notas por cor',
+    'modal_title_new' => 'Nova',
+    'modal_title_edit' => 'Editar',
+    'modal_note' => 'Nota',
+
+    'field_title' => 'Titulo',
+    'field_title_ph' => 'Ex. Follow-up de cliente',
+    'field_content' => 'Conteudo',
+    'field_content_ph' => 'Escreva sua nota aqui...',
+    'field_color' => 'Cor',
+    'field_important_date' => 'Data importante',
+    'selected_color' => 'Cor selecionada',
+
+    'calendar_title' => 'Calendario de notas',
+    'calendar_subtitle' => 'Veja todas suas notas por data importante',
+    'calendar_prev' => 'Anterior',
+    'calendar_next' => 'Proximo',
+    'calendar_notes' => 'notas',
+    'calendar_selected' => 'Selecionado',
+    'calendar_empty' => 'Nao ha notas com data importante neste dia.',
+    'day_mon' => 'Seg',
+    'day_tue' => 'Ter',
+    'day_wed' => 'Qua',
+    'day_thu' => 'Qui',
+    'day_fri' => 'Sex',
+    'day_sat' => 'Sab',
+    'day_sun' => 'Dom',
+
+    'color_indigo' => 'Indigo',
+    'color_green' => 'Verde',
+    'color_amber' => 'Ambar',
+    'color_red' => 'Vermelho',
+    'color_cyan' => 'Ciano',
+    'color_purple' => 'Roxo',
+    'color_rose' => 'Rosa',
+    'color_slate' => 'Ardosia',
+
+    'btn_cancel' => 'Cancelar',
+    'btn_save' => 'Criar Nota',
+    'btn_update' => 'Atualizar Nota',
+    'btn_saving' => 'Salvando...',
+];

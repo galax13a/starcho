@@ -1,0 +1,68 @@
+<?php
+
+return [
+    'page_title' => 'Notes',
+    'page_subtitle' => 'Organize your ideas and reminders by color.',
+    'new_note' => 'New Note',
+    'show_calendar' => 'Show calendar',
+
+    'stat_total' => 'Total',
+    'stat_with_content' => 'With content',
+    'stat_without_content' => 'Without content',
+    'stat_indigo' => 'Indigo',
+    'stat_green' => 'Green',
+    'stat_red' => 'Red',
+    'stat_important_date' => 'With important date',
+
+    'filter_all_colors' => 'All colors',
+
+    'col_id' => 'ID',
+    'col_title' => 'Title',
+    'col_content' => 'Content',
+    'col_color' => 'Color',
+    'col_important_date' => 'Important date',
+    'col_created' => 'Created',
+    'col_actions' => 'Actions',
+
+    'modal_subtitle' => 'Color notes system',
+    'modal_title_new' => 'New',
+    'modal_title_edit' => 'Edit',
+    'modal_note' => 'Note',
+
+    'field_title' => 'Title',
+    'field_title_ph' => 'Ex. Customer follow-up',
+    'field_content' => 'Content',
+    'field_content_ph' => 'Write your note here...',
+    'field_color' => 'Color',
+    'field_important_date' => 'Important date',
+    'selected_color' => 'Selected color',
+
+    'calendar_title' => 'Notes calendar',
+    'calendar_subtitle' => 'View all your notes by important date',
+    'calendar_prev' => 'Previous',
+    'calendar_next' => 'Next',
+    'calendar_notes' => 'notes',
+    'calendar_selected' => 'Selected',
+    'calendar_empty' => 'There are no notes with important date on this day.',
+    'day_mon' => 'Mon',
+    'day_tue' => 'Tue',
+    'day_wed' => 'Wed',
+    'day_thu' => 'Thu',
+    'day_fri' => 'Fri',
+    'day_sat' => 'Sat',
+    'day_sun' => 'Sun',
+
+    'color_indigo' => 'Indigo',
+    'color_green' => 'Green',
+    'color_amber' => 'Amber',
+    'color_red' => 'Red',
+    'color_cyan' => 'Cyan',
+    'color_purple' => 'Purple',
+    'color_rose' => 'Rose',
+    'color_slate' => 'Slate',
+
+    'btn_cancel' => 'Cancel',
+    'btn_save' => 'Create Note',
+    'btn_update' => 'Update Note',
+    'btn_saving' => 'Saving...',
+];

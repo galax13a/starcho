@@ -9,6 +9,7 @@ use Livewire\Component;
 class ModulesManager extends Component
 {
     public $modules = [];
+    public string $search = '';
 
     public function mount(): void
     {
@@ -17,7 +18,7 @@ class ModulesManager extends Component
 
     public function loadModules(): void
     {
-        $this->modules = StarchoModule::orderBy('key')->get()->map(function ($module) {
+        $items = StarchoModule::orderBy('key')->get()->map(function ($module) {
             return [
                 'id' => $module->id,
                 'key' => $module->key,
@@ -31,7 +32,41 @@ class ModulesManager extends Component
                 'created_at' => $module->created_at,
                 'updated_at' => $module->updated_at,
             ];
-        })->toArray();
+        });
+
+        $term = mb_strtolower(trim($this->search));
+
+        if ($term !== '') {
+            $items = $items->filter(function (array $module) use ($term) {
+                $name = $this->normalizeSearchText($module['name'] ?? null);
+                $description = $this->normalizeSearchText($module['description'] ?? null);
+                $key = $this->normalizeSearchText($module['key'] ?? null);
+
+                return str_contains($name, $term)
+                    || str_contains($description, $term)
+                    || str_contains($key, $term);
+            })->values();
+        }
+
+        $this->modules = $items->toArray();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->loadModules();
+    }
+
+    private function normalizeSearchText(mixed $value): string
+    {
+        if (is_array($value)) {
+            $value = implode(' ', array_map(fn ($item) => is_scalar($item) ? (string) $item : '', $value));
+        }
+
+        if (!is_scalar($value)) {
+            return '';
+        }
+
+        return mb_strtolower((string) $value);
     }
 
     public function install(int $id): void
