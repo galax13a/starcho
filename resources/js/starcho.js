@@ -105,22 +105,52 @@ const dark = {
     /** Clave de localStorage. */
     _key: 'starcho_theme',
 
+    /** Clave de apariencia de Flux en localStorage. */
+    _fluxKey: 'flux.appearance',
+
+    /**
+     * Obtiene la preferencia de apariencia desde Flux.
+     * @returns {'dark'|'light'|'system'|null}
+     */
+    getFluxAppearance() {
+        if (window.Flux && window.Flux.appearance) {
+            return window.Flux.appearance;
+        }
+
+        // Compatibilidad con implementaciones antiguas
+        if (window.$flux && window.$flux.appearance) {
+            return window.$flux.appearance;
+        }
+
+        const stored = localStorage.getItem(this._fluxKey);
+        return stored === 'dark' || stored === 'light' || stored === 'system' ? stored : null;
+    },
+
     /**
      * ¿El tema actual es oscuro?
      * @returns {boolean}
      */
     isDark() {
-        // Primero verificar si Flux tiene una preferencia
-        if (window.$flux && window.$flux.appearance) {
-            if (window.$flux.appearance === 'dark') return true;
-            if (window.$flux.appearance === 'light') return false;
-            if (window.$flux.appearance === 'system') {
+        // 1) Preferencia Flux (fuente principal del sistema de apariencia)
+        const fluxAppearance = this.getFluxAppearance();
+        if (fluxAppearance) {
+            if (fluxAppearance === 'dark') return true;
+            if (fluxAppearance === 'light') return false;
+            if (fluxAppearance === 'system') {
                 return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
         }
 
-        // Fallback a localStorage
-        return localStorage.getItem(this._key) === 'dark';
+        // 2) Fallback a preferencia propia de Starcho
+        const stored = localStorage.getItem(this._key);
+        if (stored === 'dark') return true;
+        if (stored === 'light') return false;
+        if (stored === 'system') {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        // 3) Último fallback: estado actual del DOM (evita desincronizar admin)
+        return document.documentElement.classList.contains('dark');
     },
 
     /**
@@ -157,14 +187,20 @@ const dark = {
 
     /**
      * Fuerza un tema específico.
-     * @param {'dark'|'light'} theme
+     * @param {'dark'|'light'|'system'} theme
      */
     set(theme) {
         // Si Flux está disponible, actualizarlo también
+        if (window.Flux && window.Flux.appearance !== undefined) {
+            window.Flux.appearance = theme;
+        }
+
+        // Compatibilidad con implementaciones antiguas
         if (window.$flux && window.$flux.appearance !== undefined) {
             window.$flux.appearance = theme;
         }
 
+        localStorage.setItem(this._fluxKey, theme);
         localStorage.setItem(this._key, theme);
         this.apply();
     },
@@ -174,20 +210,19 @@ const dark = {
      */
     init() {
         // Escuchar cambios en Flux appearance
-        if (window.$flux) {
-            // Usar un intervalo para verificar cambios (Flux no expone eventos directos)
-            let lastAppearance = window.$flux.appearance;
-            setInterval(() => {
-                if (window.$flux && window.$flux.appearance !== lastAppearance) {
-                    lastAppearance = window.$flux.appearance;
-                    this.apply();
-                }
-            }, 100);
-        }
+        let lastAppearance = this.getFluxAppearance();
+        setInterval(() => {
+            const currentAppearance = this.getFluxAppearance();
+            if (currentAppearance !== lastAppearance) {
+                lastAppearance = currentAppearance;
+                this.apply();
+            }
+        }, 100);
 
         // Escuchar cambios en el sistema (para modo 'system')
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (window.$flux && window.$flux.appearance === 'system') {
+            const appearance = this.getFluxAppearance() ?? localStorage.getItem(this._key);
+            if (appearance === 'system') {
                 this.apply();
             }
         });

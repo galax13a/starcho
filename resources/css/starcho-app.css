@@ -673,21 +673,11 @@ body {
 .logout-modal,
 .flux-modal {
     box-sizing: border-box;
-}
-
-/* Centering for Flux modals in app */
-.flux-modal {
     width: min(92vw, 640px);
     max-width: 640px;
     margin: auto;
     position: relative;
     transform: translateY(0);
-}
-
-.modal-overlay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .modal-overlay > .flux-modal {
@@ -1066,13 +1056,26 @@ body {
 .card-body      { padding: 24px; }
 
 /* Inputs y forms */
+input[type="search"]{
+     width         : 100%;
+    padding       : 5px 17px;
+  /*  border-radius : 10px;*/
+    font-size     : 13px;
+    font-family   : var(--font);
+  /*  border        : 1px solid var(--border); */
+    background    : var(--bg);
+    color         : var(--text);
+    outline       : none;
+    transition    : var(--transition);
+    box-shadow    : inset 0 1px 2px rgba(0,0,0,.04);
+}
 .input,
 textarea,
 select,
 button,
 input[type="text"],
 input[type="email"],
-input[type="search"],
+
 input[type="number"],
 input[type="password"],
 input[type="date"] {
@@ -1241,16 +1244,6 @@ table .badge {
     transition   : var(--transition);
 }
 .select:focus { border-color: var(--primary); }
-
-.label {
-    display        : block;
-    font-size      : 11px;
-    font-weight    : 700;
-    color          : var(--text3);
-    margin-bottom  : 5px;
-    text-transform : uppercase;
-    letter-spacing : .06em;
-}
 
 /* Badges de estado */
 .badge {
@@ -1680,4 +1673,107 @@ table .badge {
     border-color: rgba(165,180,252,.32);
     background: rgba(99,91,255,.22);
     color: #c7d2fe;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   13. POWERGRID - DARK MODE TUNING
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.dark #power-grid-table-base {
+    background: #111522;
+    border-color: #30364a;
+    box-shadow: 0 12px 28px rgba(0,0,0,.36);
+}
+
+.dark #power-grid-table-base > div:first-child {
+    border-bottom-color: rgba(148,163,184,.18);
+}
+
+.dark #power-grid-table-base .overflow-auto {
+    background: transparent;
+}
+
+.dark #power-grid-table-base .power-grid-table thead,
+.dark #power-grid-table-base .power-grid-table thead th {
+    background: #0f1420;
+}
+
+.dark #power-grid-table-base .power-grid-table thead tr {
+    border-bottom-color: #313851;
+}
+
+.dark #power-grid-table-base .power-grid-table thead th {
+    color: #aeb8cc;
+}
+
+.dark #power-grid-table-base .power-grid-table tbody {
+    background: #141926;
+}
+
+.dark #power-grid-table-base .power-grid-table tbody tr {
+    border-color: rgba(148,163,184,.13);
+}
+
+.dark #power-grid-table-base .power-grid-table tbody tr:hover {
+    background: rgba(99,91,255,.12);
+}
+
+.dark #power-grid-table-base .power-grid-table td {
+    color: #e4e9f7;
+}
+
+.dark #power-grid-table-base input[type="text"],
+.dark #power-grid-table-base input[type="search"],
+.dark #power-grid-table-base select {
+    background: #171d2b;
+    border-color: #3a435d;
+    color: #e5e7eb;
+}
+
+.dark #power-grid-table-base input[type="text"]::placeholder,
+.dark #power-grid-table-base input[type="search"]::placeholder {
+    color: #9aa3b8;
+}
+
+.dark #power-grid-table-base input[type="text"]:focus,
+.dark #power-grid-table-base input[type="search"]:focus,
+.dark #power-grid-table-base select:focus {
+    border-color: rgba(0,242,255,.55);
+    box-shadow: 0 0 0 3px rgba(0,242,255,.18);
+}
+
+.dark #power-grid-table-base .sc-select-stripe,
+.dark #power-grid-table-base .starcho-stripeX-filter {
+    background-color: var(--stripe-bg2);
+    border-color: rgba(129,140,248,.35);
+    color: var(--stripe-text);
+}
+
+.dark #power-grid-table-base [x-show="open"] {
+    background: #101624;
+    border-color: #30384d;
+    box-shadow: 0 18px 34px rgba(0,0,0,.45);
+}
+
+.dark #power-grid-table-base [data-cy^="toggle-field-"] {
+    color: #d2d9e7;
+}
+
+.dark #power-grid-table-base [data-cy^="toggle-field-"]:hover {
+    background: rgba(99,91,255,.13);
+}
+
+.dark #power-grid-table-base .pg-actions button {
+    background: #171d2b;
+    border-color: #38415a;
+    color: #cbd5e1;
+}
+
+.dark #power-grid-table-base .pg-actions button:hover {
+    border-color: rgba(0,242,255,.42);
+}
+
+.dark #pg-footer {
+    background: rgba(15,20,31,.84);
+    border-top-color: #30384d;
 }
