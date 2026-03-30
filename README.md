@@ -70,7 +70,8 @@ Se aplicó el mismo estilo visual del panel `/admin` al área de usuario `/app`,
 - Agregado botón "Nuevo Contacto" en header
 - Modal reestructurado: header con título + cerrar, body con formulario, footer con acciones
 - Eliminados elementos duplicados (títulos y botones)
-- Diseño consistente con tasks modal
+- **Agregadas 6 tarjetas de estadísticas**: Total, Leads, Prospectos, Clientes, Perdidos, Con Email
+- Diseño consistente con tasks modal y cards
 
 ### Assets
 - Build exitoso con Vite 6
