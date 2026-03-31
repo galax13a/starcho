@@ -1,5 +1,5 @@
 ---
-name: galax-laravel13
+name: galax-starcho
 description: Agente experto en desarrollo avanzado con Laravel 13, Livewire 4 y arquitectura dinámica basada en Starcho. Ideal para construir CRUDs automáticos, paneles administrativos, sistemas modulares y aplicaciones escalables con buenas prácticas modernas.
 argument-hint: "Describe la funcionalidad, módulo o problema que deseas implementar en Laravel"
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo']

@@ -27,6 +27,11 @@
                 :class="tab === 'global' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
                 {{ __('admin_ui.site.tabs.global') }}
             </button>
+            <button type="button" @click="tab = 'access'"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                :class="tab === 'access' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
+                {{ __('admin_ui.site.tabs.access') }}
+            </button>
             <button type="button" @click="tab = 'pages'"
                 class="rounded-lg px-4 py-2 text-sm font-semibold transition"
                 :class="tab === 'pages' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
@@ -178,6 +183,33 @@
                         <flux:input name="facebook_app_id" value="{{ old('facebook_app_id', $settings->facebook_app_id) }}" placeholder="1234567890" />
                         <flux:error name="facebook_app_id" />
                     </flux:field>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="tab === 'access'" x-cloak class="space-y-6">
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                <flux:heading size="lg">{{ __('admin_ui.site.sections.access') }}</flux:heading>
+                <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.access_help') }}</flux:text>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 flex items-start gap-3">
+                        <input type="hidden" name="home_page_enabled" value="0">
+                        <input type="checkbox" name="home_page_enabled" value="1" class="mt-1" @checked(old('home_page_enabled', $settings->home_page_enabled))>
+                        <div>
+                            <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('admin_ui.site.form.home_page_enabled') }}</div>
+                            <div class="text-xs text-zinc-500">{{ __('admin_ui.site.form.home_page_enabled_help') }}</div>
+                        </div>
+                    </label>
+
+                    <label class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 flex items-start gap-3">
+                        <input type="hidden" name="public_registration_enabled" value="0">
+                        <input type="checkbox" name="public_registration_enabled" value="1" class="mt-1" @checked(old('public_registration_enabled', $settings->public_registration_enabled))>
+                        <div>
+                            <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('admin_ui.site.form.public_registration_enabled') }}</div>
+                            <div class="text-xs text-zinc-500">{{ __('admin_ui.site.form.public_registration_enabled_help') }}</div>
+                        </div>
+                    </label>
                 </div>
             </div>
         </div>
