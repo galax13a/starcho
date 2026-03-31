@@ -1070,6 +1070,61 @@ body {
     gap:         6px;
 }
 
+.sa-notif-wrap { position: relative; }
+
+.sa-notif-dropdown {
+    position:      absolute;
+    top:           calc(100% + 8px);
+    right:         0;
+    width:         300px;
+    background:    #ffffff;
+    border:        1px solid #ebebf0;
+    border-radius: 10px;
+    box-shadow:    0 20px 50px rgba(0, 0, 0, 0.15);
+    z-index:       300;
+    overflow:      hidden;
+}
+
+.dark .sa-notif-dropdown {
+    background: #111116;
+    border-color: #222230;
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.45);
+}
+
+.sa-notif-dropdown-header {
+    padding:       14px 18px;
+    border-bottom: 1px solid #ebebf0;
+}
+
+.dark .sa-notif-dropdown-header { border-color: #222230; }
+
+.sa-notif-dropdown-header h4 {
+    font-size:   14px;
+    font-weight: 800;
+    color:       #1a1a2e;
+}
+
+.dark .sa-notif-dropdown-header h4 { color: #f0f0f5; }
+
+.sa-notif-empty p { color: #8e8ea0 !important; }
+
+.sa-notif-footer {
+    border-top: 1px solid #ebebf0;
+    padding:    10px 18px;
+}
+
+.dark .sa-notif-footer { border-color: #222230; }
+
+.sa-notif-footer a {
+    color:           var(--sa-primary);
+    font-size:       12px;
+    font-weight:     700;
+    text-decoration: none;
+    cursor:          pointer;
+}
+
+.sa-notif-footer a:hover { opacity: .85; }
+
 /* Hamburger visible only on mobile */
 .sa-mob-btn { display: none; }
 
