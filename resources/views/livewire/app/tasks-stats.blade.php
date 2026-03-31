@@ -80,12 +80,13 @@ new class extends Component {
 
 <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;" class="stats-grid-tasks">
     @foreach($this->stats as $stat)
-        <div class="sc-card sc-card-kick sc-stat-kick starchi-kick-card">
-            <div class="sc-stat-icon" style="background:{{ $stat['icon_bg'] }};color:{{ $stat['icon_color'] }};">
-                <i class="{{ $stat['icon'] }}"></i>
-            </div>
-            <div class="sc-stat-label">{{ $stat['label'] }}</div>
-            <div class="sc-stat-value {{ $stat['color'] }}">{{ $stat['value'] }}</div>
-        </div>
+        <x-starcho-card-app-kick
+            :label="$stat['label']"
+            :value="$stat['value']"
+            :icon="$stat['icon']"
+            :icon-bg="$stat['icon_bg']"
+            :icon-color="$stat['icon_color']"
+            :value-class="$stat['color']"
+        />
     @endforeach
 </div>

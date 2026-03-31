@@ -95,12 +95,15 @@ Diseños disponibles:
 - `Kick` (tasks):
     - Popup: `starcho-popup-kick`
     - Botón: `starcho-btn-kick`
+    - Card stats: `starcho-card-app-kick`
 - `Stripe` (contacts):
     - Popup: `starcho-popup-stripe`
     - Botón: `starcho-btn-stripe`
+    - Card stats: `starcho-card-app-stripe`
 - `TikTok` (notes):
     - Popup: `starcho-popup-tiktok`
     - Botón: `starcho-btn-tiktok`
+    - Card stats: `starcho-card-app-tiktok`
 
 Archivos base:
 - `resources/views/components/starcho-popup-kick.blade.php`
@@ -109,6 +112,9 @@ Archivos base:
 - `resources/views/components/starcho-btn-kick.blade.php`
 - `resources/views/components/starcho-btn-stripe.blade.php`
 - `resources/views/components/starcho-btn-tiktok.blade.php`
+- `resources/views/components/starcho-card-app-kick.blade.php`
+- `resources/views/components/starcho-card-app-stripe.blade.php`
+- `resources/views/components/starcho-card-app-tiktok.blade.php`
 
 ### Cómo construir un nuevo módulo usando estos diseños
 
@@ -116,6 +122,7 @@ Archivos base:
 2. Crear el componente Livewire del modal (ejemplo: `livewire/app/project-modal.blade.php`) reutilizando `starcho-popup-*`.
 3. Definir formulario y validaciones en el componente Livewire PHP (save, reset, eventos open/edit).
 4. Renderizar CTA principal en la vista `index` con `starcho-btn-*`.
+5. Renderizar tarjetas de métricas con `starcho-card-app-*` dentro de los componentes Livewire de stats.
 5. Reusar convención de eventos:
      - Abrir nuevo: `open<Entity>`
      - Abrir edición: `open<Entity>` con id
@@ -149,9 +156,38 @@ Props comunes:
 - `onclick` o `wireClick`: acción.
 - `loadingTarget`, `loadingLabel`: estado de carga.
 
+### API recomendada de `starcho-card-app-*`
+
+Props comunes:
+- `label`: texto de la métrica.
+- `value`: valor principal a mostrar.
+- `icon`: clase de icono Font Awesome.
+- `iconBg`: color de fondo del icono.
+- `iconColor`: color del icono.
+- `valueClass`: clase visual adicional para el valor.
+
+Uso recomendado:
+- `x-starcho-card-app-kick` para módulos app con skin Kick como tasks.
+- `x-starcho-card-app-stripe` para módulos app con skin Stripe como contacts.
+- `x-starcho-card-app-tiktok` para módulos app con skin TikTok como notes.
+
+Ejemplo:
+
+```blade
+<x-starcho-card-app-kick
+    :label="$stat['label']"
+    :value="$stat['value']"
+    :icon="$stat['icon']"
+    :icon-bg="$stat['icon_bg']"
+    :icon-color="$stat['icon_color']"
+    :value-class="$stat['color']"
+/>
+```
+
 ### Buenas prácticas para mantener escalabilidad
 
 - No duplicar HTML de modales entre módulos; extender desde `starcho-popup-*`.
+- No duplicar HTML de tarjetas de estadísticas; usar `starcho-card-app-*` según la skin del módulo.
 - Mantener textos en `lang/` y pasar labels por props.
 - Mantener eventos Livewire con prefijos consistentes por entidad.
 - En acciones de tablas, centralizar en `starcho-crud1` para evitar divergencias visuales.
@@ -703,6 +739,7 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-crud1` | Acciones CRUD en tabla (edit/delete) | Columna acciones |
 | `x-starcho-btn-kick` / `x-starcho-btn-stripe` / `x-starcho-btn-tiktok` | CTA principal por estilo visual | Header de módulo |
 | `x-starcho-popup-kick` / `x-starcho-popup-stripe` / `x-starcho-popup-tiktok` | Wrapper de modal reutilizable | Formularios create/edit |
+| `x-starcho-card-app-kick` / `x-starcho-card-app-stripe` / `x-starcho-card-app-tiktok` | Tarjetas de métricas por skin visual | Componentes stats en /app |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
 
 Regla: si un bloque UI se repite en 2 o más módulos, se convierte en componente.
@@ -772,6 +809,7 @@ El repositorio incluye un agente especializado para acelerar cambios sobre la ar
 - Respetar la separacion de assets y layouts entre `/app` y `/admin`.
 - Registrar modulos con `StarchoModule::updateOrCreate()` y `config.menu_items`.
 - Mantener textos de UI en `lang/es`, `lang/en` y `lang/pt_BR`.
+- Aplicar la familia `x-starcho-card-app-*` cuando un módulo app exponga métricas o KPIs en cards.
 
 ### Flujo esperado cuando crea o modifica modulos
 
@@ -779,13 +817,15 @@ El repositorio incluye un agente especializado para acelerar cambios sobre la ar
 2. Detectar si el cambio pertenece a `/app` o `/admin`.
 3. Crear tabla Livewire, vista index, header PowerGrid, modal y rutas.
 4. Reutilizar componentes existentes como `x-starcho-btn-view-table`, `x-starcho-crud1` y la familia `x-starcho-popup-*`.
-5. Validar menu, traducciones, persistencia de columnas y coherencia visual.
+5. Si el módulo app tiene estadísticas, encapsularlas con `x-starcho-card-app-kick`, `x-starcho-card-app-stripe` o `x-starcho-card-app-tiktok` según la skin.
+6. Validar menu, traducciones, persistencia de columnas y coherencia visual.
 
 ### Criterio profesional para componentes
 
 - Si un bloque UI aparece en 2 o mas modulos, debe convertirse en componente Blade.
 - Los componentes deben servir tanto a `/app` como a `/admin` cuando la responsabilidad sea comun.
 - El ejemplo actual es `x-starcho-btn-view-table`, centralizado en el tema Tailwind de PowerGrid para evitar duplicacion y mantener consistencia.
+- Para `/app`, las métricas visuales por módulo deben componerse con la familia `x-starcho-card-app-*` en lugar de repetir HTML inline en views Livewire.
 
 ## Conservar datos del módulo (importante)
 
