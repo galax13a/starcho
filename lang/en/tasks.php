@@ -6,6 +6,8 @@ return [
     'page_title'    => 'My Tasks',
     'page_subtitle' => 'Manage your personal and team tasks.',
     'new_task'      => 'New Task',
+    'export_excel'  => 'Export Excel',
+    'import_excel'  => 'Import Excel',
 
     // Stat cards
     'stat_total'       => 'Total',
@@ -63,5 +65,13 @@ return [
     'btn_save'   => 'Create Task',
     'btn_update' => 'Update Task',
     'btn_saving' => 'Saving…',
+    'import_title' => 'Import Tasks',
+    'import_subtitle' => 'Upload a previously exported spreadsheet to create or update tasks.',
+    'import_label' => 'Excel file',
+    'import_help' => 'Uses the id, title, description, status, priority, due_date and assigned_email columns.',
+    'import_cta' => 'Import Tasks',
+    'importing' => 'Importing…',
+    'import_result' => 'Import finished: :created created, :updated updated.',
+    'import_error' => 'The tasks file could not be imported.',
 
 ];

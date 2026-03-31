@@ -58,6 +58,7 @@ new class extends Component {
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-note'}}))");
         $this->dispatch('pg:eventRefresh-notes-table');
+        $this->dispatch('notes-updated');
     }
 }; ?>
 
@@ -74,7 +75,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <form wire:submit="saveNote">
+            <form wire:submit="saveNote" class="starcho-tiktok-modal-form">
                 <div class="sc-modal-tt-body starcho-tiktok-modal-body" style="display:flex;flex-direction:column;gap:16px;">
                     <div class="sc-field">
                         <label class="sc-label sc-label-tt">{{ __('notes.field_title') }} <span style="color:#fe2c55">*</span></label>

@@ -5,6 +5,8 @@ return [
     'page_subtitle' => 'Organize your ideas and reminders by color.',
     'new_note' => 'New Note',
     'show_calendar' => 'Show calendar',
+    'export_excel' => 'Export Excel',
+    'import_excel' => 'Import Excel',
 
     'stat_total' => 'Total',
     'stat_with_content' => 'With content',
@@ -65,4 +67,12 @@ return [
     'btn_save' => 'Create Note',
     'btn_update' => 'Update Note',
     'btn_saving' => 'Saving...',
+    'import_title' => 'Import Notes',
+    'import_subtitle' => 'Upload a previously exported spreadsheet to create or update notes.',
+    'import_label' => 'Excel file',
+    'import_help' => 'Uses the id, title, content, color and important_date columns. Existing ids are updated.',
+    'import_cta' => 'Import Notes',
+    'importing' => 'Importing...',
+    'import_result' => 'Import finished: :created created, :updated updated.',
+    'import_error' => 'The notes file could not be imported.',
 ];

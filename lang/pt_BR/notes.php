@@ -5,6 +5,8 @@ return [
     'page_subtitle' => 'Organize suas ideias e lembretes por cor.',
     'new_note' => 'Nova Nota',
     'show_calendar' => 'Ver calendario',
+    'export_excel' => 'Exportar Excel',
+    'import_excel' => 'Importar Excel',
 
     'stat_total' => 'Total',
     'stat_with_content' => 'Com conteudo',
@@ -65,4 +67,12 @@ return [
     'btn_save' => 'Criar Nota',
     'btn_update' => 'Atualizar Nota',
     'btn_saving' => 'Salvando...',
+    'import_title' => 'Importar Notas',
+    'import_subtitle' => 'Envie uma planilha exportada anteriormente para criar ou atualizar notas.',
+    'import_label' => 'Arquivo Excel',
+    'import_help' => 'Usa as colunas id, title, content, color e important_date. IDs existentes sao atualizados.',
+    'import_cta' => 'Importar Notas',
+    'importing' => 'Importando...',
+    'import_result' => 'Importacao concluida: :created criadas, :updated atualizadas.',
+    'import_error' => 'Nao foi possivel importar o arquivo de notas.',
 ];
