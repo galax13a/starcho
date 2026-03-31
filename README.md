@@ -184,10 +184,49 @@ Ejemplo:
 />
 ```
 
+### API recomendada de `starcho-noty`
+
+Prop | Tipo | Default | Descripción
+-----|------|---------|------------
+`theme` | string | `'app'` | `app` o `admin`, elige clases CSS del panel correspondiente
+`buttonClass` | string | auto | Clase del botón (auto-detectada por theme)
+`wrapperClass` | string | auto | Clase del wrapper del dropdown
+`dropdownClass` | string | auto | Clase del panel desplegable
+
+Uso mínimo:
+```blade
+<x-starcho-noty theme="app" />
+<x-starcho-noty theme="admin" />
+```
+
+El componente lee traducciones de `app_layout.notifications`, `app_layout.no_notifications` y `app_layout.view_all_activity`. No duplicar HTML de campana de notificaciones en ningún layout.
+
+### API recomendada de `starcho-alert`
+
+Prop | Tipo | Default | Descripción
+-----|------|---------|------------
+`theme` | string | `'app'` | `app` o `admin`, elige clases CSS del panel correspondiente
+
+Uso mínimo:
+```blade
+<x-starcho-alert theme="app" />
+<x-starcho-alert theme="admin" />
+```
+
+Escucha el evento Alpine `notify.window` con payload `{ type, message }`. Para disparar un toast desde cualquier parte del proyecto:
+```js
+window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: 'Guardado correctamente' } }));
+```
+O desde Livewire:
+```php
+$this->dispatch('notify', type: 'success', message: __('messages.saved'));
+```
+
 ### Buenas prácticas para mantener escalabilidad
 
 - No duplicar HTML de modales entre módulos; extender desde `starcho-popup-*`.
 - No duplicar HTML de tarjetas de estadísticas; usar `starcho-card-app-*` según la skin del módulo.
+- No duplicar icono de notificaciones ni toast en layouts; usar `x-starcho-noty` y `x-starcho-alert`.
 - Mantener textos en `lang/` y pasar labels por props.
 - Mantener eventos Livewire con prefijos consistentes por entidad.
 - En acciones de tablas, centralizar en `starcho-crud1` para evitar divergencias visuales.
@@ -740,6 +779,8 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-btn-kick` / `x-starcho-btn-stripe` / `x-starcho-btn-tiktok` | CTA principal por estilo visual | Header de módulo |
 | `x-starcho-popup-kick` / `x-starcho-popup-stripe` / `x-starcho-popup-tiktok` | Wrapper de modal reutilizable | Formularios create/edit |
 | `x-starcho-card-app-kick` / `x-starcho-card-app-stripe` / `x-starcho-card-app-tiktok` | Tarjetas de métricas por skin visual | Componentes stats en /app |
+| `x-starcho-noty` | Icono de notificaciones con dropdown | Topbar app y admin |
+| `x-starcho-alert` | Toast/alerta de sistema (evento `notify`) | Layout app y admin |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
 
 Regla: si un bloque UI se repite en 2 o más módulos, se convierte en componente.

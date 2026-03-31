@@ -260,21 +260,7 @@
                 @endif
 
                 {{-- Notifications --}}
-                <div class="notif-wrap" x-data="{ open: false }" @click.outside="open = false">
-                    <button type="button" class="tb-btn" @click="open = !open">
-                        <i class="fas fa-bell"></i>
-                    </button>
-                    <div class="notif-dropdown" x-show="open" x-transition.origin.top.right x-cloak>
-                        <div class="notif-dropdown-header">
-                            <h4>{{ __('app_layout.notifications') }}</h4>
-                        </div>
-                        <div style="padding:32px 18px;text-align:center">
-                            <i class="fas fa-bell-slash" style="font-size:28px;color:var(--text4);margin-bottom:10px;display:block"></i>
-                            <p style="font-size:12px;color:var(--text3)">{{ __('app_layout.no_notifications') }}</p>
-                        </div>
-                        <div class="notif-footer"><a @click="open=false">{{ __('app_layout.view_all_activity') }}</a></div>
-                    </div>
-                </div>
+                <x-starcho-noty theme="app" />
 
                 {{-- Logout button --}}
                 <button type="button" class="tb-btn" @click="showLogout = true"
@@ -316,17 +302,7 @@
 </div>
 
 {{-- ─── TOAST NOTIFICATIONS ────────────────────────────────────────────── --}}
-<div class="toast-stack"
-     x-data="{ toasts: [] }"
-     @notify.window="
-         const t = { id: Date.now(), type: $event.detail.type || 'success', msg: $event.detail.message };
-         toasts.push(t);
-         setTimeout(() => toasts = toasts.filter(i => i.id !== t.id), 4000);
-     ">
-    <template x-for="t in toasts" :key="t.id">
-        <div class="toast-item" :class="'toast-' + t.type" x-text="t.msg" x-transition></div>
-    </template>
-</div>
+<x-starcho-alert theme="app" />
 
 {{-- starchoApp() está definido en resources/js/starcho.js y cargado vía app.js --}}
 @fluxScripts

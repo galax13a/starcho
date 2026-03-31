@@ -171,6 +171,9 @@
             </div>
 
             <div class="sa-topbar-end">
+                {{-- Notifications --}}
+                <x-starcho-noty theme="admin" />
+
                 {{-- Back to app --}}
                 <a href="{{ route('app.dashboard') }}" wire:navigate class="sa-tb-btn" title="{{ __('app_layout.go_to_app') }}">
                     <i class="fas fa-home"></i>
@@ -195,17 +198,7 @@
 </div>{{-- /.sa-app --}}
 
 {{-- ─── Toast notifications ─── --}}
-<div class="sa-toast-stack"
-     x-data="{ toasts: [] }"
-     @notify.window="
-         const t = { id: Date.now(), type: $event.detail.type || 'success', msg: $event.detail.message };
-         toasts.push(t);
-         setTimeout(() => toasts = toasts.filter(i => i.id !== t.id), 4000);
-     ">
-    <template x-for="t in toasts" :key="t.id">
-        <div class="sa-toast" :class="'sa-toast-' + t.type" x-text="t.msg" x-transition></div>
-    </template>
-</div>
+<x-starcho-alert theme="admin" />
 
 @fluxScripts
 </body>

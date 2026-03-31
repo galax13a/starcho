@@ -241,7 +241,7 @@
     content   : '';
     position  : absolute;
     inset     : 0;
-    background: var(--tt-grad2);
+   /* background: var(--tt-grad2); */
     opacity   : 0;
     transition: opacity .25s;
 }
@@ -807,3 +807,12 @@
 .sc-kick-done     { color: #53fc18; }
 .sc-kick-late     { color: #fe2c55; }
 .sc-kick-today    { color: #f59e0b; }
+
+
+.notif-footer{
+    background-color: rgb(240, 242, 243);
+    padding: 2px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text3);
+}

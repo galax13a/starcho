@@ -55,10 +55,11 @@
         <div class="db-subtitle">{{ __('app_dashboard.subtitle_today') }}</div>
         <div class="db-hero-actions">
             @if(\App\Models\StarchoModule::isActive('tasks'))
-            <button onclick="Livewire.dispatch('openTask',{id:0})" class="sc-btn sc-btn-tt">
-                <span><i class="fas fa-plus" style="position:relative;z-index:1;font-size:11px;"></i></span>
-                <span>{{ __('tasks.new_task') }}</span>
-            </button>
+            <x-starcho-btn-kick
+                :label="__('tasks.new_task')"
+                icon="fas fa-plus"
+                onclick="Livewire.dispatch('openTask',{id:0})"
+            />
             @endif
             @if($contactsActive)
             <a href="{{ route('app.contacts.index') }}" class="sc-btn sc-btn-tt sc-btn-outline">
@@ -173,10 +174,13 @@
         <div class="db-empty">
             <i class="fas fa-clipboard" style="font-size:28px;color:var(--tt-border);margin-bottom:10px;display:block;"></i>
             <span>{{ __('app_dashboard.no_tasks_yet') }}</span>
-            <button onclick="Livewire.dispatch('openTask',{id:0})" class="sc-btn sc-btn-tt sc-btn-sm" style="margin-top:14px;">
-                <span><i class="fas fa-plus" style="position:relative;z-index:1;font-size:10px;"></i></span>
-                <span>{{ __('app_dashboard.create_first_task') }}</span>
-            </button>
+            <x-starcho-btn-kick
+                :label="__('app_dashboard.create_first_task')"
+                icon="fas fa-plus"
+                onclick="Livewire.dispatch('openTask',{id:0})"
+                class="sc-btn-sm"
+                style="margin-top:14px;"
+            />
         </div>
         @else
         <div class="db-task-list">
@@ -282,7 +286,7 @@
 </div>
 
 @if(\App\Models\StarchoModule::isActive('tasks'))
-<livewire:admin.task-modal />
+<livewire:app.task-modal />
 @endif
 
 </x-layouts::app>
