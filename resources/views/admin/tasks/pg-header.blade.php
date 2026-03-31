@@ -13,14 +13,8 @@
         {{ __('admin_ui.tasks.new') }}
     </flux:button>
 
-    <flux:button
-        href="{{ route('admin.tasks.export') }}"
-        variant="ghost"
-        icon="arrow-down-tray"
-        size="sm"
-    >
-        {{ __('admin_ui.tasks.export_excel') }}
-    </flux:button>
+    <x-starcho-btn-excel action="export" module="tasks" section="admin" />
+    <x-starcho-btn-excel action="import" module="tasks" section="admin" />
 
     {{-- Filtro estado --}}
     <select wire:model.live="filterStatus"

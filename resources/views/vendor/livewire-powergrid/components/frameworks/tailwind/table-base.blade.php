@@ -14,7 +14,7 @@
     >
         <div
             id="power-grid-table-base"
-            class="{{ theme_style($theme, 'table.layout.base') }}"
+            class="w-full power-gridTableApp border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden bg-white dark:bg-zinc-800"
         >
             @include(theme_style($theme, 'layout.header'), [
                 'enabledFilters' => $enabledFilters,

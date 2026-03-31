@@ -7,19 +7,19 @@
     <button
         @click.prevent="open = !open"
         title="{{ __('admin_ui.powergrid.export_data') }}"
+        aria-label="{{ __('admin_ui.powergrid.export_data') }}"
         class="
-            inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium
+            inline-flex items-center justify-center size-8 rounded-lg text-xs font-medium
             border border-zinc-200 dark:border-zinc-600
             bg-white dark:bg-zinc-700/50
             text-zinc-500 dark:text-zinc-400
-            hover:text-[#ff00c8] hover:border-[#ff00c8]/50 hover:bg-[#ff00c8]/5
-            dark:hover:text-[#ff00c8] dark:hover:border-[#ff00c8]/40
+            hover:text-[#22c55e] hover:border-[#22c55e]/50 hover:bg-[#22c55e]/5
+            dark:hover:text-[#22c55e] dark:hover:border-[#22c55e]/40
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-[#ff00c8]/25
+            focus:outline-none focus:ring-2 focus:ring-[#22c55e]/25
         "
     >
         <x-livewire-powergrid::icons.download class="w-4 h-4" />
-        {{ __('admin_ui.powergrid.export') }}
     </button>
 
     <div
@@ -32,7 +32,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="
-            absolute left-0 z-20 mt-2 w-52
+            absolute right-0 z-20 mt-2 w-52
             rounded-xl border border-zinc-200 dark:border-zinc-700
             bg-white dark:bg-zinc-800
             shadow-lg shadow-zinc-200/50 dark:shadow-zinc-900/50

@@ -1,34 +1,7 @@
 <div class="px-4 pt-4 pb-3 border-b border-zinc-100 dark:border-zinc-700/60">
 
-    {{-- Controls left + search right (single line on desktop) --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-
-        {{-- Left: actions / export / toggle-columns --}}
-        <div class="flex flex-wrap items-center gap-2">
-            <div x-data="pgRenderActions">
-                <span class="pg-actions" x-html="toHtml"></span>
-            </div>
-
-            @includeIf(data_get($setUp, 'header.includeViewOnTop'))
-
-            @if (data_get($setUp, 'exportable'))
-                <div id="pg-header-export">
-                    @include(data_get($theme, 'root') . '.header.export')
-                </div>
-            @endif
-
-            @includeIf(data_get($theme, 'root') . '.header.toggle-columns')
-            @includeIf(data_get($theme, 'root') . '.header.soft-deletes')
-
-            @if (config('livewire-powergrid.filter') == 'outside' && count($this->filters()) > 0)
-                @includeIf(data_get($theme, 'root') . '.header.filters')
-            @endif
-
-            @includeWhen(boolval(data_get($setUp, 'header.wireLoading')),
-                data_get($theme, 'root') . '.header.loading')
-        </div>
-
-        {{-- Right: search input --}}
+    {{-- Search left + controls right (single line on desktop) --}}
+    <div class="flex flex-col md:flex-row md:items-center gap-3">
         @if (data_get($setUp, 'header.searchInput'))
             <div class="relative w-full md:w-80 group">
                 <input
@@ -66,6 +39,27 @@
                 @endif
             </div>
         @endif
+
+        <div class="flex w-full md:w-auto flex-wrap items-center justify-end content-center gap-2 md:ml-auto">
+
+            @includeIf(data_get($setUp, 'header.includeViewOnTop'))
+
+            @if (data_get($setUp, 'exportable'))
+                <div id="pg-header-export">
+                    @include(data_get($theme, 'root') . '.header.export')
+                </div>
+            @endif
+
+            @includeIf(data_get($theme, 'root') . '.header.toggle-columns')
+            @includeIf(data_get($theme, 'root') . '.header.soft-deletes')
+
+            @if (config('livewire-powergrid.filter') == 'outside' && count($this->filters()) > 0)
+                @includeIf(data_get($theme, 'root') . '.header.filters')
+            @endif
+
+            @includeWhen(boolval(data_get($setUp, 'header.wireLoading')),
+                data_get($theme, 'root') . '.header.loading')
+        </div>
     </div>
 
     @includeIf(data_get($theme, 'root') . '.header.enabled-filters')

@@ -37,15 +37,17 @@ Route::prefix('admin')
         Route::put('users/{user}',        [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}',     [UserController::class, 'destroy'])->name('users.destroy');
 
-        // ── Tasks (Index + Export) ───────────────────────────────────────────────
-        Route::get('tasks',         [TaskController::class, 'index'])->name('tasks.index');
-        Route::get('tasks/export',  [TaskController::class, 'export'])->name('tasks.export');
+        // ── Tasks (Index + Export + Import) ───────────────────────────────────────
+        Route::get('tasks',             [TaskController::class, 'index'])->name('tasks.index');
+        Route::get('tasks/export',      [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportTasks'])->name('tasks.export');
 
-        // ── Contacts (Index) ─────────────────────────────────────────────────────
+        // ── Contacts (Index + Export + Import) ────────────────────────────────────
         Route::view('contacts', 'admin.contacts.index')->name('contacts.index');
+        Route::get('contacts/export',   [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportContacts'])->name('contacts.export');
 
-        // ── Notes (Index) ────────────────────────────────────────────────────────
+        // ── Notes (Index + Export + Import) ───────────────────────────────────────
         Route::view('notes', 'admin.notes.index')->name('notes.index');
+        Route::get('notes/export',      [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportNotes'])->name('notes.export');
 
         // ── Site module (SEO / favicon / metadata) ─────────────────────────────
         Route::get('site', [SiteController::class, 'index'])->name('site.index');
