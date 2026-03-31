@@ -273,6 +273,7 @@
   </style>
 </head>
 <body x-data="app()" x-init="init()" :class="isLight ? 'light' : ''">
+@php($registrationUrl = \App\Models\SiteSetting::isPublicRegistrationEnabled() ? route('register') : route('login'))
 
 <!-- ── NAV ── -->
 <nav class="nav">
@@ -301,7 +302,7 @@
           <a href="{{ route('app.dashboard') }}" class="btn btn-neon btn-sm"><i class="fas fa-bolt"></i> <span x-text="t('go_app')"></span></a>
         @else
           <a href="{{ route('login') }}" class="btn btn-ghost btn-sm" x-text="t('login')"></a>
-          <a href="{{ route('register') }}" class="btn btn-neon btn-sm" x-text="t('register')"></a>
+          <a href="{{ $registrationUrl }}" class="btn btn-neon btn-sm" x-text="t('register')"></a>
         @endauth
         <button class="mobile-toggle" @click="mobileOpen=!mobileOpen"><i class="fas fa-bars"></i></button>
       </div>
@@ -315,7 +316,7 @@
         <a href="{{ route('app.dashboard') }}" class="btn btn-neon" style="text-align:center"><i class="fas fa-bolt"></i> <span x-text="t('go_app')"></span></a>
       @else
         <a href="{{ route('login') }}" x-text="t('login')"></a>
-        <a href="{{ route('register') }}" class="btn btn-neon" style="text-align:center" x-text="t('register')"></a>
+        <a href="{{ $registrationUrl }}" class="btn btn-neon" style="text-align:center" x-text="t('register')"></a>
       @endauth
     </div>
   </div>
@@ -336,7 +337,7 @@
         </h1>
         <p x-text="t('hero_desc')"></p>
         <div class="hero-btns">
-          <a href="{{ route('register') }}" class="btn btn-neon"><i class="fas fa-rocket"></i> <span x-text="t('start')"></span></a>
+          <a href="{{ $registrationUrl }}" class="btn btn-neon"><i class="fas fa-rocket"></i> <span x-text="t('start')"></span></a>
           <a href="https://packagist.org/packages/galax13a/live4crud-tailwind" target="_blank" class="btn btn-ghost"><i class="fab fa-github"></i> live4crud-tailwind</a>
         </div>
         <div class="hero-stats">
@@ -560,7 +561,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
             <h3><i class="fas fa-chart-pie"></i> Dashboard</h3>
             <div style="display:flex;gap:.5rem">
-              <a href="{{ route('register') }}" class="btn btn-neon btn-sm">+ <span x-text="t('dm_new_deal')"></span></a>
+              <a href="{{ $registrationUrl }}" class="btn btn-neon btn-sm">+ <span x-text="t('dm_new_deal')"></span></a>
               <span class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> <span x-text="t('dm_export')"></span></span>
             </div>
           </div>
@@ -598,7 +599,7 @@
         <h3>Starter</h3>
         <div class="subtitle" x-text="t('pr_starter_sub')"></div>
         <div class="price">$0 <span>/ forever</span></div>
-        <a href="{{ route('register') }}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_get_started')"></a>
+        <a href="{{ $registrationUrl }}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_get_started')"></a>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_crud')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_auth')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_dark')"></span></div>
@@ -609,7 +610,7 @@
         <h3>Pro</h3>
         <div class="subtitle" x-text="t('pr_pro_sub')"></div>
         <div class="price">$49 <span>/ <span x-text="t('pr_once')"></span></span></div>
-        <a href="{{ route('register') }}" class="btn btn-neon" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_get_pro')"></a>
+        <a href="{{ $registrationUrl }}" class="btn btn-neon" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_get_pro')"></a>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_all_starter')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_roles')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_analytics')"></span></div>
@@ -620,7 +621,7 @@
         <h3>Enterprise</h3>
         <div class="subtitle" x-text="t('pr_ent_sub')"></div>
         <div class="price" x-text="t('pr_custom')"></div>
-        <a href="{{ route('register') }}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_contact')"></a>
+        <a href="{{ $registrationUrl }}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:1.5rem" x-text="t('pr_contact')"></a>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_all_pro')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_custom_modules')"></span></div>
         <div class="price-feat"><i class="fas fa-check"></i> <span x-text="t('pf_sla')"></span></div>
@@ -673,7 +674,7 @@
       <h2 x-text="t('cta_title')"></h2>
       <p x-text="t('cta_desc')"></p>
       <div class="btns">
-        <a href="{{ route('register') }}" class="btn-white"><i class="fas fa-rocket"></i> <span x-text="t('cta_btn1')"></span></a>
+        <a href="{{ $registrationUrl }}" class="btn-white"><i class="fas fa-rocket"></i> <span x-text="t('cta_btn1')"></span></a>
         <a href="https://packagist.org/packages/galax13a/live4crud-tailwind" target="_blank" class="btn-white-outline"><i class="fab fa-github"></i> GitHub</a>
       </div>
       <div style="margin-top:1.5rem;font-size:.78rem;color:rgba(255,255,255,.7)">

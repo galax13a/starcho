@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('theme_color', 20)->default('#111827');
             $table->boolean('robots_index')->default(true);
             $table->boolean('robots_follow')->default(true);
+            $table->boolean('home_page_enabled')->default(true);
+            $table->boolean('public_registration_enabled')->default(true);
             $table->string('favicon_path')->nullable();
             $table->string('og_image_path')->nullable();
             $table->timestamps();

@@ -59,6 +59,8 @@ class SiteController extends Controller
             'theme_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'robots_index' => ['nullable', 'boolean'],
             'robots_follow' => ['nullable', 'boolean'],
+            'home_page_enabled' => ['nullable', 'boolean'],
+            'public_registration_enabled' => ['nullable', 'boolean'],
             'favicon' => ['nullable', 'file', 'mimes:ico,png,svg,webp', 'max:2048'],
             'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'page_settings' => ['nullable', 'array'],
@@ -94,6 +96,8 @@ class SiteController extends Controller
             'theme_color' => $data['theme_color'],
             'robots_index' => $request->boolean('robots_index'),
             'robots_follow' => $request->boolean('robots_follow'),
+            'home_page_enabled' => $request->boolean('home_page_enabled'),
+            'public_registration_enabled' => $request->boolean('public_registration_enabled'),
         ];
 
         if ($request->hasFile('favicon')) {
@@ -304,6 +308,14 @@ class SiteController extends Controller
 
         if (!filled($settings->twitter_card)) {
             $updates['twitter_card'] = 'summary_large_image';
+        }
+
+        if (is_null($settings->home_page_enabled)) {
+            $updates['home_page_enabled'] = true;
+        }
+
+        if (is_null($settings->public_registration_enabled)) {
+            $updates['public_registration_enabled'] = true;
         }
 
         if (!empty($updates)) {

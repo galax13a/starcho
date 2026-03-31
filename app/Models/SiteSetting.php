@@ -28,6 +28,8 @@ class SiteSetting extends Model
         'theme_color',
         'robots_index',
         'robots_follow',
+        'home_page_enabled',
+        'public_registration_enabled',
         'favicon_path',
         'og_image_path',
     ];
@@ -35,6 +37,8 @@ class SiteSetting extends Model
     protected $casts = [
         'robots_index' => 'boolean',
         'robots_follow' => 'boolean',
+        'home_page_enabled' => 'boolean',
+        'public_registration_enabled' => 'boolean',
     ];
 
     public static function defaults(): array
@@ -56,9 +60,25 @@ class SiteSetting extends Model
             'theme_color' => '#111827',
             'robots_index' => true,
             'robots_follow' => true,
+            'home_page_enabled' => true,
+            'public_registration_enabled' => true,
             'favicon_path' => null,
             'og_image_path' => null,
         ];
+    }
+
+    public static function isHomePageEnabled(): bool
+    {
+        $settings = static::cached();
+
+        return $settings?->home_page_enabled ?? true;
+    }
+
+    public static function isPublicRegistrationEnabled(): bool
+    {
+        $settings = static::cached();
+
+        return $settings?->public_registration_enabled ?? true;
     }
 
     public static function singleton(): self
