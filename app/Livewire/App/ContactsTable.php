@@ -5,6 +5,7 @@ namespace App\Livewire\App;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use PowerComponents\LivewirePowerGrid\Button;
@@ -37,7 +38,7 @@ final class ContactsTable extends PowerGridComponent
     public function datasource(): Builder
     {
         return Contact::query()
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus));
     }
 
@@ -112,10 +113,11 @@ final class ContactsTable extends PowerGridComponent
     #[On('deleteContact')]
     public function deleteContact(int $id): void
     {
-        $contact = Contact::where('id', $id)->where('user_id', auth()->id())->first();
+        $contact = Contact::where('id', $id)->where('user_id', Auth::id())->first();
         if ($contact) {
             $contact->delete();
             $this->dispatch('pg:eventRefresh-' . $this->tableName);
+            $this->dispatch('contacts-updated');
         }
     }
 }

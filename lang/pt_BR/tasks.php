@@ -4,6 +4,8 @@ return [
     'page_title'    => 'Minhas Tarefas',
     'page_subtitle' => 'Gerencie suas tarefas pessoais e de equipe.',
     'new_task'      => 'Nova Tarefa',
+    'export_excel'  => 'Exportar Excel',
+    'import_excel'  => 'Importar Excel',
 
     'stat_total'       => 'Total',
     'stat_pending'     => 'Pendentes',
@@ -53,4 +55,12 @@ return [
     'btn_save'   => 'Criar Tarefa',
     'btn_update' => 'Atualizar Tarefa',
     'btn_saving' => 'Salvando...',
+    'import_title' => 'Importar Tarefas',
+    'import_subtitle' => 'Envie uma planilha exportada anteriormente para criar ou atualizar tarefas.',
+    'import_label' => 'Arquivo Excel',
+    'import_help' => 'Usa as colunas id, title, description, status, priority, due_date e assigned_email.',
+    'import_cta' => 'Importar Tarefas',
+    'importing' => 'Importando...',
+    'import_result' => 'Importacao concluida: :created criadas, :updated atualizadas.',
+    'import_error' => 'Nao foi possivel importar o arquivo de tarefas.',
 ];

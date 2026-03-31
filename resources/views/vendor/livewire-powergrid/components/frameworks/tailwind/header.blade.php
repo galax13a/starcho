@@ -1,13 +1,6 @@
 <div class="px-4 pt-4 pb-3 border-b border-zinc-100 dark:border-zinc-700/60">
 
-    {{-- Row 1: pg-header (Nuevo X / Import / Export buttons) --}}
-    @if(data_get($setUp, 'header.includeViewOnTop'))
-        <div class="mb-3">
-            @includeIf(data_get($setUp, 'header.includeViewOnTop'))
-        </div>
-    @endif
-
-    {{-- Row 2: controls left + search right (single line on desktop) --}}
+    {{-- Controls left + search right (single line on desktop) --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
         {{-- Left: actions / export / toggle-columns --}}
@@ -15,6 +8,8 @@
             <div x-data="pgRenderActions">
                 <span class="pg-actions" x-html="toHtml"></span>
             </div>
+
+            @includeIf(data_get($setUp, 'header.includeViewOnTop'))
 
             @if (data_get($setUp, 'exportable'))
                 <div id="pg-header-export">

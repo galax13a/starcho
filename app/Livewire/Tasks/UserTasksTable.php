@@ -5,6 +5,7 @@ namespace App\Livewire\Tasks;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use PowerComponents\LivewirePowerGrid\Button;
@@ -41,7 +42,7 @@ final class UserTasksTable extends PowerGridComponent
         return Task::query()
             ->with('assignedUser')
             ->withoutTrashed()
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterPriority, fn($q) => $q->where('priority', $this->filterPriority));
     }
@@ -113,7 +114,8 @@ final class UserTasksTable extends PowerGridComponent
     public function deleteUserTask(int $id): void
     {
         // Only allow deleting own tasks
-        Task::where('id', $id)->where('user_id', auth()->id())->delete();
+        Task::where('id', $id)->where('user_id', Auth::id())->delete();
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('tasks-updated');
     }
 }

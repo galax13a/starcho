@@ -68,6 +68,7 @@ new class extends Component {
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-contact'}}))");
         $this->dispatch('pg:eventRefresh-contacts-table');
+        $this->dispatch('contacts-updated');
     }
 }; ?>
 

@@ -94,6 +94,7 @@ final class NotesTable extends PowerGridComponent
     {
         Note::where('id', $id)->where('user_id', Auth::id())->delete();
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('notes-updated');
     }
 
     private function colorLabel(string $color): string

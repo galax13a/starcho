@@ -6,6 +6,8 @@ return [
     'page_title'    => 'Mis Tareas',
     'page_subtitle' => 'Gestiona tus tareas personales y de equipo.',
     'new_task'      => 'Nueva Tarea',
+    'export_excel'  => 'Exportar Excel',
+    'import_excel'  => 'Importar Excel',
 
     // Tarjetas de estadísticas
     'stat_total'       => 'Total',
@@ -63,5 +65,13 @@ return [
     'btn_save'   => 'Crear Tarea',
     'btn_update' => 'Actualizar Tarea',
     'btn_saving' => 'Guardando…',
+    'import_title' => 'Importar Tareas',
+    'import_subtitle' => 'Sube un Excel exportado previamente para crear o actualizar tareas.',
+    'import_label' => 'Archivo Excel',
+    'import_help' => 'Se usan las columnas id, title, description, status, priority, due_date y assigned_email.',
+    'import_cta' => 'Importar Tareas',
+    'importing' => 'Importando…',
+    'import_result' => 'Importacion completada: :created creadas, :updated actualizadas.',
+    'import_error' => 'No se pudo importar el archivo de tareas.',
 
 ];

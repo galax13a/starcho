@@ -17,6 +17,9 @@ export default defineConfig({
                 // CSS específico de /admin (cargado en layouts/admin/sidebar.blade.php)
                 'resources/css/starcho-admin.css',
 
+                // CSS específico de auth (cargado en layouts/auth/simple.blade.php)
+                'resources/css/starcho-auth.css',
+
                 // JS de /app: starcho.js + PowerGrid
                 'resources/js/app.js',
 

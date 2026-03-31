@@ -68,7 +68,9 @@ new class extends Component {
         ];
 
         if ($this->taskId > 0) {
-            Task::where('id', $this->taskId)->where('user_id', auth()->id())->update($data);
+            $task = Task::where('id', $this->taskId)->where('user_id', auth()->id())->firstOrFail();
+            $task->fill($data);
+            $task->save();
         } else {
             $data['user_id'] = auth()->id();
             Task::create($data);
@@ -76,6 +78,7 @@ new class extends Component {
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-task'}}))");
         $this->dispatch('pg:eventRefresh-user-tasks-table');
+        $this->dispatch('tasks-updated');
     }
 }; ?>
 

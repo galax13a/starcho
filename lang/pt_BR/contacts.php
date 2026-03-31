@@ -4,6 +4,8 @@ return [
     'page_title'    => 'Contatos',
     'page_subtitle' => 'Gerencie seus leads, prospectos e clientes.',
     'new_contact'   => 'Novo Contato',
+    'export_excel'  => 'Exportar Excel',
+    'import_excel'  => 'Importar Excel',
 
     'stat_total'      => 'Total',
     'stat_leads'      => 'Leads',
@@ -49,4 +51,12 @@ return [
     'btn_save'   => 'Criar Contato',
     'btn_update' => 'Atualizar Contato',
     'btn_saving' => 'Salvando...',
+    'import_title' => 'Importar Contatos',
+    'import_subtitle' => 'Envie uma planilha exportada anteriormente para criar ou atualizar contatos.',
+    'import_label' => 'Arquivo Excel',
+    'import_help' => 'Usa as colunas id, name, company, email, phone, status e notes.',
+    'import_cta' => 'Importar Contatos',
+    'importing' => 'Importando...',
+    'import_result' => 'Importacao concluida: :created criados, :updated atualizados.',
+    'import_error' => 'Nao foi possivel importar o arquivo de contatos.',
 ];
