@@ -6,12 +6,18 @@
                 <p>{{ __('notes.page_subtitle') }}</p>
             </div>
             <div class="sa-page-header-right">
-                <button onclick="Livewire.dispatch('openNotesCalendar')" class="sc-btn sc-btn-tt sc-btn-ghost">
-                    <i class="fas fa-calendar-alt"></i> {{ __('notes.show_calendar') }}
-                </button>
-                <button onclick="Livewire.dispatch('openNote', {id:0})" class="sc-btn sc-btn-tt starcho-tiktok-btn">
-                    <i class="fas fa-plus"></i> {{ __('notes.new_note') }}
-                </button>
+                <x-starcho-btn-tiktok
+                    variant="ghost"
+                    icon="fas fa-calendar-alt"
+                    :label="__('notes.show_calendar')"
+                    onclick="Livewire.dispatch('openNotesCalendar')"
+                />
+                <x-starcho-btn-tiktok
+                    class="starcho-tiktok-btn"
+                    icon="fas fa-plus"
+                    :label="__('notes.new_note')"
+                    onclick="Livewire.dispatch('openNote', {id:0})"
+                />
             </div>
         </div>
 

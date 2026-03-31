@@ -87,6 +87,76 @@ La interfaz de `/app` ya no depende de textos hardcodeados en Blade para tareas,
 - Se documentó el estándar de implementación en `MODULES_AND_MENU.md`.
 - Incluye estructura de archivos, convención de eventos Livewire, patrón de modales Flux y checklist de publicación.
 
+### Nuevos diseños reutilizables para módulos (/app)
+
+Se incorporó un patrón profesional para crear módulos con UI consistente y mantenible usando componentes Blade reutilizables.
+
+Diseños disponibles:
+- `Kick` (tasks):
+    - Popup: `starcho-popup-kick`
+    - Botón: `starcho-btn-kick`
+- `Stripe` (contacts):
+    - Popup: `starcho-popup-stripe`
+    - Botón: `starcho-btn-stripe`
+- `TikTok` (notes):
+    - Popup: `starcho-popup-tiktok`
+    - Botón: `starcho-btn-tiktok`
+
+Archivos base:
+- `resources/views/components/starcho-popup-kick.blade.php`
+- `resources/views/components/starcho-popup-stripe.blade.php`
+- `resources/views/components/starcho-popup-tiktok.blade.php`
+- `resources/views/components/starcho-btn-kick.blade.php`
+- `resources/views/components/starcho-btn-stripe.blade.php`
+- `resources/views/components/starcho-btn-tiktok.blade.php`
+
+### Cómo construir un nuevo módulo usando estos diseños
+
+1. Elegir diseño visual (`Kick`, `Stripe` o `TikTok`) según el módulo.
+2. Crear el componente Livewire del modal (ejemplo: `livewire/app/project-modal.blade.php`) reutilizando `starcho-popup-*`.
+3. Definir formulario y validaciones en el componente Livewire PHP (save, reset, eventos open/edit).
+4. Renderizar CTA principal en la vista `index` con `starcho-btn-*`.
+5. Reusar convención de eventos:
+     - Abrir nuevo: `open<Entity>`
+     - Abrir edición: `open<Entity>` con id
+     - Guardar: `wire:submit="save<Entity>"`
+6. Integrar tabla PowerGrid y acciones CRUD con `starcho-crud1` + `HasStarchoCrudActions`.
+7. Si el modal crece en campos, usar body con scroll interno y footer fijo (ya resuelto en estilos base de cada popup).
+
+### API recomendada de `starcho-popup-*`
+
+Props comunes disponibles para los tres popups:
+- `name`: nombre del modal Flux.
+- `title`: título principal.
+- `titleAccent`: parte destacada del título.
+- `subtitle`: texto secundario bajo título.
+- `icon`: icono Font Awesome.
+- `width`: ancho del modal.
+- `submitAction`: método Livewire para submit.
+- `loadingTarget`: target de loading de botón guardar.
+- `cancelLabel`, `saveLabel`, `savingLabel`: textos de acciones.
+
+Slots:
+- `default`: cuerpo del formulario.
+- `actions` (opcional): footer personalizado para casos especiales.
+
+### API recomendada de `starcho-btn-*`
+
+Props comunes:
+- `variant`: `primary` o `ghost`.
+- `icon`: icono Font Awesome.
+- `label`: texto del botón.
+- `onclick` o `wireClick`: acción.
+- `loadingTarget`, `loadingLabel`: estado de carga.
+
+### Buenas prácticas para mantener escalabilidad
+
+- No duplicar HTML de modales entre módulos; extender desde `starcho-popup-*`.
+- Mantener textos en `lang/` y pasar labels por props.
+- Mantener eventos Livewire con prefijos consistentes por entidad.
+- En acciones de tablas, centralizar en `starcho-crud1` para evitar divergencias visuales.
+- Evitar estilos inline nuevos; preferir clases existentes del diseño seleccionado.
+
 ---
 
 ```
