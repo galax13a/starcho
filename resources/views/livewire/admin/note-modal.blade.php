@@ -65,9 +65,15 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-admin-note" class="md:w-[700px]" focusable>
-        <form wire:submit="saveNote" class="space-y-5">
-            <flux:heading size="lg">{{ $noteId > 0 ? __('admin_ui.notes.modal.edit') : __('admin_ui.notes.modal.new') }}</flux:heading>
+    <x-starcho-popup-standar
+        name="modal-admin-note"
+        width="md:w-[700px]"
+        submit-action="saveNote"
+        :title="$noteId > 0 ? __('admin_ui.notes.modal.edit') : __('admin_ui.notes.modal.new')"
+        :save-label="$noteId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save')"
+        :saving-label="__('admin_ui.common.saving')"
+        loading-target="saveNote"
+    >
 
             <flux:field>
                 <flux:label>{{ __('admin_ui.notes.modal.title') }}</flux:label>
@@ -104,15 +110,5 @@ new class extends Component {
                 <flux:error name="importantDate" />
             </flux:field>
 
-            <div class="flex justify-end gap-2 pt-1">
-                <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveNote">{{ $noteId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save') }}</span>
-                    <span wire:loading wire:target="saveNote">{{ __('admin_ui.common.saving') }}</span>
-                </flux:button>
-            </div>
-        </form>
-    </flux:modal>
+    </x-starcho-popup-standar>
 </div>

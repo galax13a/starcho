@@ -10,20 +10,21 @@
     {{-- Stats --}}
     @php
         $stats = [
-            ['label' => __('admin_ui.contacts.stats.total'),      'value' => \App\Models\Contact::count(),                              'color' => 'text-zinc-700 dark:text-zinc-200'],
-            ['label' => __('admin_ui.contacts.stats.leads'),      'value' => \App\Models\Contact::where('status', 'lead')->count(),     'color' => 'text-blue-600 dark:text-blue-400'],
-            ['label' => __('admin_ui.contacts.stats.prospects'),  'value' => \App\Models\Contact::where('status', 'prospect')->count(), 'color' => 'text-violet-600 dark:text-violet-400'],
-            ['label' => __('admin_ui.contacts.stats.customers'),  'value' => \App\Models\Contact::where('status', 'customer')->count(), 'color' => 'text-emerald-600 dark:text-emerald-400'],
-            ['label' => __('admin_ui.contacts.stats.churned'),    'value' => \App\Models\Contact::where('status', 'churned')->count(),  'color' => 'text-red-500 dark:text-red-400'],
+            ['label' => __('admin_ui.contacts.stats.total'), 'value' => \App\Models\Contact::count(), 'tone' => 'default'],
+            ['label' => __('admin_ui.contacts.stats.leads'), 'value' => \App\Models\Contact::where('status', 'lead')->count(), 'tone' => 'blue'],
+            ['label' => __('admin_ui.contacts.stats.prospects'), 'value' => \App\Models\Contact::where('status', 'prospect')->count(), 'tone' => 'violet'],
+            ['label' => __('admin_ui.contacts.stats.customers'), 'value' => \App\Models\Contact::where('status', 'customer')->count(), 'tone' => 'emerald'],
+            ['label' => __('admin_ui.contacts.stats.churned'), 'value' => \App\Models\Contact::where('status', 'churned')->count(), 'tone' => 'red'],
         ];
     @endphp
 
-    <div class="sa-stats-grid mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         @foreach($stats as $s)
-        <div class="sa-stat-card">
-            <div class="sa-stat-label">{{ $s['label'] }}</div>
-            <div class="sa-stat-value {{ $s['color'] }}">{{ $s['value'] }}</div>
-        </div>
+            <x-starcho-card-statsOne
+                :label="$s['label']"
+                :value="$s['value']"
+                :tone="$s['tone']"
+            />
         @endforeach
     </div>
 

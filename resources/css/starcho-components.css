@@ -112,6 +112,60 @@
 .sc-btn-icon      { width: 40px; padding: 0; gap: 0; }
 .sc-btn-sm.sc-btn-icon { width: 32px; }
 
+/* ── BUTTON COLOR SYSTEM (4 REUSABLE TONES) ───────────────── */
+.sc-btn.sc-btn-color-violet {
+    --sc-btn-accent: #7c3aed;
+    --sc-btn-accent-hover: #6d28d9;
+    --sc-btn-accent-soft: rgba(124,58,237,.12);
+}
+
+.sc-btn.sc-btn-color-emerald {
+    --sc-btn-accent: #10b981;
+    --sc-btn-accent-hover: #059669;
+    --sc-btn-accent-soft: rgba(16,185,129,.12);
+}
+
+.sc-btn.sc-btn-color-sky {
+    --sc-btn-accent: #0ea5e9;
+    --sc-btn-accent-hover: #0284c7;
+    --sc-btn-accent-soft: rgba(14,165,233,.12);
+}
+
+.sc-btn.sc-btn-color-amber {
+    --sc-btn-accent: #f59e0b;
+    --sc-btn-accent-hover: #d97706;
+    --sc-btn-accent-soft: rgba(245,158,11,.14);
+}
+
+.sc-btn[class*="sc-btn-color-"]:not(.sc-btn-ghost):not(.sc-btn-outline) {
+    background: var(--sc-btn-accent) !important;
+    color: #fff !important;
+}
+
+.sc-btn[class*="sc-btn-color-"]:not(.sc-btn-ghost):not(.sc-btn-outline):hover {
+    background: var(--sc-btn-accent-hover) !important;
+    box-shadow: 0 6px 18px var(--sc-btn-accent-soft);
+}
+
+.sc-btn[class*="sc-btn-color-"].sc-btn-outline {
+    background: transparent !important;
+    border: 1.5px solid var(--sc-btn-accent) !important;
+    color: var(--sc-btn-accent) !important;
+}
+
+.sc-btn[class*="sc-btn-color-"].sc-btn-outline:hover {
+    background: var(--sc-btn-accent-soft) !important;
+}
+
+.sc-btn[class*="sc-btn-color-"].sc-btn-ghost {
+    background: transparent !important;
+    color: var(--sc-btn-accent) !important;
+}
+
+.sc-btn[class*="sc-btn-color-"].sc-btn-ghost:hover {
+    background: var(--sc-btn-accent-soft) !important;
+}
+
 /* ── KICK BUTTON ───────────────────────────────────────────── */
 .sc-btn-kick {
     background   : var(--kick-green);

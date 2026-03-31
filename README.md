@@ -526,7 +526,63 @@ Para añadir nuevos textos en la UI de `/app`, conviene seguir el mismo patrón 
 | `Admin\RolesTable` | /admin | Role (Spatie) |
 | `Admin\PermissionsTable` | /admin | Permission (Spatie) |
 | `Admin\UsersTable` | /admin | User |
+| `Admin\TasksTable` | /admin | Task |
+| `Admin\ContactsTable` | /admin | Contact |
+| `Admin\NotesTable` | /admin | Note |
+| `Tasks\UserTasksTable` | /app | Task |
 | `App\ContactsTable` | /app | Contact |
+| `App\NotesTable` | /app | Note |
+
+### Persistencia de columnas visibles (nuevo estándar)
+
+Todas las tablas de negocio en `/app` y `/admin` deben persistir el estado de columnas visibles para evitar que el usuario pierda su preferencia al refrescar.
+
+```php
+public function setUp(): array
+{
+    $this->persist(['columns'], 'app'); // o 'admin'
+
+    return [
+        PowerGrid::header()
+            ->showSearchInput()
+            ->showToggleColumns(),
+        PowerGrid::footer()
+            ->showPerPage(15)
+            ->showRecordCount(),
+    ];
+}
+```
+
+Uso actual aplicado:
+- `app/Livewire/App/ContactsTable.php`
+- `app/Livewire/App/NotesTable.php`
+- `app/Livewire/Tasks/UserTasksTable.php`
+- `app/Livewire/Admin/ContactsTable.php`
+- `app/Livewire/Admin/NotesTable.php`
+- `app/Livewire/Admin/TasksTable.php`
+
+### Botón reutilizable para ver/ocultar columnas
+
+El botón de toggle de columnas ya no se replica como HTML inline. Ahora se centraliza en:
+
+- `resources/views/components/starcho-btn-view-table.blade.php`
+
+Integración en el tema Tailwind de PowerGrid:
+
+- `resources/views/vendor/livewire-powergrid/components/frameworks/tailwind/header/toggle-columns.blade.php`
+
+API del componente:
+- `tableName` (requerido): nombre de tabla usado para `data-cy`.
+- `title` (opcional): tooltip/aria label. Por defecto usa `__('admin_ui.powergrid.toggle_columns')`.
+
+Ejemplo de uso:
+
+```blade
+<x-starcho-btn-view-table
+    :table-name="$tableName"
+    :title="__('admin_ui.powergrid.toggle_columns')"
+/>
+```
 
 ### Confirmación de eliminación en PowerGrid
 
@@ -577,17 +633,18 @@ Tipos válidos: `success`, `warning`, `error`. Duración: 4 segundos.
 
 ---
 
-## Crear un módulo (guía rápida)
+## Workflow profesional para crear módulos (app/admin)
 
-Esta es la forma recomendada en Starcho para crear módulos nuevos sin romper el ecosistema dinámico.
+Esta es la forma recomendada para crear módulos productivos y consistentes con el enfoque Starcho.
 
-### 1) Crear backend y UI del módulo
+### 1) Elegir el área y crear estructura base
 
-Para área `/app`:
+Módulo para `/app`:
 
 ```text
 app/Livewire/App/MiModuloTable.php
 resources/views/mi-modulo/index.blade.php
+resources/views/mi-modulo/pg-header.blade.php
 resources/views/livewire/app/mi-modulo-modal.blade.php
 routes/app.php
 lang/es/mi-modulo.php
@@ -595,7 +652,7 @@ lang/en/mi-modulo.php
 lang/pt_BR/mi-modulo.php
 ```
 
-Para área `/admin`:
+Módulo para `/admin`:
 
 ```text
 app/Livewire/Admin/MiModuloTable.php
@@ -608,7 +665,49 @@ lang/en/mi-modulo.php
 lang/pt_BR/mi-modulo.php
 ```
 
-### 2) Registrar el módulo en `starcho_modules`
+### 2) Aplicar setup estándar de PowerGrid
+
+Todo módulo nuevo debe incluir:
+
+- Búsqueda (`showSearchInput()`)
+- Toggle de columnas (`showToggleColumns()`)
+- Persistencia de columnas (`persist(['columns'], 'app'|'admin')`)
+- Header propio (`includeViewOnTop('...pg-header')`)
+
+Plantilla base:
+
+```php
+public function setUp(): array
+{
+    $this->persist(['columns'], 'app'); // o 'admin'
+
+    return [
+        PowerGrid::header()
+            ->showSearchInput()
+            ->showToggleColumns()
+            ->includeViewOnTop('mi-modulo.pg-header'),
+        PowerGrid::footer()
+            ->showPerPage(15)
+            ->showRecordCount(),
+    ];
+}
+```
+
+### 3) Reutilizar componentes, no duplicar HTML
+
+Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade reutilizables:
+
+| Componente | Propósito | Uso típico |
+|-----------|-----------|------------|
+| `x-starcho-btn-view-table` | Botón de mostrar/ocultar columnas PowerGrid | Header de tabla |
+| `x-starcho-crud1` | Acciones CRUD en tabla (edit/delete) | Columna acciones |
+| `x-starcho-btn-kick` / `x-starcho-btn-stripe` / `x-starcho-btn-tiktok` | CTA principal por estilo visual | Header de módulo |
+| `x-starcho-popup-kick` / `x-starcho-popup-stripe` / `x-starcho-popup-tiktok` | Wrapper de modal reutilizable | Formularios create/edit |
+| `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
+
+Regla: si un bloque UI se repite en 2 o más módulos, se convierte en componente.
+
+### 4) Registrar el módulo en `starcho_modules`
 
 ```php
 StarchoModule::updateOrCreate(
@@ -622,7 +721,7 @@ StarchoModule::updateOrCreate(
         'config'      => [
             'menu_items' => [
                 [
-                    'panel'      => 'app',
+                    'panel'      => 'app', // o 'admin'
                     'section'    => 'App',
                     'name'       => [
                         'es' => 'Mi Módulo',
@@ -640,21 +739,53 @@ StarchoModule::updateOrCreate(
 );
 ```
 
-### 3) Instalar y activar desde `/admin/modules`
+### 5) Flujo de instalación/operación
 
-Al presionar **Instalar**, Starcho ejecuta:
+1. Instalar desde `/admin/modules`.
+2. Verificar que crea ítems de menú según `config.menu_items`.
+3. Confirmar que el módulo aparece en menú dinámico.
+4. Probar create/edit/delete + refresco de tabla.
+5. Validar persistencia de columnas al recargar.
 
-- `install()` en `StarchoModule`
-- Crea automáticamente los `menu_items` desde `config.menu_items`
-- Limpia caché de módulos y menú
+### 6) Checklist de publicación (app y admin)
 
-### 4) Validación mínima antes de publicar
+1. Rutas registradas en `routes/app.php` o `routes/admin.php`.
+2. Tabla PowerGrid funcional con persistencia de columnas.
+3. Header de módulo usando componentes reutilizables.
+4. Modal create/edit implementado con `x-starcho-popup-*` o variante admin.
+5. Acciones de tabla centralizadas (preferiblemente con `HasStarchoCrudActions` + `x-starcho-crud1`).
+6. Traducciones en `lang/es`, `lang/en`, `lang/pt_BR`.
+7. Build y vistas sin errores (`npm run build`, `php artisan view:cache`).
 
-1. Ruta funcional en `routes/app.php` o `routes/admin.php`.
-2. Ítem visible en menú dinámico tras instalar.
-3. Tabla PowerGrid y modal CRUD funcionando.
-4. Traducciones completas `es/en/pt_BR`.
-5. `php artisan view:cache` y `npm run build` sin errores.
+## Agente galax-starcho
+
+El repositorio incluye un agente especializado para acelerar cambios sobre la arquitectura Starcho:
+
+- Archivo: `.github/agents/galax-starcho.agent.md`
+- Enfoque: Laravel 13 + Livewire 4 + PowerGrid + arquitectura modular Starcho
+- Fuente de verdad: `README.md` y `MODULES_AND_MENU.md`
+
+### Qué debe hacer este agente
+
+- Priorizar componentes reutilizables antes que HTML duplicado.
+- Aplicar persistencia de columnas en PowerGrid segun el panel (`app` o `admin`).
+- Respetar la separacion de assets y layouts entre `/app` y `/admin`.
+- Registrar modulos con `StarchoModule::updateOrCreate()` y `config.menu_items`.
+- Mantener textos de UI en `lang/es`, `lang/en` y `lang/pt_BR`.
+
+### Flujo esperado cuando crea o modifica modulos
+
+1. Leer `README.md` y `MODULES_AND_MENU.md` antes de proponer arquitectura.
+2. Detectar si el cambio pertenece a `/app` o `/admin`.
+3. Crear tabla Livewire, vista index, header PowerGrid, modal y rutas.
+4. Reutilizar componentes existentes como `x-starcho-btn-view-table`, `x-starcho-crud1` y la familia `x-starcho-popup-*`.
+5. Validar menu, traducciones, persistencia de columnas y coherencia visual.
+
+### Criterio profesional para componentes
+
+- Si un bloque UI aparece en 2 o mas modulos, debe convertirse en componente Blade.
+- Los componentes deben servir tanto a `/app` como a `/admin` cuando la responsabilidad sea comun.
+- El ejemplo actual es `x-starcho-btn-view-table`, centralizado en el tema Tailwind de PowerGrid para evitar duplicacion y mantener consistencia.
 
 ## Conservar datos del módulo (importante)
 

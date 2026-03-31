@@ -13,42 +13,26 @@
     </div>
 
     {{-- Stats Cards --}}
+    @php
+        $taskCards = [
+            ['label' => __('admin_ui.tasks.stats.total'), 'value' => $stats['total'], 'tone' => 'default'],
+            ['label' => __('admin_ui.tasks.stats.pending'), 'value' => $stats['pending'], 'tone' => 'muted'],
+            ['label' => __('admin_ui.tasks.stats.in_progress'), 'value' => $stats['in_progress'], 'tone' => 'blue'],
+            ['label' => __('admin_ui.tasks.stats.completed'), 'value' => $stats['completed'], 'tone' => 'emerald'],
+            ['label' => __('admin_ui.tasks.stats.cancelled'), 'value' => $stats['cancelled'], 'tone' => 'muted'],
+            ['label' => __('admin_ui.tasks.stats.overdue'), 'value' => $stats['overdue'], 'tone' => 'red'],
+            ['label' => __('admin_ui.tasks.stats.due_today'), 'value' => $stats['due_today'], 'tone' => 'violet'],
+        ];
+    @endphp
+
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-        {{-- Total --}}
-        <div class="col-span-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.total') }}</span>
-            <span class="text-3xl font-bold text-zinc-800 dark:text-zinc-100">{{ $stats['total'] }}</span>
-        </div>
-        {{-- Pendientes --}}
-        <div class="col-span-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.pending') }}</span>
-            <span class="text-3xl font-bold text-zinc-500">{{ $stats['pending'] }}</span>
-        </div>
-        {{-- En progreso --}}
-        <div class="col-span-1 rounded-xl border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/20 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.in_progress') }}</span>
-            <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ $stats['in_progress'] }}</span>
-        </div>
-        {{-- Completadas --}}
-        <div class="col-span-1 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.completed') }}</span>
-            <span class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['completed'] }}</span>
-        </div>
-        {{-- Canceladas --}}
-        <div class="col-span-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.cancelled') }}</span>
-            <span class="text-3xl font-bold text-zinc-400">{{ $stats['cancelled'] }}</span>
-        </div>
-        {{-- Vencidas --}}
-        <div class="col-span-1 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.overdue') }}</span>
-            <span class="text-3xl font-bold text-red-600 dark:text-red-400">{{ $stats['overdue'] }}</span>
-        </div>
-        {{-- Hoy --}}
-        <div class="col-span-1 rounded-xl border border-violet-200 dark:border-violet-800/50 bg-violet-50 dark:bg-violet-900/20 p-4 flex flex-col gap-1 shadow-sm">
-            <span class="text-xs font-medium text-violet-600 dark:text-violet-400 uppercase tracking-wider">{{ __('admin_ui.tasks.stats.due_today') }}</span>
-            <span class="text-3xl font-bold text-violet-600 dark:text-violet-400">{{ $stats['due_today'] }}</span>
-        </div>
+        @foreach($taskCards as $card)
+            <x-starcho-card-statsOne
+                :label="$card['label']"
+                :value="$card['value']"
+                :tone="$card['tone']"
+            />
+        @endforeach
     </div>
 
     {{-- Charts Row --}}
