@@ -2,20 +2,25 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
+        @vite(['resources/css/starcho-auth.css'])
     </head>
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-sm flex-col gap-2">
-                <a href="{{ route('app.dashboard') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                        {{ config('app.name', 'Laravel') }}
-                    </span>
-                </a>
-                <div class="flex flex-col gap-6">
-                    {{ $slot }}
+        @if (request()->routeIs('login', 'register'))
+            {{ $slot }}
+        @else
+            <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+                <div class="flex w-full max-w-sm flex-col gap-2">
+                    <a href="{{ route('app.dashboard') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
+                        <span class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                            {{ config('app.name', 'Laravel') }}
+                        </span>
+                    </a>
+                    <div class="flex flex-col gap-6">
+                        {{ $slot }}
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
         @fluxScripts
     </body>
 </html>
