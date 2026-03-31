@@ -33,13 +33,27 @@ function tr(key, fallback) {
  * @param {Function} [opts.onCancel]   Callback al cancelar.
  */
 function confirm(opts) {
+    let keyHandler = null;
+
+    const cleanupKeyHandler = () => {
+        if (!keyHandler) return;
+        document.removeEventListener('keydown', keyHandler, true);
+        keyHandler = null;
+    };
+
     Notiflix.Confirm.show(
         opts.title   ?? tr('confirm_title', 'Confirm action'),
         opts.message ?? tr('confirm_message', 'Are you sure? This action cannot be undone.'),
         opts.okText     ?? tr('confirm_ok', 'Yes, continue'),
         opts.cancelText ?? tr('confirm_cancel', 'Cancel'),
-        opts.onConfirm  ?? function () {},
-        opts.onCancel   ?? function () {},
+        () => {
+            cleanupKeyHandler();
+            (opts.onConfirm ?? function () {})();
+        },
+        () => {
+            cleanupKeyHandler();
+            (opts.onCancel ?? function () {})();
+        },
         {
             backOverlayColor : 'rgba(0,0,10,0.55)',
             cssAnimationStyle: 'zoom',
@@ -53,6 +67,47 @@ function confirm(opts) {
             onReady() {
                 const btn = document.querySelector('#NXConfirmButtonOk');
                 if (btn) { btn.tabIndex = 0; btn.focus(); }
+
+                // Keyboard shortcuts for confirm dialogs: Enter confirms, Escape cancels.
+                keyHandler = (event) => {
+                    const wrapper = document.querySelector('#NotiflixConfirmWrap, [id^="NotiflixConfirmWrap"]');
+                    const isVisible = !!wrapper;
+
+                    if (!isVisible) {
+                        cleanupKeyHandler();
+                        return;
+                    }
+
+                    if (event.key === 'Enter' || event.key === 'NumpadEnter') {
+                        const confirmInput = document.querySelector('#NXConfirmValidationInput');
+                        const confirmYesButton = document.querySelector('#NXConfirmButtonOk')
+                            ?? document.querySelector('#NXConfirmButtonOkay')
+                            ?? document.querySelector('.notiflix-confirm-button-ok');
+
+                        if (!confirmInput && confirmYesButton) {
+                            const isButtonVisible = confirmYesButton.offsetParent !== null;
+
+                            if (isButtonVisible) {
+                                event.preventDefault();
+                                confirmYesButton.click();
+                            }
+                        }
+                    } else if (event.key === 'Escape' || event.key === 'Esc') {
+                        const confirmNoButton = document.querySelector('#NXConfirmButtonCancel')
+                            ?? document.querySelector('.notiflix-confirm-button-cancel');
+
+                        if (confirmNoButton) {
+                            const isButtonVisible = confirmNoButton.offsetParent !== null;
+
+                            if (isButtonVisible) {
+                                event.preventDefault();
+                                confirmNoButton.click();
+                            }
+                        }
+                    }
+                };
+
+                document.addEventListener('keydown', keyHandler, true);
             },
         }
     );

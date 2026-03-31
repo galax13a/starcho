@@ -1594,6 +1594,16 @@ table .badge {
     border-radius: 12px;
     box-shadow   : var(--stripe-shadow-hover);
     overflow     : hidden;
+    max-height   : calc(100dvh - 48px);
+    display      : flex;
+    flex-direction: column;
+}
+
+.starcho-stripeX-modal-form {
+    display      : flex;
+    flex         : 1 1 auto;
+    flex-direction: column;
+    min-height   : 0;
 }
 
 .starcho-stripeX-modal-header {
@@ -1638,6 +1648,9 @@ table .badge {
 
 .starcho-stripeX-modal-body {
     padding: 22px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .starcho-stripeX-modal-footer {
@@ -1647,6 +1660,7 @@ table .badge {
     display      : flex;
     justify-content: flex-end;
     gap          : 10px;
+    flex-shrink  : 0;
 }
 
 .dark .starcho-stripeX .starcho-stripeX-header {
@@ -1670,6 +1684,17 @@ table .badge {
     border-color: rgba(165,180,252,.32);
     background: rgba(99,91,255,.22);
     color: #c7d2fe;
+}
+
+@media (max-width: 640px) {
+    .starcho-stripeX-modal {
+        max-height: calc(100dvh - 24px);
+    }
+
+    .starcho-stripeX-modal-footer {
+        padding: 14px 16px;
+        justify-content: space-between;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1979,6 +2004,23 @@ table .badge {
 
 .starcho-tiktok .starcho-tiktok-btn {
     min-width: 152px;
+}
+
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:hover,
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:focus-visible {
+    color: #000 !important;
+}
+
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:hover i,
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:focus-visible i,
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:hover span,
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:focus-visible span {
+    color: #000 !important;
+}
+
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:hover::before,
+.starcho-tiktok button.sc-btn.sc-btn-tt.starcho-tiktok-btn:focus-visible::before {
+    opacity: .2;
 }
 
 .starcho-tiktok .starcho-tiktok-card {
