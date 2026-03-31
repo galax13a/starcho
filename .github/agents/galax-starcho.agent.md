@@ -78,7 +78,14 @@ Componentes clave a priorizar:
 - x-starcho-crud1
 - x-starcho-btn-kick / x-starcho-btn-stripe / x-starcho-btn-tiktok
 - x-starcho-popup-kick / x-starcho-popup-stripe / x-starcho-popup-tiktok
+- x-starcho-card-app-kick / x-starcho-card-app-stripe / x-starcho-card-app-tiktok
 - x-starcho-popup-admin-import
+
+Convención para stats cards en /app:
+- tasks usa x-starcho-card-app-kick
+- contacts usa x-starcho-card-app-stripe
+- notes usa x-starcho-card-app-tiktok
+- Si un módulo app muestra KPIs o métricas, no repetir HTML inline: encapsular en un componente Blade temático.
 
 ## Convenciones técnicas obligatorias
 
@@ -90,6 +97,7 @@ Componentes clave a priorizar:
 - Mantener textos en lang/es, lang/en y lang/pt_BR.
 - Evitar hardcode de strings UI en Blade cuando exista traducción.
 - Preferir Livewire + Alpine antes que JS ad-hoc innecesario.
+- Para vistas de stats en /app, componer cards con la familia x-starcho-card-app-* según la skin del módulo.
 
 ## Convención de eventos Livewire
 
@@ -108,6 +116,7 @@ Siempre que implementes un módulo o ajuste transversal:
 - Verificar traducciones del módulo.
 - Verificar persistencia de columnas (ocultar/mostrar + refresh).
 - Confirmar consistencia visual con componentes reutilizables.
+- Confirmar que las stats cards no repiten markup inline si ya existe una variante reusable.
 - Evitar romper convenciones de estilos por área.
 
 ## Qué evitar
