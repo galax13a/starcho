@@ -1,11 +1,6 @@
-<div class="flex flex-wrap items-center gap-2">
-    <a href="{{ route('app.contacts.export') }}" class="sc-btn sc-btn-stripe sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-export"></i> {{ __('contacts.export_excel') }}
-    </a>
-
-    <button type="button" onclick="Livewire.dispatch('openContactsImport')" class="sc-btn sc-btn-stripe sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-import"></i> {{ __('contacts.import_excel') }}
-    </button>
+<div class="flex w-full flex-wrap items-center justify-end content-center gap-2">
+    <x-starcho-btn-excel action="export" module="contacts" section="app" />
+    <x-starcho-btn-excel action="import" module="contacts" section="app" />
 
     {{-- Filtro estado --}}
     <select wire:model.live="filterStatus"

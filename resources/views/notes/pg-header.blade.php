@@ -1,11 +1,6 @@
-<div class="flex flex-wrap items-center gap-2">
-    <a href="{{ route('app.notes.export') }}" class="sc-btn sc-btn-tt sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-export"></i> {{ __('notes.export_excel') }}
-    </a>
-
-    <button type="button" onclick="Livewire.dispatch('openNotesImport')" class="sc-btn sc-btn-tt sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-import"></i> {{ __('notes.import_excel') }}
-    </button>
+<div class="flex w-full flex-wrap items-center justify-end content-center gap-2">
+    <x-starcho-btn-excel action="export" module="notes" section="app" />
+    <x-starcho-btn-excel action="import" module="notes" section="app" />
 
     <select wire:model.live="filterColor"
         class="sc-select sc-select-tt starcho-tiktok-filter"

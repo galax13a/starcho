@@ -5,8 +5,9 @@
             data-cy="toggle-columns-{{ $tableName }}"
             @click.prevent="open = !open"
             title="{{ __('admin_ui.powergrid.toggle_columns') }}"
+            aria-label="{{ __('admin_ui.powergrid.toggle_columns') }}"
             class="
-                inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium
+                inline-flex items-center justify-center size-8 rounded-lg text-xs font-medium
                 border border-zinc-200 dark:border-zinc-600
                 bg-white dark:bg-zinc-700/50
                 text-zinc-500 dark:text-zinc-400
@@ -17,7 +18,6 @@
             "
         >
             <x-livewire-powergrid::icons.eye-off class="w-4 h-4" />
-            {{ __('admin_ui.powergrid.columns') }}
         </button>
 
         <div
@@ -30,7 +30,7 @@
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
             class="
-                absolute left-0 z-20 mt-2 w-52
+                absolute right-0 z-20 mt-2 w-52
                 rounded-xl border border-zinc-200 dark:border-zinc-700
                 bg-white dark:bg-zinc-800
                 shadow-lg shadow-zinc-200/50 dark:shadow-zinc-900/50

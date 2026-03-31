@@ -1,12 +1,4 @@
-<div class="flex flex-wrap items-center gap-2">
-    <a href="{{ route('app.tasks.export') }}" class="sc-btn sc-btn-kick sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-export"></i> {{ __('tasks.export_excel') }}
-    </a>
-
-    <button type="button" onclick="Livewire.dispatch('openTasksImport')" class="sc-btn sc-btn-kick sc-btn-ghost" style="height:36px;">
-        <i class="fas fa-file-import"></i> {{ __('tasks.import_excel') }}
-    </button>
-
+<div class="flex w-full flex-wrap items-center justify-end content-center gap-2">
     {{-- Filtro estado — Kick input --}}
     <select wire:model.live="filterStatus" class="sc-select sc-select-kick starchi-kick-filter"
             style="height:36px;font-size:12.5px;padding:0 34px 0 12px;width:auto;">
@@ -26,5 +18,8 @@
         <option value="high">🟠 {{ __('tasks.priority_high') }}</option>
         <option value="urgent">🔴 {{ __('tasks.priority_urgent') }}</option>
     </select>
+
+    <x-starcho-btn-excel action="export" module="tasks" section="app" />
+    <x-starcho-btn-excel action="import" module="tasks" section="app" />
 
 </div>

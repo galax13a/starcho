@@ -29,5 +29,6 @@
 
     <livewire:admin.contacts-table />
     <livewire:admin.contact-modal />
+    <livewire:admin.contacts-import-modal />
 
 </x-layouts::admin>

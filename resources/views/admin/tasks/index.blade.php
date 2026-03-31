@@ -151,5 +151,6 @@
     {{-- Table --}}
     <livewire:admin.tasks-table />
     <livewire:admin.task-modal />
+    <livewire:admin.tasks-import-modal />
 
 </x-layouts::admin>

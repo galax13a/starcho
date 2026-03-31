@@ -37,5 +37,6 @@
     <livewire:admin.notes-table />
     <livewire:admin.note-modal />
     <livewire:admin.notes-calendar-modal />
+    <livewire:admin.notes-import-modal />
 
 </x-layouts::admin>

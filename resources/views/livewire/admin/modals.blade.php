@@ -278,4 +278,9 @@ new class extends Component {
             </div>
         </form>
     </flux:modal>
+
+    {{-- Import Modals --}}
+    <livewire:admin.tasks-import-modal />
+    <livewire:admin.contacts-import-modal />
+    <livewire:admin.notes-import-modal />
 </div>
