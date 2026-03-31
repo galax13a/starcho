@@ -98,15 +98,6 @@ new class extends Component {
                         <div class="starcho-tiktok-modal-subtitle">{{ __('notes.calendar_subtitle') ?? 'View notes by date' }}</div>
                     </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button type="button" wire:click="prevMonth" class="sc-btn sc-btn-tt sc-btn-sm" title="Previous month">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div style="font-size:14px;font-weight:600;min-width:160px;text-align:center;color:var(--tt-text);">{{ $this->monthLabel }}</div>
-                    <button type="button" wire:click="nextMonth" class="sc-btn sc-btn-tt sc-btn-sm" title="Next month">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
             </div>
 
             <div class="sc-modal-tt-body starcho-tiktok-modal-body" style="display:flex;flex-direction:column;gap:20px;">
@@ -177,9 +168,21 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="sc-modal-tt-footer starcho-tiktok-modal-footer">
+            <div class="sc-modal-tt-footer starcho-tiktok-modal-footer" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div class="flex items-center gap-2" style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" wire:click="prevMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm sc-btn sc-btn-tt sc-btn-sm">
+                        {{ __('notes.calendar_prev') }}
+                    </button>
+                    <div class="text-sm font-semibold min-w-[150px] text-center" style="font-size:14px;font-weight:600;min-width:160px;text-align:center;color:var(--tt-text);">
+                        {{ $this->monthLabel }}
+                    </div>
+                    <button type="button" wire:click="nextMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm sc-btn sc-btn-tt sc-btn-sm">
+                        {{ __('notes.calendar_next') }}
+                    </button>
+                </div>
+
                 <flux:modal.close>
-                    <button type="button" class="sc-btn sc-btn-tt sc-btn-ghost">{{ __('common.close') ?? 'Close' }}</button>
+                    <button type="button" class="sc-btn sc-btn-tt sc-btn-ghost">{{ __('Close') }}</button>
                 </flux:modal.close>
             </div>
         </div>

@@ -91,11 +91,6 @@ new class extends Component {
         <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <flux:heading size="lg">{{ __('admin_ui.notes.calendar.title') }}</flux:heading>
-                <div class="flex items-center gap-2">
-                    <button type="button" wire:click="prevMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm">{{ __('admin_ui.notes.calendar.prev') }}</button>
-                    <div class="text-sm font-semibold min-w-[150px] text-center">{{ $this->monthLabel }}</div>
-                    <button type="button" wire:click="nextMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm">{{ __('admin_ui.notes.calendar.next') }}</button>
-                </div>
             </div>
 
             <div class="grid grid-cols-7 gap-2 text-xs font-semibold text-zinc-500">
@@ -145,6 +140,18 @@ new class extends Component {
                         <div class="text-sm text-zinc-500">{{ __('admin_ui.notes.calendar.empty') }}</div>
                     @endforelse
                 </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <button type="button" wire:click="prevMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm">{{ __('admin_ui.notes.calendar.prev') }}</button>
+                    <div class="text-sm font-semibold min-w-[150px] text-center">{{ $this->monthLabel }}</div>
+                    <button type="button" wire:click="nextMonth" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm">{{ __('admin_ui.notes.calendar.next') }}</button>
+                </div>
+
+                <flux:modal.close>
+                    <button type="button" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm">{{ __('Close') }}</button>
+                </flux:modal.close>
             </div>
         </div>
     </flux:modal>
