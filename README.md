@@ -507,38 +507,119 @@ Tipos válidos: `success`, `warning`, `error`. Duración: 4 segundos.
 
 ---
 
-## Añadir un nuevo módulo
+## Crear un módulo (guía rápida)
 
-1. **Registrar en `starcho_modules`** (via seeder o desde el panel):
-   ```php
-   StarchoModule::create([
-       'key'         => 'mi-modulo',
-       'name'        => 'Mi Módulo',
-       'description' => 'Descripción breve',
-       'icon'        => 'puzzle-piece',
-       'installed'   => false,
-       'active'      => false,
-   ]);
-   ```
+Esta es la forma recomendada en Starcho para crear módulos nuevos sin romper el ecosistema dinámico.
 
-2. **Crear ítems de menú** en `starcho_menu_items`:
-   ```php
-   StarchoMenuItem::create([
-       'module_key' => 'mi-modulo',
-       'label'      => 'Mi Módulo',
-       'icon'       => 'star',
-       'route'      => 'app.mi-modulo.index',
-       'sort_order' => 10,
-       'active'     => false,
-   ]);
-   ```
+### 1) Crear backend y UI del módulo
 
-3. **Crear las rutas** en `routes/app.php`:
-   ```php
-   Route::view('mi-modulo', 'mi-modulo.index')->name('mi-modulo.index');
-   ```
+Para área `/app`:
 
-4. **Instalar desde el panel**: `/admin/modules` → botón "Instalar".
+```text
+app/Livewire/App/MiModuloTable.php
+resources/views/mi-modulo/index.blade.php
+resources/views/livewire/app/mi-modulo-modal.blade.php
+routes/app.php
+lang/es/mi-modulo.php
+lang/en/mi-modulo.php
+lang/pt_BR/mi-modulo.php
+```
+
+Para área `/admin`:
+
+```text
+app/Livewire/Admin/MiModuloTable.php
+resources/views/admin/mi-modulo/index.blade.php
+resources/views/admin/mi-modulo/pg-header.blade.php
+resources/views/livewire/admin/mi-modulo-modal.blade.php
+routes/admin.php
+lang/es/mi-modulo.php
+lang/en/mi-modulo.php
+lang/pt_BR/mi-modulo.php
+```
+
+### 2) Registrar el módulo en `starcho_modules`
+
+```php
+StarchoModule::updateOrCreate(
+    ['key' => 'mi-modulo'],
+    [
+        'name'        => 'Mi Módulo',
+        'description' => 'Descripción breve',
+        'icon'        => 'puzzle-piece',
+        'installed'   => false,
+        'active'      => false,
+        'config'      => [
+            'menu_items' => [
+                [
+                    'panel'      => 'app',
+                    'section'    => 'App',
+                    'name'       => [
+                        'es' => 'Mi Módulo',
+                        'en' => 'My Module',
+                        'pt_BR' => 'Meu Módulo',
+                    ],
+                    'icon'       => 'star',
+                    'route'      => 'app.mi-modulo.index',
+                    'sort_order' => 50,
+                    'target'     => '_self',
+                ],
+            ],
+        ],
+    ]
+);
+```
+
+### 3) Instalar y activar desde `/admin/modules`
+
+Al presionar **Instalar**, Starcho ejecuta:
+
+- `install()` en `StarchoModule`
+- Crea automáticamente los `menu_items` desde `config.menu_items`
+- Limpia caché de módulos y menú
+
+### 4) Validación mínima antes de publicar
+
+1. Ruta funcional en `routes/app.php` o `routes/admin.php`.
+2. Ítem visible en menú dinámico tras instalar.
+3. Tabla PowerGrid y modal CRUD funcionando.
+4. Traducciones completas `es/en/pt_BR`.
+5. `php artisan view:cache` y `npm run build` sin errores.
+
+## Conservar datos del módulo (importante)
+
+Starcho separa **estado del módulo** de **datos de negocio**.
+
+| Acción | Menú | Estado módulo | Datos del módulo |
+|-------|------|---------------|------------------|
+| `deactivate()` | Se oculta | `installed=true`, `active=false` | Se conservan |
+| `activate()` | Se muestra | `installed=true`, `active=true` | Se conservan |
+| `uninstall()` | Se eliminan ítems de menú | `installed=false`, `active=false` | Se conservan (no se dropean tablas) |
+
+### Recomendación para producción
+
+1. Usa **Desactivar** para ocultar funcionalidad temporalmente.
+2. Usa **Desinstalar** solo para retirar el módulo del menú y del flujo activo.
+3. No hagas `dropIfExists(...)` en migraciones de mantenimiento normal.
+4. Si necesitas borrar datos, hazlo con comando explícito y respaldos previos.
+
+### Patrón seguro de migraciones
+
+```php
+public function down(): void
+{
+    // Evita pérdidas accidentales de datos en entornos productivos.
+    // Si se requiere limpieza real, hacerlo con comando manual controlado.
+}
+```
+
+### Patrón seguro de seeders
+
+```php
+StarchoModule::updateOrCreate(['key' => 'mi-modulo'], [...]);
+```
+
+Este patrón conserva configuración existente y evita duplicados al redeploy.
 
 ---
 
