@@ -83,20 +83,16 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-task" class="md:w-[760px] !p-0 app-popup-card starchi-kick-modal" focusable>
-        <div class="sc-modal-kick">
-            <div class="sc-modal-kick-header starchi-kick-modal-header">
-                <div class="sc-modal-kick-icon"><i class="fas fa-clipboard-list"></i></div>
-                <div>
-                    <div class="sc-modal-kick-title">
-                        <span>{{ $taskId > 0 ? __('tasks.modal_title_edit') : __('tasks.modal_title_new') }}</span> {{ __('tasks.modal_task') }}
-                    </div>
-                    <div class="starchi-kick-modal-subtitle">{{ __('tasks.modal_subtitle') }}</div>
-                </div>
-            </div>
-
-            <form wire:submit="saveTask">
-                <div class="sc-modal-kick-body starchi-kick-modal-body" style="display:flex;flex-direction:column;gap:16px;">
+    <x-starcho-popup-kick
+        name="modal-task"
+        icon="fas fa-clipboard-list"
+        :title="($taskId > 0 ? __('tasks.modal_title_edit') : __('tasks.modal_title_new')).' '.__('tasks.modal_task')"
+        :subtitle="__('tasks.modal_subtitle')"
+        submit-action="saveTask"
+        :cancel-label="__('tasks.btn_cancel')"
+        :save-label="$taskId > 0 ? __('tasks.btn_update') : __('tasks.btn_save')"
+        :saving-label="__('tasks.btn_saving')"
+    >
                     <div class="sc-field">
                         <label class="sc-label sc-label-kick">{{ __('tasks.field_title') }} <span style="color:#ef4444">*</span></label>
                         <input wire:model="taskTitle" type="text" placeholder="{{ __('tasks.field_title_ph') }}" class="sc-input sc-input-kick">
@@ -163,18 +159,5 @@ new class extends Component {
                             @enderror
                         </div>
                     </div>
-                </div>
-
-                <div class="sc-modal-kick-footer starchi-kick-modal-footer">
-                    <flux:modal.close>
-                        <button type="button" class="sc-btn sc-btn-kick sc-btn-ghost">{{ __('tasks.btn_cancel') }}</button>
-                    </flux:modal.close>
-                    <button type="submit" class="sc-btn sc-btn-kick" wire:loading.attr="disabled" wire:loading.class="opacity-60">
-                        <span wire:loading.remove wire:target="saveTask">{{ $taskId > 0 ? __('tasks.btn_update') : __('tasks.btn_save') }}</span>
-                        <span wire:loading wire:target="saveTask">{{ __('tasks.btn_saving') }}</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
+    </x-starcho-popup-kick>
 </div>

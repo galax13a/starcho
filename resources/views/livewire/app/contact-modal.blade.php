@@ -73,26 +73,19 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-contact" class="md:w-[640px] !p-0 app-popup-card" focusable>
-
-        <div class="starcho-stripeX-modal">
-
-            {{-- Header ── Stripe style ── --}}
-            <div class="starcho-stripeX-modal-header">
-                <div class="starcho-stripeX-modal-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div>
-                    <div class="starcho-stripeX-modal-title">
-                        {!! $contactId > 0 ? '<span>'.__('contacts.modal_title_edit').'</span> '.__('contacts.modal_contact') : '<span>'.__('contacts.modal_title_new').'</span> '.__('contacts.modal_contact') !!}
-                    </div>
-                    <div class="starcho-stripeX-modal-subtitle">{{ __('contacts.modal_subtitle') }}</div>
-                </div>
-            </div>
-
-            {{-- Body ── Stripe style inputs ── --}}
-            <form wire:submit="saveContact" class="starcho-stripeX-modal-form">
-                <div class="starcho-stripeX-modal-body" style="display:flex;flex-direction:column;gap:16px;">
+    <x-starcho-popup-stripe
+        name="modal-contact"
+        width="md:w-[640px]"
+        icon="fas fa-users"
+        :title="__('contacts.modal_contact')"
+        :title-accent="$contactId > 0 ? __('contacts.modal_title_edit') : __('contacts.modal_title_new')"
+        :subtitle="__('contacts.modal_subtitle')"
+        submit-action="saveContact"
+        :cancel-label="__('contacts.btn_cancel')"
+        :save-label="$contactId > 0 ? __('contacts.btn_update') : __('contacts.btn_save')"
+        :saving-label="__('contacts.btn_saving')"
+        loading-target="saveContact"
+    >
 
                     {{-- Nombre --}}
                     <div class="sc-field">
@@ -158,26 +151,14 @@ new class extends Component {
                         @enderror
                     </div>
 
-                </div>
-
-                {{-- Footer ── Stripe style ── --}}
-                <div class="starcho-stripeX-modal-footer">
-                    <flux:modal.close>
-                        <button type="button" class="sc-btn sc-btn-stripe sc-btn-ghost">
-                            {{ __('contacts.btn_cancel') }}
-                        </button>
-                    </flux:modal.close>
-                    <button type="submit" class="sc-btn sc-btn-stripe" wire:loading.attr="disabled" wire:loading.class="opacity-60">
-                        <span wire:loading.remove="" wire:target="saveContact">
-                            <i class="fas fa-bolt" style="font-size:11px;"></i>
-                            {{ $contactId > 0 ? __('contacts.btn_update') : __('contacts.btn_save') }}
-                        </span>
-                        <span wire:loading="" wire:target="saveContact">{{ __('contacts.btn_saving') }}</span>
-                    </button>
-                </div>
-            </form>
-
-        </div>
-
-    </flux:modal>
+        <x-slot:actions>
+            <x-starcho-btn-stripe
+                type="submit"
+                icon="fas fa-bolt"
+                :label="$contactId > 0 ? __('contacts.btn_update') : __('contacts.btn_save')"
+                :loading-label="__('contacts.btn_saving')"
+                loading-target="saveContact"
+            />
+        </x-slot:actions>
+    </x-starcho-popup-stripe>
 </div>

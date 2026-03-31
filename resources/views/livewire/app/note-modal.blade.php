@@ -63,20 +63,20 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-note" class="md:w-[700px] !p-0 app-popup-card starcho-tiktok-modal" focusable>
-        <div class="sc-modal-tt">
-            <div class="sc-modal-tt-header starcho-tiktok-modal-header">
-                <div class="sc-modal-tt-icon"><i class="fas fa-note-sticky"></i></div>
-                <div>
-                    <div class="sc-modal-tt-title">
-                        <span>{{ $noteId > 0 ? __('notes.modal_title_edit') : __('notes.modal_title_new') }}</span> {{ __('notes.modal_note') }}
-                    </div>
-                    <div class="starcho-tiktok-modal-subtitle">{{ __('notes.modal_subtitle') }}</div>
-                </div>
-            </div>
-
-            <form wire:submit="saveNote" class="starcho-tiktok-modal-form">
-                <div class="sc-modal-tt-body starcho-tiktok-modal-body" style="display:flex;flex-direction:column;gap:16px;">
+    <x-starcho-popup-tiktok
+        name="modal-note"
+        width="md:w-[700px]"
+        icon="fas fa-note-sticky"
+        :title="__('notes.modal_note')"
+        :title-accent="$noteId > 0 ? __('notes.modal_title_edit') : __('notes.modal_title_new')"
+        :subtitle="__('notes.modal_subtitle')"
+        submit-action="saveNote"
+        form-class="starcho-tiktok-modal-form"
+        :cancel-label="__('notes.btn_cancel')"
+        :save-label="$noteId > 0 ? __('notes.btn_update') : __('notes.btn_save')"
+        :saving-label="__('notes.btn_saving')"
+        loading-target="saveNote"
+    >
                     <div class="sc-field">
                         <label class="sc-label sc-label-tt">{{ __('notes.field_title') }} <span style="color:#fe2c55">*</span></label>
                         <input wire:model="title" type="text" placeholder="{{ __('notes.field_title_ph') }}" class="sc-input sc-input-tt">
@@ -120,18 +120,5 @@ new class extends Component {
                             <span class="sc-field-error sc-field-error-tt">{{ $message }}</span>
                         @enderror
                     </div>
-                </div>
-
-                <div class="sc-modal-tt-footer starcho-tiktok-modal-footer">
-                    <flux:modal.close>
-                        <button type="button" class="sc-btn sc-btn-tt sc-btn-ghost">{{ __('notes.btn_cancel') }}</button>
-                    </flux:modal.close>
-                    <button type="submit" class="sc-btn sc-btn-tt" wire:loading.attr="disabled" wire:loading.class="opacity-60">
-                        <span wire:loading.remove wire:target="saveNote">{{ $noteId > 0 ? __('notes.btn_update') : __('notes.btn_save') }}</span>
-                        <span wire:loading wire:target="saveNote">{{ __('notes.btn_saving') }}</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
+    </x-starcho-popup-tiktok>
 </div>

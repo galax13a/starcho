@@ -1925,12 +1925,28 @@ table .badge {
     --kick-text: #163117;
     --kick-text2: #4b6a4c;
     --kick-glow: rgba(83,252,24,.14);
+    max-height: calc(100dvh - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .starchi-kick-modal .sc-modal-kick {
     border-radius: 12px;
     background: var(--kick-card);
     border-color: var(--kick-border);
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.starchi-kick-modal .starchi-kick-modal-form,
+.starchi-kick-modal form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .starchi-kick-modal .starchi-kick-modal-header {
@@ -1946,11 +1962,15 @@ table .badge {
 
 .starchi-kick-modal .starchi-kick-modal-body {
     background: linear-gradient(180deg, rgba(245,255,243,.9), rgba(240,251,238,.7));
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .starchi-kick-modal .starchi-kick-modal-footer {
     border-top: 1px solid rgba(83,252,24,.22);
     background: rgba(231,247,229,.7);
+    flex-shrink: 0;
 }
 
 .dark .starchi-kick-modal {
@@ -1979,6 +1999,12 @@ table .badge {
 .dark .starchi-kick-modal .starchi-kick-modal-footer {
     border-top-color: rgba(83,252,24,.24);
     background: rgba(11,17,10,.92);
+}
+
+@media (max-width: 640px) {
+    .starchi-kick-modal {
+        max-height: calc(100dvh - 24px);
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════

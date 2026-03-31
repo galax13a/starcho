@@ -6,9 +6,12 @@
                 <p>{{ __('tasks.page_subtitle') }}</p>
             </div>
             <div class="sa-page-header-right">
-                <button onclick="Livewire.dispatch('openTask', {id:0})" class="sc-btn sc-btn-kick starchi-kick-btn">
-                    <i class="fas fa-plus"></i> {{ __('tasks.new_task') }}
-                </button>
+                <x-starcho-btn-kick
+                    onclick="Livewire.dispatch('openTask', {id:0})"
+                    icon="fas fa-plus"
+                    :label="__('tasks.new_task')"
+                    class="starchi-kick-btn"
+                />
             </div>
         </div>
 
