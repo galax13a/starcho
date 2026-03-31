@@ -15,22 +15,23 @@
 
     @php
         $stats = [
-            ['label' => __('admin_ui.notes.stats.total'), 'value' => \App\Models\Note::count(), 'color' => 'text-zinc-700 dark:text-zinc-200'],
-            ['label' => __('admin_ui.notes.stats.with_content'), 'value' => \App\Models\Note::whereNotNull('content')->where('content', '!=', '')->count(), 'color' => 'text-cyan-600 dark:text-cyan-400'],
-            ['label' => __('admin_ui.notes.stats.without_content'), 'value' => \App\Models\Note::where(function ($q) { $q->whereNull('content')->orWhere('content', ''); })->count(), 'color' => 'text-slate-600 dark:text-slate-400'],
-            ['label' => __('admin_ui.notes.stats.indigo'), 'value' => \App\Models\Note::where('color', '#6366f1')->count(), 'color' => 'text-indigo-600 dark:text-indigo-400'],
-            ['label' => __('admin_ui.notes.stats.green'), 'value' => \App\Models\Note::where('color', '#22c55e')->count(), 'color' => 'text-emerald-600 dark:text-emerald-400'],
-            ['label' => __('admin_ui.notes.stats.red'), 'value' => \App\Models\Note::where('color', '#ef4444')->count(), 'color' => 'text-red-600 dark:text-red-400'],
-            ['label' => __('admin_ui.notes.stats.important_date'), 'value' => \App\Models\Note::whereNotNull('important_date')->count(), 'color' => 'text-emerald-600 dark:text-emerald-400'],
+            ['label' => __('admin_ui.notes.stats.total'), 'value' => \App\Models\Note::count(), 'tone' => 'default'],
+            ['label' => __('admin_ui.notes.stats.with_content'), 'value' => \App\Models\Note::whereNotNull('content')->where('content', '!=', '')->count(), 'tone' => 'cyan'],
+            ['label' => __('admin_ui.notes.stats.without_content'), 'value' => \App\Models\Note::where(function ($q) { $q->whereNull('content')->orWhere('content', ''); })->count(), 'tone' => 'slate'],
+            ['label' => __('admin_ui.notes.stats.indigo'), 'value' => \App\Models\Note::where('color', '#6366f1')->count(), 'tone' => 'indigo'],
+            ['label' => __('admin_ui.notes.stats.green'), 'value' => \App\Models\Note::where('color', '#22c55e')->count(), 'tone' => 'emerald'],
+            ['label' => __('admin_ui.notes.stats.red'), 'value' => \App\Models\Note::where('color', '#ef4444')->count(), 'tone' => 'red'],
+            ['label' => __('admin_ui.notes.stats.important_date'), 'value' => \App\Models\Note::whereNotNull('important_date')->count(), 'tone' => 'violet'],
         ];
     @endphp
 
-    <div class="sa-stats-grid mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
         @foreach($stats as $s)
-            <div class="sa-stat-card">
-                <div class="sa-stat-label">{{ $s['label'] }}</div>
-                <div class="sa-stat-value {{ $s['color'] }}">{{ $s['value'] }}</div>
-            </div>
+            <x-starcho-card-statsOne
+                :label="$s['label']"
+                :value="$s['value']"
+                :tone="$s['tone']"
+            />
         @endforeach
     </div>
 

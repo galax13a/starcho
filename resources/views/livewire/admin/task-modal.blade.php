@@ -78,9 +78,15 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:modal name="modal-task" class="md:w-[680px]" focusable>
-        <form wire:submit="saveTask" class="space-y-5">
-            <flux:heading size="lg">{{ $taskId > 0 ? __('admin_ui.tasks.edit_title') : __('admin_ui.tasks.create_title') }}</flux:heading>
+    <x-starcho-popup-standar
+        name="modal-task"
+        width="md:w-[680px]"
+        submit-action="saveTask"
+        :title="$taskId > 0 ? __('admin_ui.tasks.edit_title') : __('admin_ui.tasks.create_title')"
+        :save-label="$taskId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save')"
+        :saving-label="__('admin_ui.common.saving')"
+        loading-target="saveTask"
+    >
 
             <flux:field>
                 <flux:label>{{ __('admin_ui.tasks.form.title') }}</flux:label>
@@ -137,15 +143,5 @@ new class extends Component {
                 </flux:field>
             </div>
 
-            <div class="flex justify-end gap-2 pt-1">
-                <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('admin_ui.common.cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveTask">{{ $taskId > 0 ? __('admin_ui.common.update') : __('admin_ui.common.save') }}</span>
-                    <span wire:loading wire:target="saveTask">{{ __('admin_ui.common.saving') }}</span>
-                </flux:button>
-            </div>
-        </form>
-    </flux:modal>
+    </x-starcho-popup-standar>
 </div>

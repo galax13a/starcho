@@ -1,8 +1,8 @@
 @props([
-    'variant' => 'primary', // primary | ghost
-    'color' => null, // violet | emerald | sky | amber
+    'variant' => 'primary', // primary | ghost | outline
+    'color' => 'violet', // violet | emerald | sky | amber
     'type' => 'button',
-    'icon' => null,
+    'icon' => null, // Font Awesome class, ex: fas fa-plus
     'label' => null,
     'onclick' => null,
     'wireClick' => null,
@@ -12,9 +12,14 @@
 ])
 
 @php
-    $variantClass = $variant === 'ghost' ? 'sc-btn-ghost' : '';
-    $colorClass = $color ? "sc-btn-color-{$color}" : '';
-    $btnClass = trim("sc-btn sc-btn-stripe {$variantClass} {$colorClass} {$class}");
+    $variantClass = match ($variant) {
+        'ghost' => 'sc-btn-ghost',
+        'outline' => 'sc-btn-outline',
+        default => '',
+    };
+
+    $colorClass = "sc-btn-color-{$color}";
+    $btnClass = trim("sc-btn {$variantClass} {$colorClass} {$class}");
 @endphp
 
 <button

@@ -26,6 +26,8 @@ final class ContactsTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->persist(['columns'], 'app');
+
         return [
             PowerGrid::header()
                 ->showSearchInput()

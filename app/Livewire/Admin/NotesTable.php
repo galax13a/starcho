@@ -25,6 +25,8 @@ final class NotesTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->persist(['columns'], 'admin');
+
         return [
             PowerGrid::header()
                 ->showSearchInput()

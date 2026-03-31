@@ -1,5 +1,6 @@
 @props([
     'variant' => 'primary', // primary | ghost
+    'color' => null, // violet | emerald | sky | amber
     'type' => 'button',
     'icon' => null,
     'label' => null,
@@ -12,7 +13,8 @@
 
 @php
     $variantClass = $variant === 'ghost' ? 'sc-btn-ghost' : '';
-    $btnClass = trim("sc-btn sc-btn-kick {$variantClass} {$class}");
+    $colorClass = $color ? "sc-btn-color-{$color}" : '';
+    $btnClass = trim("sc-btn sc-btn-kick {$variantClass} {$colorClass} {$class}");
 @endphp
 
 <button
