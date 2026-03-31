@@ -1,82 +1,81 @@
 <x-layouts::auth :title="__('Register')">
     @php($registrationEnabled = $registrationEnabled ?? \App\Models\SiteSetting::isPublicRegistrationEnabled())
 
-    <div class="flex flex-col gap-6">
-        @if ($registrationEnabled)
-            <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
-        @else
-            <x-auth-header
-                :title="__('Registration disabled')"
-                :description="__('admin_ui.site.notify.registration_disabled_support')"
-            />
-        @endif
+    <div class="st-auth" x-data="{ isLight:false }" :class="isLight ? 'is-light' : ''">
+        <div class="absolute right-4 top-4 z-20">
+            <button type="button" class="st-auth-link" @click="isLight = !isLight">{{ __('Theme') }}</button>
+        </div>
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
-
-        @if ($registrationEnabled)
-            <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
-                @csrf
-                <!-- Name -->
-                <flux:input
-                    name="name"
-                    :label="__('Name')"
-                    :value="old('name')"
-                    type="text"
-                    required
-                    autofocus
-                    autocomplete="name"
-                    :placeholder="__('Full name')"
-                />
-
-                <!-- Email Address -->
-                <flux:input
-                    name="email"
-                    :label="__('Email address')"
-                    :value="old('email')"
-                    type="email"
-                    required
-                    autocomplete="email"
-                    placeholder="email@example.com"
-                />
-
-                <!-- Password -->
-                <flux:input
-                    name="password"
-                    :label="__('Password')"
-                    type="password"
-                    required
-                    autocomplete="new-password"
-                    :placeholder="__('Password')"
-                    viewable
-                />
-
-                <!-- Confirm Password -->
-                <flux:input
-                    name="password_confirmation"
-                    :label="__('Confirm password')"
-                    type="password"
-                    required
-                    autocomplete="new-password"
-                    :placeholder="__('Confirm password')"
-                    viewable
-                />
-
-                <div class="flex items-center justify-end">
-                    <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                        {{ __('Create account') }}
-                    </flux:button>
+        <div class="st-auth-shell">
+            <aside class="st-auth-brand">
+                <div class="st-auth-brand-card">
+                    <div class="st-auth-logo">
+                        <span class="st-auth-logo-mark">S</span>
+                        <span>{{ config('app.name', 'Starcho') }}</span>
+                    </div>
+                    <h2 class="st-auth-title">{{ __('Build your next') }}<br><span>{{ __('CRM in hours') }}</span></h2>
+                    <p class="st-auth-sub">{{ __('Launch with auth, dashboard and modular architecture using a modern TikTok-inspired visual style.') }}</p>
+                    <div class="st-auth-pills">
+                        <span class="st-auth-pill">CRUD Auto</span>
+                        <span class="st-auth-pill">Dark/Light</span>
+                        <span class="st-auth-pill">Scalable</span>
+                        <span class="st-auth-pill">SEO Ready</span>
+                    </div>
                 </div>
-            </form>
-        @else
-            <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200">
-                {{ __('admin_ui.site.notify.registration_disabled_support') }}
-            </div>
-        @endif
+            </aside>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-            <span>{{ __('Already have an account?') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+            <section class="st-auth-form">
+                <div class="st-auth-form-card">
+                    @if ($registrationEnabled)
+                        <h1 class="st-auth-h1">{{ __('Create account') }}</h1>
+                        <p class="st-auth-hint">{{ __('Enter your details below to create your account') }}</p>
+
+                        <form method="POST" action="{{ route('register.store') }}">
+                            @csrf
+
+                            <div class="st-auth-field">
+                                <label class="st-auth-label" for="name">{{ __('Name') }}</label>
+                                <input id="name" name="name" type="text" value="{{ old('name') }}" class="st-auth-input" autocomplete="name" required autofocus>
+                                @error('name')
+                                    <div class="st-auth-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="st-auth-field">
+                                <label class="st-auth-label" for="email">{{ __('Email address') }}</label>
+                                <input id="email" name="email" type="email" value="{{ old('email') }}" class="st-auth-input" autocomplete="email" required>
+                                @error('email')
+                                    <div class="st-auth-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="st-auth-field">
+                                <label class="st-auth-label" for="password">{{ __('Password') }}</label>
+                                <input id="password" name="password" type="password" class="st-auth-input" autocomplete="new-password" required>
+                                @error('password')
+                                    <div class="st-auth-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="st-auth-field">
+                                <label class="st-auth-label" for="password_confirmation">{{ __('Confirm password') }}</label>
+                                <input id="password_confirmation" name="password_confirmation" type="password" class="st-auth-input" autocomplete="new-password" required>
+                            </div>
+
+                            <button type="submit" class="st-auth-btn" data-test="register-user-button">{{ __('Create account') }}</button>
+                        </form>
+                    @else
+                        <h1 class="st-auth-h1">{{ __('Registration disabled') }}</h1>
+                        <p class="st-auth-hint">{{ __('admin_ui.site.notify.registration_disabled_support') }}</p>
+                        <div class="st-auth-alert">{{ __('admin_ui.site.notify.registration_disabled_support') }}</div>
+                    @endif
+
+                    <div class="st-auth-foot">
+                        {{ __('Already have an account?') }}
+                        <a href="{{ route('login') }}" wire:navigate class="st-auth-link">{{ __('Log in') }}</a>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </x-layouts::auth>
