@@ -91,7 +91,7 @@ new class extends Component {
             </div>
 
             {{-- Body ── Stripe style inputs ── --}}
-            <form wire:submit="saveContact">
+            <form wire:submit="saveContact" class="starcho-stripeX-modal-form">
                 <div class="starcho-stripeX-modal-body" style="display:flex;flex-direction:column;gap:16px;">
 
                     {{-- Nombre --}}
