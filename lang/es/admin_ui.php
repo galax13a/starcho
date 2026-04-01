@@ -523,6 +523,82 @@ return [
         ],
     ],
 
+    'users_ban' => [
+        'heading'     => 'Banear Usuarios',
+        'description' => 'Restringe o bloquea el acceso de usuarios por tiempo determinado o de forma permanente.',
+        'status' => [
+            'banned' => 'Baneado',
+            'active' => 'Activo',
+        ],
+        'stats' => [
+            'total_banned' => 'Total baneados',
+            'permanent'    => 'Permanentes',
+            'temporary'    => 'Temporales activos',
+            'lifted'       => 'Levantados',
+        ],
+        'filter' => [
+            'active' => 'Bans activos',
+            'all'    => 'Todos',
+            'lifted' => 'Levantados',
+        ],
+        'duration' => [
+            '1h'        => '1 hora',
+            '6h'        => '6 horas',
+            '12h'       => '12 horas',
+            '1d'        => '1 dia',
+            '3d'        => '3 dias',
+            '7d'        => '7 dias',
+            '30d'       => '30 dias',
+            'permanent' => 'Permanente',
+        ],
+        'columns' => [
+            'user'       => 'Usuario',
+            'email'      => 'Email',
+            'status'     => 'Estado',
+            'reason'     => 'Razon',
+            'expires'    => 'Expira',
+            'total_bans' => 'Historial bans',
+            'actions'    => 'Acciones',
+        ],
+        'actions' => [
+            'ban'     => 'Banear',
+            'banning' => 'Baneando...',
+            'unban'   => 'Levantar ban',
+        ],
+        'modal' => [
+            'ban_title'     => 'Banear usuario',
+            'ban_subtitle'  => 'Vas a restringir el acceso a:',
+            'unban_title'   => 'Levantar ban',
+            'unban_confirm' => 'Confirma que deseas levantar el ban a',
+        ],
+        'form' => [
+            'duration'           => 'Duracion del ban',
+            'reason'             => 'Razon del ban',
+            'reason_placeholder' => 'Ej: Comportamiento inapropiado, spam...',
+            'notes'              => 'Notas internas',
+            'notes_help'         => 'Solo visible para administradores',
+            'notes_placeholder'  => 'Contexto adicional para el equipo...',
+        ],
+        'notify' => [
+            'banned'   => 'Usuario :name ha sido baneado.',
+            'unbanned' => 'Ban levantado para :name.',
+        ],
+        'errors' => [
+            'cannot_ban_admin'  => 'No puedes banear a un administrador.',
+            'not_banned'        => 'Este usuario no esta baneado.',
+            'access_restricted' => 'Tu acceso a esta plataforma esta restringido.',
+        ],
+        'banned_page' => [
+            'title'           => 'Acceso restringido',
+            'heading'         => 'Acceso Restringido',
+            'intro'           => 'Hola :name, tu cuenta ha sido suspendida temporalmente.',
+            'reason'          => 'Motivo',
+            'expires'         => 'Expira',
+            'contact_support' => 'Si crees que esto es un error, contacta al soporte.',
+            'logout'          => 'Cerrar sesion',
+        ],
+    ],
+
     'menu' => [
         'heading' => 'Administrador de menu',
         'description' => 'Gestiona los items del menu lateral de la aplicacion. Los cambios se reflejan de inmediato.',

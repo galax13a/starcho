@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('app')
     ->name('app.')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'banned'])
     ->group(function () {
 
         Route::view('/', 'dashboard')->name('dashboard');

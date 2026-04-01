@@ -117,6 +117,28 @@ class StarchoSeeder extends Seeder
                     ],
                 ],
             ],
+            [
+                'key'         => 'users-ban',
+                'name'        => ['es' => 'Banear Usuarios', 'en' => 'Ban Users', 'pt_BR' => 'Banir Usuarios'],
+                'description' => ['es' => 'Restringe o bloquea el acceso de usuarios por tiempo determinado o de forma permanente.', 'en' => 'Restrict or block user access for a set time or permanently.', 'pt_BR' => 'Restrinja ou bloqueie o acesso de usuarios por tempo determinado ou permanentemente.'],
+                'icon'        => 'no-symbol',
+                'installed'   => false,
+                'active'      => false,
+                'config'      => [
+                    'settings_route' => 'admin.users-ban.index',
+                    'menu_items' => [
+                        [
+                            'panel'        => 'admin',
+                            'section'      => 'Sistema',
+                            'parent_route' => 'admin.site.index',
+                            'name'         => ['es' => 'Banear Usuarios', 'en' => 'Ban Users', 'pt_BR' => 'Banir Usuarios'],
+                            'icon'         => 'fas fa-ban',
+                            'route'        => 'admin.users-ban.index',
+                            'sort_order'   => 66,
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         foreach ($modules as $data) {
