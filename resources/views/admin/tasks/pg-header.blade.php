@@ -36,13 +36,4 @@
         <option value="urgent">{{ __('admin_ui.tasks.priority.urgent') }}</option>
     </select>
 
-    {{-- Feature toggle --}}
-    <flux:button
-        wire:click="toggleFeature"
-        variant="{{ $tasksEnabled ? 'ghost' : 'primary' }}"
-        icon="{{ $tasksEnabled ? 'eye' : 'eye-slash' }}"
-        size="sm"
-    >
-        {{ $tasksEnabled ? __('admin_ui.tasks.feature.visible') : __('admin_ui.tasks.feature.hidden') }}
-    </flux:button>
 </div>

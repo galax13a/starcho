@@ -79,6 +79,9 @@ Componentes clave a priorizar:
 - x-starcho-btn-kick / x-starcho-btn-stripe / x-starcho-btn-tiktok
 - x-starcho-popup-kick / x-starcho-popup-stripe / x-starcho-popup-tiktok
 - x-starcho-card-app-kick / x-starcho-card-app-stripe / x-starcho-card-app-tiktok
+- x-starcho-noty (icono notificaciones, soporta theme="app" y theme="admin")
+- x-starcho-alert (toast/notify, soporta theme="app" y theme="admin")
+- x-starcho-chart (gráfica ApexCharts universal, 8 tipos: donut|pie|bar|area|line|radialBar|heatmap|scatter)
 - x-starcho-popup-admin-import
 
 Convención para stats cards en /app:
@@ -86,6 +89,14 @@ Convención para stats cards en /app:
 - contacts usa x-starcho-card-app-stripe
 - notes usa x-starcho-card-app-tiktok
 - Si un módulo app muestra KPIs o métricas, no repetir HTML inline: encapsular en un componente Blade temático.
+
+Convención para gráficas:
+- Usar siempre x-starcho-chart para cualquier gráfica en app o admin.
+- No instanciar ApexCharts con JS ad-hoc en vistas.
+- Props mínimas: type, :series. Agregar :title, :labels/:categories según el tipo.
+- El componente gestiona automáticamente el tema dark/light y la paleta Starcho.
+- Admin/tasks ya lo usa con 3 gráficas (donut by_status, bar last7days, area monthly).
+- Cargar ApexCharts cdn UNA sola vez en el layout o con @assets antes de usarlo.
 
 ## Convenciones técnicas obligatorias
 
