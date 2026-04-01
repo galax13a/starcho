@@ -1,11 +1,4 @@
-<div
-    x-data="{
-        showUnban: false,
-        unbanUserId: null,
-        unbanUserName: '',
-    }"
-    x-on:openUnbanConfirm.window="showUnban = true; unbanUserId = $event.detail.userId; unbanUserName = $event.detail.userName"
->
+<div>
     <!-- Modal: Banear usuario -->
     <div
         x-show="$wire.showBanModal"
@@ -126,7 +119,7 @@
 
     <!-- Confirm unban dialog -->
     <div
-        x-show="showUnban"
+        x-show="$wire.showUnbanModal"
         x-transition
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
         x-cloak
@@ -137,18 +130,18 @@
             </h3>
             <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-5">
                 {{ __('admin_ui.users_ban.modal.unban_confirm') }}
-                <strong x-text="unbanUserName"></strong>?
+                <strong x-text="$wire.selectedUserName"></strong>?
             </p>
             <div class="flex gap-3 justify-end">
                 <button
                     type="button"
                     class="sa-btn sa-btn-secondary sa-btn-sm"
-                    @click="showUnban = false"
+                    wire:click="$set('showUnbanModal', false)"
                 >{{ __('actions.cancel') }}</button>
                 <button
                     type="button"
                     class="sa-btn sa-btn-success sa-btn-sm"
-                    @click="$wire.doUnban(unbanUserId); showUnban = false"
+                    wire:click="doUnban"
                     wire:loading.attr="disabled"
                 >
                     <i class="fas fa-unlock mr-1"></i>
