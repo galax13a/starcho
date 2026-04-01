@@ -10,10 +10,15 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AdminContactsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
+    public function __construct(private readonly ?array $contactIds = null)
+    {
+    }
+
     public function query()
     {
         return Contact::query()
             ->with('creator')
+            ->when($this->contactIds, fn ($query) => $query->whereIn('id', $this->contactIds))
             ->orderByDesc('created_at');
     }
 
@@ -21,10 +26,10 @@ class AdminContactsExport implements FromQuery, WithHeadings, WithMapping, Shoul
     {
         return [
             'id',
-            'full_name',
+            'name',
             'email',
             'phone',
-            'organization',
+            'company',
             'status',
             'notes',
             'created_by',
@@ -36,10 +41,10 @@ class AdminContactsExport implements FromQuery, WithHeadings, WithMapping, Shoul
     {
         return [
             $contact->id,
-            (string) ($contact->full_name ?? ''),
+            (string) ($contact->name ?? ''),
             (string) ($contact->email ?? ''),
             (string) ($contact->phone ?? ''),
-            (string) ($contact->organization ?? ''),
+            (string) ($contact->company ?? ''),
             $contact->status ?? '',
             (string) ($contact->notes ?? ''),
             $contact->creator?->email ?? '',

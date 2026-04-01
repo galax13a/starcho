@@ -34,10 +34,10 @@ new class extends Component {
             $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-tasks-import'}}))");
             $this->dispatch('pg:eventRefresh-admin-tasks-table');
             $this->dispatch('admin-tasks-updated');
-            $this->dispatch('notify', type: 'success', message: __('admin_ui.tasks.import_result', ['created' => $import->created, 'updated' => $import->updated]));
+            $this->dispatch('notify', type: 'success', message: __('admin_ui.common.import_result', ['created' => $import->created, 'updated' => $import->updated]));
         } catch (\Throwable $exception) {
             report($exception);
-            $this->dispatch('notify', type: 'error', message: __('admin_ui.tasks.import_error'));
+            $this->dispatch('notify', type: 'error', message: __('admin_ui.common.import_error'));
         }
     }
 }; ?>
@@ -47,7 +47,7 @@ new class extends Component {
         modal-name="modal-admin-tasks-import"
         submit-method="importTasks"
         loading-target="importTasks"
-        title="{{ __('admin_ui.tasks.import_excel') }}"
+        title="{{ __('admin_ui.common.import_data') }}"
         file-model="importFile"
     />
 </div>

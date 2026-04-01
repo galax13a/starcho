@@ -8,6 +8,12 @@ return [
         'saving' => 'Saving...',
         'save_changes' => 'Save changes',
         'import' => 'Import',
+        'importing' => 'Importing...',
+        'import_data' => 'Import data',
+        'import_result' => 'Import finished: :created created, :updated updated.',
+        'import_error' => 'The file could not be imported.',
+        'select_item_to_export' => 'Select at least one item to export.',
+        'file' => 'File',
         'update' => 'Update',
         'record_not_found' => 'Record not found or without permission.',
     ],
@@ -169,6 +175,12 @@ return [
             'all_statuses' => 'All statuses',
             'all_priorities' => 'All priorities',
         ],
+        'bulk' => [
+            'selected' => 'selected',
+            'delete_selected' => 'Delete selected',
+            'clear_selection' => 'Clear selection',
+            'delete_confirm' => 'The selected tasks will be deleted. This action cannot be undone.',
+        ],
         'status' => [
             'pending' => 'Pending',
             'in_progress' => 'In progress',
@@ -216,6 +228,8 @@ return [
             'updated' => 'Task :name updated successfully.',
             'deleted' => 'Task deleted successfully.',
             'not_found' => 'Task not found or without permission.',
+            'no_selection' => 'Select at least one task.',
+            'bulk_deleted' => ':count tasks were deleted successfully.',
         ],
     ],
 
@@ -232,6 +246,13 @@ return [
         ],
         'filters' => [
             'all_statuses' => 'All statuses',
+        ],
+        'bulk' => [
+            'selected' => 'selected',
+            'export_selected' => 'Export selected',
+            'delete_selected' => 'Delete selected',
+            'clear_selection' => 'Clear selection',
+            'delete_confirm' => 'The selected contacts will be deleted. This action cannot be undone.',
         ],
         'status' => [
             'lead' => 'Lead',
@@ -270,6 +291,8 @@ return [
             'updated' => 'Contact :name updated successfully.',
             'deleted' => 'Contact deleted successfully.',
             'not_found' => 'Contact not found or without permission.',
+            'no_selection' => 'Select at least one contact.',
+            'bulk_deleted' => ':count contacts were deleted successfully.',
         ],
     ],
 
@@ -288,6 +311,12 @@ return [
         ],
         'filters' => [
             'all_colors' => 'All colors',
+        ],
+        'bulk' => [
+            'selected' => 'selected',
+            'delete_selected' => 'Delete selected',
+            'clear_selection' => 'Clear selection',
+            'delete_confirm' => 'The selected notes will be deleted. This action cannot be undone.',
         ],
         'colors' => [
             'indigo' => 'Indigo',
@@ -335,6 +364,14 @@ return [
             'day_fri' => 'Fri',
             'day_sat' => 'Sat',
             'day_sun' => 'Sun',
+        ],
+        'notify' => [
+            'created' => 'Note :name created successfully.',
+            'updated' => 'Note :name updated successfully.',
+            'deleted' => 'Note deleted successfully.',
+            'not_found' => 'Note not found or without permission.',
+            'no_selection' => 'Select at least one note.',
+            'bulk_deleted' => ':count notes were deleted successfully.',
         ],
     ],
 
@@ -444,6 +481,7 @@ return [
         ],
         'items_in_panel' => ':count item(s) in panel :panel',
         'new_item' => 'New item',
+        'drag_hint' => 'Drag and drop to reorder menu and submenus. It saves automatically on drop.',
         'no_items' => 'No items in panel :panel. Create the first one.',
         'sub_level' => 'sub-:depth',
         'route_label' => 'route',
@@ -454,6 +492,7 @@ return [
         'actions' => [
             'move_up' => 'Move up',
             'move_down' => 'Move down',
+            'drag' => 'Drag',
             'activate' => 'Activate',
             'deactivate' => 'Deactivate',
             'add_child' => 'Add child',
@@ -464,6 +503,15 @@ return [
             'item_saved' => 'Item saved.',
             'item_deleted' => 'Item deleted.',
         ],
+        'labels' => [
+            'title' => 'Section labels',
+            'subtitle' => 'Create or edit global labels for this panel.',
+            'placeholder' => 'Ex. Access, App, System...',
+            'create' => 'Create label',
+            'update' => 'Update label',
+            'edit' => 'Edit label',
+            'empty' => 'No labels yet for this panel.',
+        ],
         'modal' => [
             'new_item' => 'New menu item',
             'edit_item' => 'Edit item',
@@ -472,6 +520,7 @@ return [
             'panel' => 'Panel',
             'section' => 'Section',
             'section_placeholder' => 'Access, System...',
+            'section_hint' => 'You can type a new label or reuse an existing one.',
             'icon' => 'Icon (FA class)',
             'icon_placeholder' => 'fas fa-home',
             'order' => 'Order',
@@ -583,6 +632,8 @@ return [
         'total_countries' => 'Unique Countries',
         'total_cities' => 'Unique Cities',
         'total_users' => 'Registered Users',
+        'total_isps' => 'Unique ISP Providers',
+        'table_hint' => 'Includes country, timezone, coordinates and ISP (enable columns from toggle).',
         'columns' => [
             'ip' => 'IP Address',
             'user' => 'User',

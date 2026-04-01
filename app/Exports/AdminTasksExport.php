@@ -10,10 +10,15 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AdminTasksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
+    public function __construct(private readonly ?array $taskIds = null)
+    {
+    }
+
     public function query()
     {
         return Task::query()
             ->with('assignedUser', 'creator')
+            ->when($this->taskIds, fn ($query) => $query->whereIn('id', $this->taskIds))
             ->orderByDesc('created_at');
     }
 

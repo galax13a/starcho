@@ -10,10 +10,15 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AdminNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
+    public function __construct(private readonly ?array $noteIds = null)
+    {
+    }
+
     public function query()
     {
         return Note::query()
             ->with('creator')
+            ->when($this->noteIds, fn ($query) => $query->whereIn('id', $this->noteIds))
             ->orderByDesc('created_at');
     }
 

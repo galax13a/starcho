@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminTasksExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\AppSetting;
@@ -10,10 +11,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class TasksTable extends PowerGridComponent
 {
@@ -30,6 +33,7 @@ final class TasksTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
         $this->persist(['columns'], 'admin');
 
         return [
@@ -81,7 +85,7 @@ final class TasksTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('admin_ui.tasks.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.tasks.columns.id'), 'id')->sortable()->hidden(),
             Column::make(__('admin_ui.tasks.columns.title'), 'title')->sortable()->searchable(),
             Column::make(__('admin_ui.tasks.columns.status'), 'status_label'),
             Column::make(__('admin_ui.tasks.columns.priority'), 'priority_label'),
@@ -107,6 +111,62 @@ final class TasksTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedTaskIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AdminTasksExport($selectedIds),
+            'admin-tasks-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedTaskIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+            return;
+        }
+
+        $tasks = Task::query()
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($tasks as $task) {
+            $task->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+
+        $this->notifyWarning(__('admin_ui.tasks.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
     #[On('deleteTask')]
     public function deleteTask(int $id): void
     {
@@ -120,6 +180,16 @@ final class TasksTable extends PowerGridComponent
         $task->delete();
         $this->notifyCrud('tasks', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    private function selectedTaskIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function toggleFeature(): void

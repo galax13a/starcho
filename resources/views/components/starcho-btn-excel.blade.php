@@ -2,11 +2,18 @@
     'action' => 'export', // 'export' o 'import'
     'module' => 'notes', // 'notes', 'tasks', 'contacts'
     'section' => 'app', // 'app' o 'admin'
+    'bulkWireMethod' => null, // Si se define, al haber selección llama $wire.método en vez de navegar
+    'requireSelection' => false, // Si está en true, no exporta todo cuando no hay selección
+    'requireSelectionMessage' => null, // Mensaje de alerta cuando no hay selección
 ])
 
 @php
     $isImport = $action === 'import';
     $isExport = $action === 'export';
+    $requireSelectionMessageJs = json_encode(
+        $requireSelectionMessage ?? __('admin_ui.common.select_item_to_export'),
+        JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+    );
     
     // Textos en español e inglés
     $translations = [
@@ -51,7 +58,19 @@
     }
 @endphp
 
-@if ($isExport)
+@if ($isExport && $bulkWireMethod)
+    {{-- Modo inteligente: exporta seleccionados; opcionalmente exige selección previa --}}
+    <flux:button
+        type="button"
+        x-on:click="if (typeof selected !== 'undefined' && selected.length > 0) { $wire.{{ $bulkWireMethod }}(); } else if ({{ $requireSelection ? 'true' : 'false' }}) { window.Starcho.alert('warning', {{ $requireSelectionMessageJs }}); } else { window.location.href='{{ $href }}'; }"
+        variant="ghost"
+        size="sm"
+        icon="{{ $icon }}"
+        tooltip="{{ $displayTitle }}"
+        aria-label="{{ $displayTitle }}"
+        class="{{ $baseClass }}"
+    />
+@elseif ($isExport)
     <flux:button
         :href="$href"
         variant="ghost"
