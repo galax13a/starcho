@@ -222,6 +222,67 @@ O desde Livewire:
 $this->dispatch('notify', type: 'success', message: __('messages.saved'));
 ```
 
+### API recomendada de `x-starcho-chart`
+
+Componente universal de gráficas basado en **ApexCharts** + **Alpine.js 3**. Se usa en dashboards, stats de módulos y cualquier pantalla que requiera visualización de datos en app o admin.
+
+Prop | Tipo | Default | Descripción
+-----|------|---------|------------
+`type` | string | `'bar'` | `donut` \| `pie` \| `bar` \| `area` \| `line` \| `radialBar` \| `heatmap` \| `scatter`
+`:series` | array | `[]` | Datos de la serie. Donut/Pie/RadialBar: `[12, 8, 3]`. Bar/Area/Line: `[['name'=>'X','data'=>[1,2,3]]]`
+`:title` | string | `''` | Título visible sobre la gráfica
+`:labels` | array | `[]` | Etiquetas de segmentos para `donut`, `pie` y `radialBar`
+`:categories` | array | `[]` | Etiquetas del eje X para `bar`, `area`, `line`, `heatmap`
+`:colors` | array | paleta Starcho | Paleta hex personalizada
+`height` | int | `240` | Alto en px del canvas
+`:total-label` | string | `'Total'` | Texto del total visible en el centro del donut
+`:gradient` | bool | `true` | Activa relleno degradado en barras
+
+Uso mínimo:
+```blade
+{{-- Requerir ApexCharts UNA vez en el layout o vista --}}
+@assets
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
+@endassets
+
+{{-- Donut de estados --}}
+<x-starcho-chart
+    type="donut"
+    :title="__('admin_ui.tasks.chart.by_status')"
+    :series="$byStatus->values()->toArray()"
+    :labels="$byStatus->keys()->toArray()"
+    :colors="['#64748b','#3b82f6','#10b981','#6b7280']"
+    :total-label="__('admin_ui.tasks.stats.total')"
+/>
+
+{{-- Barras de actividad semanal --}}
+<x-starcho-chart
+    type="bar"
+    :title="'Actividad (7 días)'"
+    :series="[['name' => 'Tareas', 'data' => $last7Days]]"
+    :categories="$last7DaysLabels"
+    :height="180"
+/>
+
+{{-- Área de tendencia mensual --}}
+<x-starcho-chart
+    type="area"
+    :title="'Tendencia 6 meses'"
+    :series="[['name' => 'Registros', 'data' => $monthly]]"
+    :categories="['Ene','Feb','Mar','Abr','May','Jun']"
+    :colors="['#a855f7']"
+/>
+```
+
+**Portabilidad a otros proyectos Laravel:**
+Copiar `resources/views/components/starcho-chart.blade.php`. Dependencias: ApexCharts (CDN o npm) y Alpine.js 3. No requiere ninguna clase PHP adicional.
+
+**Módulos que ya lo usan:** `admin/tasks` (3 gráficas: donut, bar, area).
+
+**Regla:** No instanciar `ApexCharts` con JS ad-hoc en vistas. Usar siempre `x-starcho-chart` para mantener tema dark/light automático y paleta Starcho.
+
+---
+
 ### Buenas prácticas para mantener escalabilidad
 
 - No duplicar HTML de modales entre módulos; extender desde `starcho-popup-*`.
@@ -781,6 +842,7 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-card-app-kick` / `x-starcho-card-app-stripe` / `x-starcho-card-app-tiktok` | Tarjetas de métricas por skin visual | Componentes stats en /app |
 | `x-starcho-noty` | Icono de notificaciones con dropdown | Topbar app y admin |
 | `x-starcho-alert` | Toast/alerta de sistema (evento `notify`) | Layout app y admin |
+| `x-starcho-chart` | Gráfica ApexCharts universal (8 tipos) | Stats y dashboards en app y admin |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
 
 Regla: si un bloque UI se repite en 2 o más módulos, se convierte en componente.
