@@ -523,6 +523,82 @@ return [
         ],
     ],
 
+    'users_ban' => [
+        'heading'     => 'Banir Usuarios',
+        'description' => 'Restrinja ou bloqueie o acesso de usuarios por um periodo especifico ou de forma permanente.',
+        'status' => [
+            'banned' => 'Banido',
+            'active' => 'Ativo',
+        ],
+        'stats' => [
+            'total_banned' => 'Total banidos',
+            'permanent'    => 'Permanentes',
+            'temporary'    => 'Temporarios',
+            'lifted'       => 'Removidos',
+        ],
+        'filter' => [
+            'active' => 'Bans ativos',
+            'all'    => 'Todos',
+            'lifted' => 'Removidos',
+        ],
+        'duration' => [
+            '1h'        => '1 hora',
+            '6h'        => '6 horas',
+            '12h'       => '12 horas',
+            '1d'        => '1 dia',
+            '3d'        => '3 dias',
+            '7d'        => '7 dias',
+            '30d'       => '30 dias',
+            'permanent' => 'Permanente',
+        ],
+        'columns' => [
+            'user'       => 'Usuario',
+            'email'      => 'Email',
+            'status'     => 'Status',
+            'reason'     => 'Motivo',
+            'expires'    => 'Expira em',
+            'total_bans' => 'Historico de bans',
+            'actions'    => 'Acoes',
+        ],
+        'actions' => [
+            'ban'     => 'Banir',
+            'banning' => 'Banindo...',
+            'unban'   => 'Remover ban',
+        ],
+        'modal' => [
+            'ban_title'     => 'Banir usuario',
+            'ban_subtitle'  => 'Voce vai restringir o acesso de:',
+            'unban_title'   => 'Remover ban',
+            'unban_confirm' => 'Confirme que deseja remover o ban de',
+        ],
+        'form' => [
+            'duration'           => 'Duracao do ban',
+            'reason'             => 'Motivo do ban',
+            'reason_placeholder' => 'Ex: Comportamento inadequado, spam...',
+            'notes'              => 'Notas internas',
+            'notes_help'         => 'Visivel apenas para administradores',
+            'notes_placeholder'  => 'Contexto adicional para o time...',
+        ],
+        'notify' => [
+            'banned'   => 'Usuario :name foi banido.',
+            'unbanned' => 'Ban removido para :name.',
+        ],
+        'errors' => [
+            'cannot_ban_admin'  => 'Voce nao pode banir um administrador.',
+            'not_banned'        => 'Este usuario nao esta banido.',
+            'access_restricted' => 'Seu acesso a esta plataforma esta restrito.',
+        ],
+        'banned_page' => [
+            'title'           => 'Acesso restrito',
+            'heading'         => 'Acesso Restrito',
+            'intro'           => 'Ola :name, sua conta foi suspensa temporariamente.',
+            'reason'          => 'Motivo',
+            'expires'         => 'Expira em',
+            'contact_support' => 'Se voce acredita que isso e um erro, contate o suporte.',
+            'logout'          => 'Sair',
+        ],
+    ],
+
     'menu' => [
         'heading' => 'Construtor de menu',
         'description' => 'Gerencie os itens do menu lateral. As mudancas sao refletidas imediatamente.',

@@ -521,6 +521,82 @@ return [
         ],
     ],
 
+    'users_ban' => [
+        'heading'     => 'Ban Users',
+        'description' => 'Restrict or block user access for a specific time or permanently.',
+        'status' => [
+            'banned' => 'Banned',
+            'active' => 'Active',
+        ],
+        'stats' => [
+            'total_banned' => 'Total banned',
+            'permanent'    => 'Permanent',
+            'temporary'    => 'Temporary',
+            'lifted'       => 'Lifted',
+        ],
+        'filter' => [
+            'active' => 'Active bans',
+            'all'    => 'All',
+            'lifted' => 'Lifted',
+        ],
+        'duration' => [
+            '1h'        => '1 hour',
+            '6h'        => '6 hours',
+            '12h'       => '12 hours',
+            '1d'        => '1 day',
+            '3d'        => '3 days',
+            '7d'        => '7 days',
+            '30d'       => '30 days',
+            'permanent' => 'Permanent',
+        ],
+        'columns' => [
+            'user'       => 'User',
+            'email'      => 'Email',
+            'status'     => 'Status',
+            'reason'     => 'Reason',
+            'expires'    => 'Expires',
+            'total_bans' => 'Ban history',
+            'actions'    => 'Actions',
+        ],
+        'actions' => [
+            'ban'     => 'Ban',
+            'banning' => 'Banning...',
+            'unban'   => 'Unban',
+        ],
+        'modal' => [
+            'ban_title'     => 'Ban user',
+            'ban_subtitle'  => 'You are about to restrict access for:',
+            'unban_title'   => 'Unban user',
+            'unban_confirm' => 'Confirm you want to unban',
+        ],
+        'form' => [
+            'duration'           => 'Ban duration',
+            'reason'             => 'Ban reason',
+            'reason_placeholder' => 'Ex: Inappropriate behavior, spam...',
+            'notes'              => 'Internal notes',
+            'notes_help'         => 'Visible only to administrators',
+            'notes_placeholder'  => 'Additional context for the team...',
+        ],
+        'notify' => [
+            'banned'   => 'User :name has been banned.',
+            'unbanned' => 'Ban has been lifted for :name.',
+        ],
+        'errors' => [
+            'cannot_ban_admin'  => 'You cannot ban an administrator.',
+            'not_banned'        => 'This user is not banned.',
+            'access_restricted' => 'Your access to this platform is restricted.',
+        ],
+        'banned_page' => [
+            'title'           => 'Restricted access',
+            'heading'         => 'Restricted Access',
+            'intro'           => 'Hi :name, your account has been temporarily suspended.',
+            'reason'          => 'Reason',
+            'expires'         => 'Expires',
+            'contact_support' => 'If you think this is an error, contact support.',
+            'logout'          => 'Log out',
+        ],
+    ],
+
     'menu' => [
         'heading' => 'Menu builder',
         'description' => 'Manage sidebar menu items. Changes are reflected immediately.',

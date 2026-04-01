@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserBanController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
@@ -86,4 +87,9 @@ Route::prefix('admin')
         // ── Geolocation (Starcho IP) ─────────────────────────────────────────────
         Route::get('geolocations',                [GeoLocationsController::class, 'index'])->name('geolocations.index');
         Route::get('geolocations/{geolocation}', [GeoLocationsController::class, 'show'])->name('geolocations.show');
+
+        // ── Ban Users ─────────────────────────────────────────────────────────────
+        Route::get('users-ban',               [UserBanController::class, 'index'])->name('users-ban.index');
+        Route::post('users-ban/{user}/ban',   [UserBanController::class, 'ban'])->name('users-ban.ban');
+        Route::post('users-ban/{user}/unban', [UserBanController::class, 'unban'])->name('users-ban.unban');
     });
