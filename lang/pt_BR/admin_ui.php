@@ -403,6 +403,7 @@ return [
     'modules' => [
         'heading' => 'Modulos do sistema',
         'description' => 'Instale, ative ou desative modulos para adicionar funcionalidades ao app.',
+        'clear_confirm' => 'Esta acao desinstalara todos os modulos instalados e removera seus itens de menu. Deseja continuar?',
         'status' => [
             'active' => 'Ativo',
             'installed' => 'Instalado',
@@ -415,12 +416,16 @@ return [
             'deactivate' => 'Desativar',
             'config' => 'Confing',
             'uninstall' => 'Desinstalar',
+            'export_excel' => 'Exportar Excel',
+            'import_excel' => 'Importar Excel',
+            'clear_all' => 'Excluir tudo',
         ],
         'notify' => [
             'installed_activated' => 'Modulo ":name" instalado e ativado.',
             'uninstalled' => 'Modulo ":name" desinstalado.',
             'activated' => 'Modulo ":name" ativado.',
             'deactivated' => 'Modulo ":name" desativado.',
+            'cleared' => 'Todos os modulos instalados foram desinstalados.',
         ],
     ],
 
