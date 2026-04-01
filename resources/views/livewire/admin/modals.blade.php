@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
@@ -9,6 +10,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 new class extends Component {
+    use DispatchesStarchoNotify;
 
     // ── Rol ───────────────────────────────────────────────────────────────
     public int    $roleId   = 0;
@@ -58,16 +60,22 @@ new class extends Component {
             'roleName' => 'required|string|min:2|max:100|unique:roles,name,' . ($this->roleId ?: 'NULL'),
         ]);
 
-        if ($this->roleId > 0) {
+        $isUpdate = $this->roleId > 0;
+        $notifyName = $this->roleName;
+
+        if ($isUpdate) {
             $role = Role::findOrFail($this->roleId);
             if ($role->name !== 'admin') {
                 $role->update(['name' => $this->roleName, 'guard_name' => 'web']);
             }
             $role->syncPermissions(array_map('intval', $this->rolePerms));
         } else {
-            Role::create(['name' => $this->roleName, 'guard_name' => 'web'])
-                ->syncPermissions(array_map('intval', $this->rolePerms));
+            $role = Role::create(['name' => $this->roleName, 'guard_name' => 'web']);
+            $role->syncPermissions(array_map('intval', $this->rolePerms));
+            $notifyName = $role->name;
         }
+
+        $this->notifyCrud('roles', $isUpdate ? 'updated' : 'created', ['name' => $notifyName]);
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-role'}}))");
         $this->dispatch('pg:eventRefresh-roles-table');
@@ -90,11 +98,15 @@ new class extends Component {
             'permissionName' => 'required|string|min:2|max:100|unique:permissions,name,' . ($this->permissionId ?: 'NULL'),
         ]);
 
-        if ($this->permissionId > 0) {
+        $isUpdate = $this->permissionId > 0;
+
+        if ($isUpdate) {
             Permission::findOrFail($this->permissionId)->update(['name' => $this->permissionName]);
         } else {
             Permission::create(['name' => $this->permissionName, 'guard_name' => 'web']);
         }
+
+        $this->notifyCrud('permissions', $isUpdate ? 'updated' : 'created', ['name' => $this->permissionName]);
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-permission'}}))");
         $this->dispatch('pg:eventRefresh-permissions-table');
@@ -136,7 +148,10 @@ new class extends Component {
 
         $this->validate($rules);
 
-        if ($this->userId > 0) {
+        $isUpdate = $this->userId > 0;
+        $notifyName = $this->userName;
+
+        if ($isUpdate) {
             $user = User::findOrFail($this->userId);
             $data = ['name' => $this->userName, 'email' => $this->userEmail];
             if (filled($this->userPassword)) {
@@ -145,13 +160,17 @@ new class extends Component {
             $user->update($data);
             $user->syncRoles(array_map('intval', $this->userRoles));
         } else {
-            User::create([
+            $user = User::create([
                 'name'              => $this->userName,
                 'email'             => $this->userEmail,
                 'password'          => Hash::make($this->userPassword),
                 'email_verified_at' => now(),
-            ])->syncRoles(array_map('intval', $this->userRoles));
+            ]);
+            $user->syncRoles(array_map('intval', $this->userRoles));
+            $notifyName = $user->name;
         }
+
+        $this->notifyCrud('users', $isUpdate ? 'updated' : 'created', ['name' => $notifyName]);
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-user'}}))");
         $this->dispatch('pg:eventRefresh-users-table');

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class UsersTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'users-table';
@@ -81,7 +83,15 @@ final class UsersTable extends PowerGridComponent
     #[On('deleteUser')]
     public function deleteUser(int $id): void
     {
-        User::find($id)?->delete();
+        $user = User::find($id);
+
+        if (! $user) {
+            $this->notifyCrud('users', 'not_found');
+            return;
+        }
+
+        $user->delete();
+        $this->notifyCrud('users', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

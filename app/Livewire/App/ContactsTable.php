@@ -2,6 +2,7 @@
 
 namespace App\Livewire\App;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class ContactsTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'contacts-table';
@@ -110,10 +112,16 @@ final class ContactsTable extends PowerGridComponent
     public function deleteContact(int $id): void
     {
         $contact = Contact::where('id', $id)->where('user_id', Auth::id())->first();
-        if ($contact) {
-            $contact->delete();
-            $this->dispatch('pg:eventRefresh-' . $this->tableName);
-            $this->dispatch('contacts-updated');
+
+        if (! $contact) {
+            $this->notifyFailure(__('contacts.notify.not_found'));
+            return;
         }
+
+        $contact->delete();
+
+        $this->notifyWarning(__('contacts.notify.deleted'));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('contacts-updated');
     }
 }

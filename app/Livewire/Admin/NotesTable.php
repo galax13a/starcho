@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Note;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class NotesTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'admin-notes-table';
@@ -89,7 +91,15 @@ final class NotesTable extends PowerGridComponent
     #[On('deleteAdminNote')]
     public function deleteAdminNote(int $id): void
     {
-        Note::find($id)?->delete();
+        $note = Note::find($id);
+
+        if (! $note) {
+            $this->notifyCrud('notes', 'not_found');
+            return;
+        }
+
+        $note->delete();
+        $this->notifyCrud('notes', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 

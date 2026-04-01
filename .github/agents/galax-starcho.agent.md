@@ -110,6 +110,24 @@ Convención para gráficas:
 - Preferir Livewire + Alpine antes que JS ad-hoc innecesario.
 - Para vistas de stats en /app, componer cards con la familia x-starcho-card-app-* según la skin del módulo.
 
+### Seguridad de registros (ownership)
+
+- Si la entidad tiene columna `user_id`, aplicar control de ownership a nivel modelo (no solo en UI).
+- Regla de acceso: usuario normal solo ve/edita/elimina lo propio; `root` y `admin` pueden operar globalmente.
+- Para updates/deletes, evitar patrones que salten hooks/scopes del modelo cuando haya reglas de ownership.
+- Priorizar actualización por instancia de modelo validada por ownership.
+
+Trait base del proyecto:
+
+- `app/Models/Concerns/EnforcesOwnership.php`
+
+### Convención de notificaciones CRUD (Starcho + Notiflix)
+
+- En Livewire, usar `DispatchesStarchoNotify` para emitir notificaciones de forma uniforme.
+- Método recomendado para CRUD: `notifyCrud(resource, action, replace = [], options = [])`.
+- No duplicar lógica de tipos de toast en cada componente; delegar al método central.
+- Mantener traducciones `notify.*` en `lang/es`, `lang/en`, `lang/pt_BR` para cada módulo.
+
 ## Convención de eventos Livewire
 
 Patrones recomendados:

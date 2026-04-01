@@ -69,4 +69,11 @@ return [
     'import_result' => 'Importacion completada: :created creados, :updated actualizados.',
     'import_error' => 'No se pudo importar el archivo de contactos.',
 
+    'notify' => [
+        'created' => 'Contacto creado correctamente.',
+        'updated' => 'Contacto actualizado correctamente.',
+        'deleted' => 'Contacto eliminado correctamente.',
+        'not_found' => 'El contacto no existe o no tienes permiso para acceder.',
+    ],
+
 ];

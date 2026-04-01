@@ -51,6 +51,69 @@ El seeder crea:
 
 ## Cambios recientes
 
+### Seguridad transversal de registros (app y admin)
+
+Se incorporó un control de ownership profesional para modelos con `user_id`, con estas reglas:
+
+- El usuario normal solo puede operar registros propios.
+- Los roles `root` y `admin` pueden operar cualquier registro.
+- El control se aplica en modelo (no solo en UI), para cubrir Livewire, controllers y cualquier flujo interno.
+
+Implementación base:
+
+- `app/Models/Concerns/EnforcesOwnership.php`
+
+Modelos que ya lo usan:
+
+- `app/Models/Task.php`
+- `app/Models/Contact.php`
+- `app/Models/Note.php`
+
+Comportamiento técnico del trait:
+
+- Define *global scope* por `user_id` para usuarios no admin/root.
+- En `creating`, asigna `user_id` automáticamente si no viene definido.
+- En `updating` y `deleting`, valida ownership y lanza excepción si no corresponde.
+
+### Librería unificada de notificaciones CRUD (app y admin)
+
+Se estandarizó el envío de toasts para CRUD usando una sola convención Livewire + Starcho JS + Notiflix.
+
+Base Livewire:
+
+- `app/Livewire/Concerns/DispatchesStarchoNotify.php`
+
+Método recomendado:
+
+- `notifyCrud(resource, action, replace = [], options = [])`
+
+Acciones estándar esperadas:
+
+- `created`
+- `updated`
+- `deleted`
+- `not_found`
+- `forbidden`
+- `error`
+
+Mapeo de tipo de toast (automático):
+
+- `success`: created, updated
+- `warning`: deleted
+- `failure`: not_found, forbidden, error
+
+### Regla obligatoria para nuevos CRUD en Starcho
+
+Para cualquier módulo nuevo en `/app` o `/admin`:
+
+1. Aplicar ownership en modelo si la entidad tiene `user_id`.
+2. No usar `where(...)->update(...)` en flujo principal de edición cuando se requiera respetar hooks/scopes de ownership.
+3. Usar actualización por instancia de modelo (`find*()->update(...)`) dentro del flujo validado.
+4. Usar `notifyCrud(...)` para todos los mensajes create/update/delete/error.
+5. Mantener traducciones `notify.*` en `lang/es`, `lang/en`, `lang/pt_BR`.
+
+Con esto, los toasts y las validaciones de seguridad se comportan igual en todas las áreas y módulos.
+
 ### UI app alineada con admin
 El área `/app` mantiene un lenguaje visual consistente con `/admin`, pero con assets y layout propios:
 
@@ -430,6 +493,41 @@ Starcho.notify('success', 'Operación completada');
 // Eliminar registro desde PowerGrid
 starchoDelete(row.id, row.name, 'deleteRole', 'admin.roles-table');
 ```
+
+### Notificaciones CRUD en Livewire admin
+
+Para estandarizar toasts de CRUD en `/admin`, usa el trait:
+
+`App\Livewire\Concerns\DispatchesStarchoNotify`
+
+Método recomendado:
+
+```php
+$this->notifyCrud('tasks', 'created', ['name' => $taskTitle]);
+$this->notifyCrud('tasks', 'updated', ['name' => $taskTitle]);
+$this->notifyCrud('tasks', 'deleted');
+$this->notifyCrud('tasks', 'not_found');
+```
+
+Convención de traducciones:
+
+```php
+// lang/*/admin_ui.php
+'tasks' => [
+    'notify' => [
+        'created' => '...',
+        'updated' => '...',
+        'deleted' => '...',
+        'not_found' => '...',
+    ],
+],
+```
+
+Regla de seguridad en modelos con `user_id`:
+
+- Usar `EnforcesOwnership` en el modelo.
+- Evitar `Model::where(...)->update(...)` en modales admin, porque salta eventos Eloquent.
+- Usar `findOrFail()->update(...)` y `->delete()` para respetar los hooks de ownership.
 
 ### CSS custom properties
 

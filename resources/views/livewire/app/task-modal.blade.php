@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Task;
 use App\Models\User;
 use Livewire\Attributes\Computed;
@@ -7,6 +8,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
+    use DispatchesStarchoNotify;
 
     public int $taskId = 0;
     public string $taskTitle = '';
@@ -67,7 +69,9 @@ new class extends Component {
             'assigned_to' => $this->taskAssigned ?: null,
         ];
 
-        if ($this->taskId > 0) {
+        $isUpdate = $this->taskId > 0;
+
+        if ($isUpdate) {
             $task = Task::where('id', $this->taskId)->where('user_id', auth()->id())->firstOrFail();
             $task->fill($data);
             $task->save();
@@ -75,6 +79,8 @@ new class extends Component {
             $data['user_id'] = auth()->id();
             Task::create($data);
         }
+
+        $this->notifySuccess(__($isUpdate ? 'tasks.notify.updated' : 'tasks.notify.created'));
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-task'}}))");
         $this->dispatch('pg:eventRefresh-user-tasks-table');

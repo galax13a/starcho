@@ -9,6 +9,7 @@ return [
         'save_changes' => 'Save changes',
         'import' => 'Import',
         'update' => 'Update',
+        'record_not_found' => 'Record not found or without permission.',
     ],
 
     'roles' => [
@@ -24,6 +25,14 @@ return [
             'permissions' => 'Permissions',
             'created' => 'Created',
             'actions' => 'Actions',
+        ],
+        'notify' => [
+            'created' => 'Role :name created successfully.',
+            'updated' => 'Role :name updated successfully.',
+            'deleted' => 'Role deleted successfully.',
+            'cannot_delete_admin' => 'You cannot delete the admin role.',
+            'invalid_json' => 'The JSON file is invalid.',
+            'import_done' => 'Import completed. Created: :created. Updated: :updated.',
         ],
     ],
 
@@ -55,6 +64,12 @@ return [
             'roles' => 'Roles',
             'created' => 'Created',
             'actions' => 'Actions',
+        ],
+        'notify' => [
+            'created' => 'Permission :name created successfully.',
+            'updated' => 'Permission :name updated successfully.',
+            'deleted' => 'Permission deleted successfully.',
+            'not_found' => 'Permission not found or without permission.',
         ],
     ],
 
@@ -89,6 +104,12 @@ return [
             'verification' => 'Verification',
             'registered' => 'Registered',
             'actions' => 'Actions',
+        ],
+        'notify' => [
+            'created' => 'User :name created successfully.',
+            'updated' => 'User :name updated successfully.',
+            'deleted' => 'User deleted successfully.',
+            'not_found' => 'User not found or without permission.',
         ],
     ],
 
@@ -161,6 +182,12 @@ return [
             'created' => 'Created',
             'actions' => 'Actions',
         ],
+        'notify' => [
+            'created' => 'Task :name created successfully.',
+            'updated' => 'Task :name updated successfully.',
+            'deleted' => 'Task deleted successfully.',
+            'not_found' => 'Task not found or without permission.',
+        ],
     ],
 
     'contacts' => [
@@ -208,6 +235,12 @@ return [
             'status' => 'Status',
             'notes' => 'Notes',
             'notes_placeholder' => 'Notes for this contact',
+        ],
+        'notify' => [
+            'created' => 'Contact :name created successfully.',
+            'updated' => 'Contact :name updated successfully.',
+            'deleted' => 'Contact deleted successfully.',
+            'not_found' => 'Contact not found or without permission.',
         ],
     ],
 
@@ -452,6 +485,12 @@ return [
             'views' => [
                 'title' => 'View cache',
                 'description' => 'Deletes compiled Blade views from storage/framework/views.',
+        'notify' => [
+            'created' => 'Note :name created successfully.',
+            'updated' => 'Note :name updated successfully.',
+            'deleted' => 'Note deleted successfully.',
+            'not_found' => 'Note not found or without permission.',
+        ],
             ],
             'menu' => [
                 'title' => 'Sidebar menu cache',

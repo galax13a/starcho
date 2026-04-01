@@ -69,4 +69,11 @@ return [
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The contacts file could not be imported.',
 
+    'notify' => [
+        'created' => 'Contact created successfully.',
+        'updated' => 'Contact updated successfully.',
+        'deleted' => 'Contact deleted successfully.',
+        'not_found' => 'The contact does not exist or you do not have permission.',
+    ],
+
 ];

@@ -63,4 +63,11 @@ return [
     'importing' => 'Importando...',
     'import_result' => 'Importacao concluida: :created criadas, :updated atualizadas.',
     'import_error' => 'Nao foi possivel importar o arquivo de tarefas.',
+
+    'notify' => [
+        'created' => 'Tarefa criada com sucesso.',
+        'updated' => 'Tarefa atualizada com sucesso.',
+        'deleted' => 'Tarefa removida com sucesso.',
+        'not_found' => 'A tarefa nao existe ou voce nao tem permissao.',
+    ],
 ];

@@ -1,10 +1,12 @@
 <?php
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Contact;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
+    use DispatchesStarchoNotify;
 
     public int    $contactId = 0;
     public string $name      = '';
@@ -60,11 +62,16 @@ new class extends Component {
             'user_id' => auth()->id(),
         ];
 
-        if ($this->contactId > 0) {
-            Contact::where('id', $this->contactId)->where('user_id', auth()->id())->update($data);
+        $isUpdate = $this->contactId > 0;
+
+        if ($isUpdate) {
+            $contact = Contact::where('id', $this->contactId)->where('user_id', auth()->id())->firstOrFail();
+            $contact->update($data);
         } else {
             Contact::create($data);
         }
+
+        $this->notifySuccess(__($isUpdate ? 'contacts.notify.updated' : 'contacts.notify.created'));
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-contact'}}))");
         $this->dispatch('pg:eventRefresh-contacts-table');

@@ -1,10 +1,12 @@
 <?php
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Note;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
+    use DispatchesStarchoNotify;
 
     public int $noteId = 0;
     public string $title = '';
@@ -50,11 +52,16 @@ new class extends Component {
             'user_id' => auth()->id(),
         ];
 
-        if ($this->noteId > 0) {
-            Note::where('id', $this->noteId)->where('user_id', auth()->id())->update($data);
+        $isUpdate = $this->noteId > 0;
+
+        if ($isUpdate) {
+            $note = Note::where('id', $this->noteId)->where('user_id', auth()->id())->firstOrFail();
+            $note->update($data);
         } else {
             Note::create($data);
         }
+
+        $this->notifySuccess(__($isUpdate ? 'notes.notify.updated' : 'notes.notify.created'));
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-note'}}))");
         $this->dispatch('pg:eventRefresh-notes-table');

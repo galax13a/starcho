@@ -74,4 +74,11 @@ return [
     'import_result' => 'Importacion completada: :created creadas, :updated actualizadas.',
     'import_error' => 'No se pudo importar el archivo de tareas.',
 
+    'notify' => [
+        'created' => 'Tarea creada correctamente.',
+        'updated' => 'Tarea actualizada correctamente.',
+        'deleted' => 'Tarea eliminada correctamente.',
+        'not_found' => 'La tarea no existe o no tienes permiso para acceder.',
+    ],
+
 ];

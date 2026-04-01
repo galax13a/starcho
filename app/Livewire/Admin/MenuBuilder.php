@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\StarchoMenuItem;
 use Livewire\Component;
 
 class MenuBuilder extends Component
 {
+    use DispatchesStarchoNotify;
+
     public $items = [];
 
     // Active panel tab
@@ -134,7 +137,7 @@ class MenuBuilder extends Component
         $this->showModal = false;
         $this->resetForm();
         $this->loadItems();
-        $this->dispatch('notify', type: 'success', message: __('admin_ui.menu.notify.item_saved'));
+        $this->notifyCrud('menu', 'item_saved');
     }
 
     public function delete(int $id): void
@@ -144,7 +147,7 @@ class MenuBuilder extends Component
         $item->delete();
         StarchoMenuItem::clearMenuCache();
         $this->loadItems();
-        $this->dispatch('notify', type: 'warning', message: __('admin_ui.menu.notify.item_deleted'));
+        $this->notifyCrud('menu', 'item_deleted');
     }
 
     public function toggleActive(int $id): void

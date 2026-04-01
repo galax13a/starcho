@@ -7,11 +7,39 @@
         $adminMenu     = collect();
         $adminSections = collect();
     }
+
+    $layoutNotify = session('starcho_notify');
+
+    if (! $layoutNotify && session('success')) {
+        $layoutNotify = [
+            'type' => 'success',
+            'message' => session('success'),
+        ];
+    }
+
+    if (! $layoutNotify && session('error')) {
+        $layoutNotify = [
+            'type' => 'failure',
+            'message' => session('error'),
+        ];
+    }
+
+    if (! $layoutNotify && $errors->any()) {
+        $layoutNotify = [
+            'type' => 'failure',
+            'message' => $errors->first(),
+        ];
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     @include('partials.head')
+    @if($layoutNotify)
+        <script>
+            window.__starchoNotifyBootstrap = @json($layoutNotify);
+        </script>
+    @endif
     {{-- FontAwesome — iconos del sidebar admin --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     {{-- DM Sans — tipografía del panel admin --}}

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tasks;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class UserTasksTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'user-tasks-table';
@@ -109,8 +111,16 @@ final class UserTasksTable extends PowerGridComponent
     #[On('deleteUserTask')]
     public function deleteUserTask(int $id): void
     {
-        // Only allow deleting own tasks
-        Task::where('id', $id)->where('user_id', Auth::id())->delete();
+        $task = Task::where('id', $id)->where('user_id', Auth::id())->first();
+
+        if (! $task) {
+            $this->notifyFailure(__('tasks.notify.not_found'));
+            return;
+        }
+
+        $task->delete();
+
+        $this->notifyWarning(__('tasks.notify.deleted'));
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
         $this->dispatch('tasks-updated');
     }

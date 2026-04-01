@@ -118,26 +118,138 @@ function confirm(opts) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Despacha un evento 'notify' que los layouts de Starcho escuchan para mostrar
- * un toast. Funciona tanto en /app (Alpine custom layout) como en /admin
- * (siempre que el layout incluya el listener @notify.window).
+ * Normaliza tipo para los metodos validos de Notiflix Notify.
  *
- * @param {'success'|'warning'|'error'} type    Tipo de alerta.
- * @param {string}                      message  Texto a mostrar.
+ * @param {string} type
+ * @returns {'success'|'warning'|'failure'|'info'}
  */
-function notify(type, message) {
+function normalizeNotifyType(type) {
+    const value = String(type ?? '').toLowerCase();
+
+    if (value === 'error' || value === 'danger' || value === 'fail') return 'failure';
+    if (value === 'warn') return 'warning';
+
+    if (['success', 'warning', 'failure', 'info'].includes(value)) {
+        return value;
+    }
+
+    return 'info';
+}
+
+/**
+ * Muestra una notificacion Notiflix con defaults Starcho.
+ *
+ * Firmas soportadas:
+ *  - starchoNotifyr('success', 'Guardado')
+ *  - starchoNotifyr('warning', 'Atencion', { timeout: 5000, position: 'center-top' })
+ *  - starchoNotifyr({ type: 'failure', message: 'Error', position: 'center-center' })
+ *
+ * @param {'success'|'warning'|'failure'|'info'|'error'|Object} typeOrPayload
+ * @param {string} [message]
+ * @param {Object} [options]
+ */
+function starchoNotifyr(typeOrPayload, message, options = {}) {
+    const payload = typeof typeOrPayload === 'object' && typeOrPayload !== null
+        ? typeOrPayload
+        : { type: typeOrPayload, message, ...(options || {}) };
+
+    const finalType = normalizeNotifyType(payload.type);
     const fallbackByType = {
         success: tr('toast_success', 'Success'),
         warning: tr('toast_warning', 'Warning'),
-        error  : tr('toast_error', 'Error'),
+        failure: tr('toast_error', 'Error'),
+        info: tr('toast_default', 'Operation completed.'),
     };
 
-    const finalMessage = message || fallbackByType[type] || tr('toast_default', 'Operation completed.');
+    const finalMessage = payload.message || fallbackByType[finalType] || tr('toast_default', 'Operation completed.');
 
-    window.dispatchEvent(
-        new CustomEvent('notify', { detail: { type, message: finalMessage } })
-    );
+    const defaults = {
+        position: 'center-center',
+        timeout: 3300,
+        showOnlyTheLastOne: true,
+        clickToClose: true,
+        pauseOnHover: true,
+        cssAnimationStyle: 'zoom',
+    };
+
+    const config = {
+        ...defaults,
+        ...(payload.options || {}),
+        ...payload,
+    };
+
+    delete config.type;
+    delete config.message;
+    delete config.options;
+
+    Notiflix.Notify[finalType](finalMessage, config);
 }
+
+/**
+ * API historica de notificaciones. Ahora usa Notiflix internamente.
+ *
+ * @param {'success'|'warning'|'error'|'failure'|'info'} type
+ * @param {string} message
+ * @param {Object} [options]
+ */
+function notify(type, message, options = {}) {
+    starchoNotifyr(type, message, options);
+}
+
+function consumeLayoutNotifyPayload() {
+    const payloadScript = document.getElementById('starcho-notify-payload');
+
+    if (payloadScript) {
+        const raw = payloadScript.textContent;
+        if (!raw) return;
+
+        try {
+            starchoNotifyr(JSON.parse(raw));
+        } catch {
+            // Ignore malformed payload silently to avoid breaking app boot.
+        }
+
+        payloadScript.remove();
+        return;
+    }
+
+    // Compatibilidad con implementaciones previas en meta.
+    const metaPayload = document.querySelector('meta[name="starcho-notify"]');
+
+    if (!metaPayload) return;
+
+    const raw = metaPayload.getAttribute('content');
+    if (!raw) return;
+
+    try {
+        starchoNotifyr(JSON.parse(raw));
+    } catch {
+        // Ignore malformed payload silently to avoid breaking app boot.
+    }
+
+    metaPayload.remove();
+}
+
+function consumeBootNotifyPayload() {
+    const payload = window.__starchoNotifyBootstrap;
+
+    if (!payload) return;
+
+    delete window.__starchoNotifyBootstrap;
+    window.dispatchEvent(new CustomEvent('notify', { detail: payload }));
+}
+
+window.addEventListener('notify', (event) => {
+    event.stopImmediatePropagation();
+    starchoNotifyr(event.detail || {});
+}, true);
+
+window.addEventListener('starchoNotify', (event) => {
+    starchoNotifyr(event.detail || {});
+});
+
+consumeBootNotifyPayload();
+consumeLayoutNotifyPayload();
 
 /**
  * Alias de notify. Compatibilidad semántica.
@@ -426,4 +538,5 @@ window.starchoApp = function (initialOpenMenus) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Objeto global expuesto en window para uso desde blade/inline scripts. */
-window.Starcho = { confirm, notify, alert, dark };
+window.Starcho = { confirm, notify, alert, starchoNotifyr, dark };
+window.starchoNotifyr = starchoNotifyr;

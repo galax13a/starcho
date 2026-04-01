@@ -2,6 +2,7 @@
 
 namespace App\Livewire\App;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Note;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class NotesTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'notes-table';
@@ -88,7 +90,16 @@ final class NotesTable extends PowerGridComponent
     #[On('deleteNote')]
     public function deleteNote(int $id): void
     {
-        Note::where('id', $id)->where('user_id', Auth::id())->delete();
+        $note = Note::where('id', $id)->where('user_id', Auth::id())->first();
+
+        if (! $note) {
+            $this->notifyFailure(__('notes.notify.not_found'));
+            return;
+        }
+
+        $note->delete();
+
+        $this->notifyWarning(__('notes.notify.deleted'));
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
         $this->dispatch('notes-updated');
     }

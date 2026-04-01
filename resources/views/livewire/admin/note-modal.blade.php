@@ -1,10 +1,12 @@
 <?php
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Note;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
+    use DispatchesStarchoNotify;
 
     public int $noteId = 0;
     public int $userId = 0;
@@ -50,14 +52,18 @@ new class extends Component {
             'content' => $this->content ?: null,
             'color' => $this->color,
             'important_date' => $this->importantDate ?: null,
-            'user_id' => $this->userId > 0 ? $this->userId : auth()->id(),
         ];
 
-        if ($this->noteId > 0) {
-            Note::where('id', $this->noteId)->update($data);
+        $isUpdate = $this->noteId > 0;
+
+        if ($isUpdate) {
+            Note::findOrFail($this->noteId)->update($data);
         } else {
+            $data['user_id'] = auth()->id();
             Note::create($data);
         }
+
+        $this->notifyCrud('notes', $isUpdate ? 'updated' : 'created', ['name' => $this->title]);
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-note'}}))");
         $this->dispatch('pg:eventRefresh-admin-notes-table');

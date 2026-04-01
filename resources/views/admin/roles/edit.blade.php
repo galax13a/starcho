@@ -7,8 +7,6 @@
         <flux:heading size="xl" level="1">Editar Rol: <span class="text-amber-500">{{ $role->name }}</span></flux:heading>
     </div>
 
-    @include('admin.partials.alerts')
-
     <form method="POST" action="{{ route('admin.roles.update', $role) }}" class="max-w-2xl space-y-6">
         @csrf
         @method('PUT')
