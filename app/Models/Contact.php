@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\EnforcesOwnership;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, EnforcesOwnership;
 
     protected $fillable = ['name', 'company', 'email', 'phone', 'status', 'notes', 'user_id'];
 

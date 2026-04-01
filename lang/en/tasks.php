@@ -74,4 +74,11 @@ return [
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The tasks file could not be imported.',
 
+    'notify' => [
+        'created' => 'Task created successfully.',
+        'updated' => 'Task updated successfully.',
+        'deleted' => 'Task deleted successfully.',
+        'not_found' => 'The task does not exist or you do not have permission.',
+    ],
+
 ];

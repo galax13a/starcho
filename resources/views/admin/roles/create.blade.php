@@ -7,8 +7,6 @@
         <flux:heading size="xl" level="1">Crear Rol</flux:heading>
     </div>
 
-    @include('admin.partials.alerts')
-
     <form method="POST" action="{{ route('admin.roles.store') }}" class="max-w-2xl space-y-6">
         @csrf
 

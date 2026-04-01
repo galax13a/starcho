@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -14,6 +15,7 @@ use Spatie\Permission\Models\Permission;
 
 final class PermissionsTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'permissions-table';
@@ -79,7 +81,15 @@ final class PermissionsTable extends PowerGridComponent
     #[On('deletePermission')]
     public function deletePermission(int $id): void
     {
-        Permission::find($id)?->delete();
+        $permission = Permission::find($id);
+
+        if (! $permission) {
+            $this->notifyCrud('permissions', 'not_found');
+            return;
+        }
+
+        $permission->delete();
+        $this->notifyCrud('permissions', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

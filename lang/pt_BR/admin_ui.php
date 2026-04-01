@@ -9,6 +9,7 @@ return [
         'save_changes' => 'Salvar alteracoes',
         'import' => 'Importar',
         'update' => 'Atualizar',
+        'record_not_found' => 'Registro nao encontrado ou sem permissao.',
     ],
 
     'roles' => [
@@ -24,6 +25,14 @@ return [
             'permissions' => 'Permissoes',
             'created' => 'Criado',
             'actions' => 'Acoes',
+        ],
+        'notify' => [
+            'created' => 'Papel :name criado com sucesso.',
+            'updated' => 'Papel :name atualizado com sucesso.',
+            'deleted' => 'Papel removido com sucesso.',
+            'cannot_delete_admin' => 'Voce nao pode excluir o papel admin.',
+            'invalid_json' => 'O arquivo JSON e invalido.',
+            'import_done' => 'Importacao concluida. Criados: :created. Atualizados: :updated.',
         ],
     ],
 
@@ -55,6 +64,12 @@ return [
             'roles' => 'Papeis',
             'created' => 'Criado',
             'actions' => 'Acoes',
+        ],
+        'notify' => [
+            'created' => 'Permissao :name criada com sucesso.',
+            'updated' => 'Permissao :name atualizada com sucesso.',
+            'deleted' => 'Permissao removida com sucesso.',
+            'not_found' => 'Permissao nao encontrada ou sem permissao.',
         ],
     ],
 
@@ -89,6 +104,12 @@ return [
             'verification' => 'Verificacao',
             'registered' => 'Registro',
             'actions' => 'Acoes',
+        ],
+        'notify' => [
+            'created' => 'Usuario :name criado com sucesso.',
+            'updated' => 'Usuario :name atualizado com sucesso.',
+            'deleted' => 'Usuario removido com sucesso.',
+            'not_found' => 'Usuario nao encontrado ou sem permissao.',
         ],
     ],
 
@@ -161,6 +182,12 @@ return [
             'created' => 'Criado',
             'actions' => 'Acoes',
         ],
+        'notify' => [
+            'created' => 'Tarefa :name criada com sucesso.',
+            'updated' => 'Tarefa :name atualizada com sucesso.',
+            'deleted' => 'Tarefa removida com sucesso.',
+            'not_found' => 'Tarefa nao encontrada ou sem permissao.',
+        ],
     ],
 
     'contacts' => [
@@ -208,6 +235,12 @@ return [
             'status' => 'Status',
             'notes' => 'Notas',
             'notes_placeholder' => 'Notas sobre este contato',
+        ],
+        'notify' => [
+            'created' => 'Contato :name criado com sucesso.',
+            'updated' => 'Contato :name atualizado com sucesso.',
+            'deleted' => 'Contato removido com sucesso.',
+            'not_found' => 'Contato nao encontrado ou sem permissao.',
         ],
     ],
 
@@ -273,6 +306,12 @@ return [
             'day_fri' => 'Sex',
             'day_sat' => 'Sab',
             'day_sun' => 'Dom',
+        ],
+        'notify' => [
+            'created' => 'Nota :name criada com sucesso.',
+            'updated' => 'Nota :name atualizada com sucesso.',
+            'deleted' => 'Nota removida com sucesso.',
+            'not_found' => 'Nota nao encontrada ou sem permissao.',
         ],
     ],
 

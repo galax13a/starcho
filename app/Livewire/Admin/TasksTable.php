@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\AppSetting;
 use App\Models\Task;
@@ -16,6 +17,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class TasksTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'tasks-table';
@@ -108,7 +110,15 @@ final class TasksTable extends PowerGridComponent
     #[On('deleteTask')]
     public function deleteTask(int $id): void
     {
-        Task::find($id)?->delete();
+        $task = Task::find($id);
+
+        if (! $task) {
+            $this->notifyCrud('tasks', 'not_found');
+            return;
+        }
+
+        $task->delete();
+        $this->notifyCrud('tasks', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 

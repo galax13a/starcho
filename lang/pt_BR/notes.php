@@ -75,4 +75,11 @@ return [
     'importing' => 'Importando...',
     'import_result' => 'Importacao concluida: :created criadas, :updated atualizadas.',
     'import_error' => 'Nao foi possivel importar o arquivo de notas.',
+
+    'notify' => [
+        'created' => 'Nota criada com sucesso.',
+        'updated' => 'Nota atualizada com sucesso.',
+        'deleted' => 'Nota removida com sucesso.',
+        'not_found' => 'A nota nao existe ou voce nao tem permissao.',
+    ],
 ];

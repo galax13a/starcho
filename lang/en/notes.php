@@ -75,4 +75,11 @@ return [
     'importing' => 'Importing...',
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The notes file could not be imported.',
+
+    'notify' => [
+        'created' => 'Note created successfully.',
+        'updated' => 'Note updated successfully.',
+        'deleted' => 'Note deleted successfully.',
+        'not_found' => 'The note does not exist or you do not have permission.',
+    ],
 ];

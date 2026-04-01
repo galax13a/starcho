@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class ContactsTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'admin-contacts-table';
@@ -97,7 +99,15 @@ final class ContactsTable extends PowerGridComponent
     #[On('deleteAdminContact')]
     public function deleteAdminContact(int $id): void
     {
-        Contact::find($id)?->delete();
+        $contact = Contact::find($id);
+
+        if (! $contact) {
+            $this->notifyCrud('contacts', 'not_found');
+            return;
+        }
+
+        $contact->delete();
+        $this->notifyCrud('contacts', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

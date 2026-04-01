@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -14,6 +15,7 @@ use Spatie\Permission\Models\Role;
 
 final class RolesTable extends PowerGridComponent
 {
+    use DispatchesStarchoNotify;
     use HasStarchoCrudActions;
 
     public string $tableName = 'roles-table';
@@ -83,10 +85,14 @@ final class RolesTable extends PowerGridComponent
         $role = Role::find($id);
 
         if (! $role || $role->name === 'admin') {
+            $this->notifyCrud('roles', 'cannot_delete_admin');
             return;
         }
 
         $role->delete();
+
+        $this->notifyCrud('roles', 'deleted');
+
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 }

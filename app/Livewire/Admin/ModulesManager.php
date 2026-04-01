@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\StarchoModule;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class ModulesManager extends Component
 {
+    use DispatchesStarchoNotify;
+
     public $modules = [];
     public string $search = '';
 
@@ -75,7 +78,7 @@ class ModulesManager extends Component
         $module->install();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'success', message: __('admin_ui.modules.notify.installed_activated', ['name' => $module->name]));
+        $this->notifyCrud('modules', 'installed_activated', ['name' => $module->name]);
     }
 
     public function uninstall(int $id): void
@@ -84,7 +87,7 @@ class ModulesManager extends Component
         $module->uninstall();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'warning', message: __('admin_ui.modules.notify.uninstalled', ['name' => $module->name]));
+        $this->notifyCrud('modules', 'uninstalled', ['name' => $module->name]);
     }
 
     public function activate(int $id): void
@@ -93,7 +96,7 @@ class ModulesManager extends Component
         $module->activate();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'success', message: __('admin_ui.modules.notify.activated', ['name' => $module->name]));
+        $this->notifyCrud('modules', 'activated', ['name' => $module->name]);
     }
 
     public function deactivate(int $id): void
@@ -102,7 +105,7 @@ class ModulesManager extends Component
         $module->deactivate();
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
-        $this->dispatch('notify', type: 'warning', message: __('admin_ui.modules.notify.deactivated', ['name' => $module->name]));
+        $this->notifyCrud('modules', 'deactivated', ['name' => $module->name]);
     }
 
     public function render()

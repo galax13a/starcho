@@ -9,6 +9,7 @@ return [
         'save_changes' => 'Guardar cambios',
         'import' => 'Importar',
         'update' => 'Actualizar',
+        'record_not_found' => 'Registro no encontrado o sin permisos.',
     ],
 
     'roles' => [
@@ -24,6 +25,14 @@ return [
             'permissions' => 'Permisos',
             'created' => 'Creado',
             'actions' => 'Acciones',
+        ],
+        'notify' => [
+            'created' => 'Rol :name creado correctamente.',
+            'updated' => 'Rol :name actualizado correctamente.',
+            'deleted' => 'Rol eliminado correctamente.',
+            'cannot_delete_admin' => 'No puedes eliminar el rol admin.',
+            'invalid_json' => 'El archivo JSON no es valido.',
+            'import_done' => 'Importacion completada. Creados: :created. Actualizados: :updated.',
         ],
     ],
 
@@ -55,6 +64,12 @@ return [
             'roles' => 'Roles',
             'created' => 'Creado',
             'actions' => 'Acciones',
+        ],
+        'notify' => [
+            'created' => 'Permiso :name creado correctamente.',
+            'updated' => 'Permiso :name actualizado correctamente.',
+            'deleted' => 'Permiso eliminado correctamente.',
+            'not_found' => 'Permiso no encontrado o sin permisos.',
         ],
     ],
 
@@ -89,6 +104,12 @@ return [
             'verification' => 'Verificacion',
             'registered' => 'Registro',
             'actions' => 'Acciones',
+        ],
+        'notify' => [
+            'created' => 'Usuario :name creado correctamente.',
+            'updated' => 'Usuario :name actualizado correctamente.',
+            'deleted' => 'Usuario eliminado correctamente.',
+            'not_found' => 'Usuario no encontrado o sin permisos.',
         ],
     ],
 
@@ -161,6 +182,12 @@ return [
             'created' => 'Creado',
             'actions' => 'Acciones',
         ],
+        'notify' => [
+            'created' => 'Tarea :name creada correctamente.',
+            'updated' => 'Tarea :name actualizada correctamente.',
+            'deleted' => 'Tarea eliminada correctamente.',
+            'not_found' => 'Tarea no encontrada o sin permisos.',
+        ],
     ],
 
     'contacts' => [
@@ -208,6 +235,12 @@ return [
             'status' => 'Estado',
             'notes' => 'Notas',
             'notes_placeholder' => 'Notas sobre este contacto',
+        ],
+        'notify' => [
+            'created' => 'Contacto :name creado correctamente.',
+            'updated' => 'Contacto :name actualizado correctamente.',
+            'deleted' => 'Contacto eliminado correctamente.',
+            'not_found' => 'Contacto no encontrado o sin permisos.',
         ],
     ],
 
@@ -273,6 +306,12 @@ return [
             'day_fri' => 'Vie',
             'day_sat' => 'Sab',
             'day_sun' => 'Dom',
+        ],
+        'notify' => [
+            'created' => 'Nota :name creada correctamente.',
+            'updated' => 'Nota :name actualizada correctamente.',
+            'deleted' => 'Nota eliminada correctamente.',
+            'not_found' => 'Nota no encontrada o sin permisos.',
         ],
     ],
 
