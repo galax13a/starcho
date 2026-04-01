@@ -12,6 +12,35 @@ return [
         'record_not_found' => 'Registro no encontrado o sin permisos.',
     ],
 
+    'dashboard' => [
+        'heading' => 'Dashboard Admin',
+        'description' => 'Vista ejecutiva del panel: actividad, estado de módulos y KPIs clave.',
+        'cards' => [
+            'users' => 'Usuarios',
+            'tasks_total' => 'Tareas total',
+            'tasks_pending' => 'Tareas pendientes',
+            'contacts_active' => 'Contactos activos',
+            'notes_total' => 'Notas total',
+            'modules_active' => 'Módulos activos',
+        ],
+        'charts' => [
+            'tasks' => 'Tareas',
+            'contacts' => 'Contactos',
+            'notes' => 'Notas',
+            'tasks_by_status' => 'Tareas por estado',
+            'monthly_activity' => 'Actividad mensual (6 meses)',
+            'modules_health' => 'Salud de módulos',
+            'modules_on' => 'Activos',
+            'modules_off' => 'Inactivos',
+        ],
+        'quick' => [
+            'tasks' => 'Gestionar tareas',
+            'tasks_help' => 'Ir al módulo de tareas para crear, editar y monitorear estados.',
+            'modules' => 'Gestionar módulos',
+            'modules_help' => 'Instalar, activar o desactivar módulos del ecosistema Starcho.',
+        ],
+    ],
+
     'roles' => [
         'heading' => 'Roles',
         'description' => 'Gestiona los roles del sistema y sus permisos asignados.',

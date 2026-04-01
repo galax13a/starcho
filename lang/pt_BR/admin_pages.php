@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'dashboard_index'       => 'Dashboard Admin',
     'contacts_index'        => 'Contatos',
     'notes_index'           => 'Notas',
     'tasks_index'           => 'Tarefas',
