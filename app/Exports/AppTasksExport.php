@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AppTasksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
-    public function __construct(private readonly int $userId)
+    public function __construct(private readonly int $userId, private readonly ?array $taskIds = null)
     {
     }
 
@@ -19,6 +19,7 @@ class AppTasksExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
         return Task::query()
             ->with('assignedUser')
             ->where('user_id', $this->userId)
+            ->when($this->taskIds, fn ($query) => $query->whereIn('id', $this->taskIds))
             ->orderByDesc('created_at');
     }
 

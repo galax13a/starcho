@@ -73,12 +73,18 @@ return [
     'importing' => 'Importing…',
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The tasks file could not be imported.',
+    'bulk_selected' => 'selected',
+    'bulk_delete_selected' => 'Delete selected',
+    'bulk_clear_selection' => 'Clear selection',
+    'bulk_delete_confirm' => 'The selected tasks will be deleted. This action cannot be undone.',
 
     'notify' => [
         'created' => 'Task created successfully.',
         'updated' => 'Task updated successfully.',
         'deleted' => 'Task deleted successfully.',
         'not_found' => 'The task does not exist or you do not have permission.',
+        'no_selection' => 'Select at least one task.',
+        'bulk_deleted' => ':count tasks were deleted successfully.',
     ],
 
 ];

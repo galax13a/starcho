@@ -75,11 +75,17 @@ return [
     'importing' => 'Importing...',
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The notes file could not be imported.',
+    'bulk_selected' => 'selected',
+    'bulk_delete_selected' => 'Delete selected',
+    'bulk_clear_selection' => 'Clear selection',
+    'bulk_delete_confirm' => 'The selected notes will be deleted. This action cannot be undone.',
 
     'notify' => [
         'created' => 'Note created successfully.',
         'updated' => 'Note updated successfully.',
         'deleted' => 'Note deleted successfully.',
         'not_found' => 'The note does not exist or you do not have permission.',
+        'no_selection' => 'Select at least one note.',
+        'bulk_deleted' => ':count notes were deleted successfully.',
     ],
 ];

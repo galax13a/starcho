@@ -72,12 +72,18 @@ return [
     'importing' => 'Importando…',
     'import_result' => 'Importacion completada: :created creados, :updated actualizados.',
     'import_error' => 'No se pudo importar el archivo de contactos.',
+    'bulk_selected' => 'seleccionados',
+    'bulk_delete_selected' => 'Eliminar seleccionados',
+    'bulk_clear_selection' => 'Limpiar seleccion',
+    'bulk_delete_confirm' => 'Los contactos seleccionados se eliminaran. Esta accion no se puede deshacer.',
 
     'notify' => [
         'created' => 'Contacto creado correctamente.',
         'updated' => 'Contacto actualizado correctamente.',
         'deleted' => 'Contacto eliminado correctamente.',
         'not_found' => 'El contacto no existe o no tienes permiso para acceder.',
+        'no_selection' => 'Selecciona al menos un contacto.',
+        'bulk_deleted' => 'Se eliminaron :count contactos correctamente.',
     ],
 
 ];
