@@ -14,6 +14,7 @@ new class extends Component {
     public string $email     = '';
     public string $phone     = '';
     public string $status    = 'lead';
+    public bool   $active    = true;
     public string $notes     = '';
 
     #[On('openContact')]
@@ -25,6 +26,7 @@ new class extends Component {
         $this->email     = '';
         $this->phone     = '';
         $this->status    = 'lead';
+        $this->active    = true;
         $this->notes     = '';
 
         if ($id > 0) {
@@ -34,6 +36,7 @@ new class extends Component {
             $this->email   = $contact->email ?? '';
             $this->phone   = $contact->phone ?? '';
             $this->status  = $contact->status;
+            $this->active  = (bool) $contact->active;
             $this->notes   = $contact->notes ?? '';
         }
 
@@ -49,6 +52,7 @@ new class extends Component {
             'email'   => 'nullable|email|max:150',
             'phone'   => 'nullable|string|max:50',
             'status'  => 'required|in:lead,prospect,customer,churned',
+            'active'  => 'required|boolean',
             'notes'   => 'nullable|string|max:2000',
         ]);
 
@@ -58,6 +62,7 @@ new class extends Component {
             'email'   => $this->email ?: null,
             'phone'   => $this->phone ?: null,
             'status'  => $this->status,
+            'active'  => $this->active,
             'notes'   => $this->notes ?: null,
             'user_id' => auth()->id(),
         ];
@@ -144,6 +149,18 @@ new class extends Component {
                             <option value="churned">❌ {{ __('contacts.status_churned') }}</option>
                         </select>
                         @error('status')
+                        <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    {{-- Activo --}}
+                    <div class="sc-field">
+                        <label class="sc-label sc-label-stripe">{{ __('contacts.field_active') }}</label>
+                        <select wire:model.boolean="active" class="sc-select sc-select-stripe app-select">
+                            <option value="1">{{ __('contacts.active_yes') }}</option>
+                            <option value="0">{{ __('contacts.active_no') }}</option>
+                        </select>
+                        @error('active')
                         <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
                     </div>

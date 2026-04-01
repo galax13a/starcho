@@ -10,7 +10,11 @@ class Contact extends Model
 {
     use SoftDeletes, EnforcesOwnership;
 
-    protected $fillable = ['name', 'company', 'email', 'phone', 'status', 'notes', 'user_id'];
+    protected $fillable = ['name', 'company', 'email', 'phone', 'status', 'active', 'notes', 'user_id'];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
 
     const STATUSES = ['lead', 'prospect', 'customer', 'churned'];
 

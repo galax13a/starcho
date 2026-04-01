@@ -27,6 +27,7 @@ return [
     'col_email'   => 'Email',
     'col_phone'   => 'Phone',
     'col_status'  => 'Status',
+    'col_active'  => 'Active',
     'col_created' => 'Created',
     'col_actions' => 'Actions',
 
@@ -46,6 +47,7 @@ return [
     'field_phone'       => 'Phone',
     'field_phone_ph'    => '+1 000 000 0000',
     'field_status'      => 'Status',
+    'field_active'      => 'Active',
     'field_notes'       => 'Notes',
     'field_notes_ph'    => 'Notes about this contact…',
 
@@ -54,6 +56,8 @@ return [
     'status_prospect' => 'Prospect',
     'status_customer' => 'Customer',
     'status_churned'  => 'Churned',
+    'active_yes'      => 'Active',
+    'active_no'       => 'Inactive',
 
     // Buttons
     'btn_cancel' => 'Cancel',
@@ -63,7 +67,7 @@ return [
     'import_title' => 'Import Contacts',
     'import_subtitle' => 'Upload a previously exported spreadsheet to create or update contacts.',
     'import_label' => 'Excel file',
-    'import_help' => 'Uses the id, name, company, email, phone, status and notes columns.',
+    'import_help' => 'Uses the id, name, company, email, phone, status, active and notes columns.',
     'import_cta' => 'Import Contacts',
     'importing' => 'Importing…',
     'import_result' => 'Import finished: :created created, :updated updated.',
