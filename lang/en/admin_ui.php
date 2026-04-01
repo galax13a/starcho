@@ -447,11 +447,11 @@ return [
             'contact_info' => 'Contact information',
             'social_networks' => 'Social networks',
         ],
-        'access_help' => 'Enable or disable the public home and user registration to contro
-        'social_help' => 'Add links to your social media profiles. Leave blank any you do not use.',l site exposure.',
+        'access_help' => 'Enable or disable the public home and user registration to control site exposure.',
         'pages_help' => 'Routes are detected from resources/views/pages (Folio), and you can edit SEO per locale online.',
         'pages_editor_help' => 'Edit the Blade/HTML content of each Folio page and adjust SEO per locale from this tab.',
         'no_folio_pages' => 'No editable Folio pages were found in resources/views/pages.',
+        'social_help' => 'Add links to your social media profiles. Leave blank any you do not use.',
         'visual_editor' => [
             'heading' => 'Visual page editor',
             'open' => 'Visual editor',
