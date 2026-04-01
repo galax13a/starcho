@@ -674,6 +674,14 @@ body {
     flex-shrink: 0;
 }
 .dark .sa-sb-header { border-color: #222230; }
+.sa-sb-brand {
+    display:         flex;
+    align-items:     center;
+    gap:             10px;
+    min-width:       0;
+    color:           inherit;
+    text-decoration: none;
+}
 .sa-sidebar.sa-collapsed .sa-sb-header {
     padding:         18px 0;
     justify-content: center;

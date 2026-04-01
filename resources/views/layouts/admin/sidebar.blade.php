@@ -55,10 +55,12 @@
 
         {{-- Header --}}
         <div class="sa-sb-header">
-            <div class="sa-sb-logo"><i class="fas fa-bolt"></i></div>
-            <span class="sa-sb-title">
-                Starcho<span class="sa-sb-badge">Admin</span>
-            </span>
+            <a href="{{ route('admin.index') }}" wire:navigate class="sa-sb-brand" aria-label="Ir al dashboard admin">
+                <div class="sa-sb-logo"><i class="fas fa-bolt"></i></div>
+                <span class="sa-sb-title">
+                    Starcho<span class="sa-sb-badge">Admin</span>
+                </span>
+            </a>
             <button class="sa-collapse-btn"
                     @click="collapsed = !collapsed"
                     :title="collapsed ? 'Expandir menú' : 'Colapsar menú'">
