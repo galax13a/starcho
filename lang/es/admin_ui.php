@@ -403,6 +403,7 @@ return [
     'modules' => [
         'heading' => 'Modulos del sistema',
         'description' => 'Instala, activa o desactiva modulos para anadir funcionalidades a la aplicacion.',
+        'clear_confirm' => 'Esta accion desinstalara todos los modulos instalados y retirara sus items de menu. Deseas continuar?',
         'status' => [
             'active' => 'Activo',
             'installed' => 'Instalado',
@@ -415,12 +416,16 @@ return [
             'deactivate' => 'Desactivar',
             'config' => 'Confing',
             'uninstall' => 'Desinstalar',
+            'export_excel' => 'Exportar Excel',
+            'import_excel' => 'Importar Excel',
+            'clear_all' => 'Eliminar todo',
         ],
         'notify' => [
             'installed_activated' => 'Modulo «:name» instalado y activado.',
             'uninstalled' => 'Modulo «:name» desinstalado.',
             'activated' => 'Modulo «:name» activado.',
             'deactivated' => 'Modulo «:name» desactivado.',
+            'cleared' => 'Todos los modulos instalados fueron desinstalados.',
         ],
     ],
 

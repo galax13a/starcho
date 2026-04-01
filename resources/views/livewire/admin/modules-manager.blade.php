@@ -9,16 +9,53 @@
         setTimeout(() => el.remove(), 4000);
     ">
 
-    <div class="mb-4">
-        <label for="modules-search" class="sr-only">Buscar modulos</label>
-        <input
-            id="modules-search"
-            type="text"
-            wire:model.live.debounce.300ms="search"
-            placeholder="Buscar modulo por nombre..."
-            class="w-full md:w-96 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-        >
-    </div>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="exportExcel"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition"
+                >
+                    <i class="fas fa-file-excel text-xs"></i>
+                    {{ __('admin_ui.modules.actions.export_excel') }}
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="openImportExcelModal"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                    <i class="fas fa-file-import text-xs"></i>
+                    {{ __('admin_ui.modules.actions.import_excel') }}
+                </button>
+
+                <button
+                    type="button"
+                    @click="window.Starcho.confirm({
+                        title: @js(__('js.delete.title')),
+                        message: @js(__('admin_ui.modules.clear_confirm')),
+                        okText: @js(__('js.delete.ok')),
+                        cancelText: @js(__('js.confirm.cancel')),
+                        onConfirm: () => $wire.clearAll(),
+                    })"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition"
+                >
+                    <i class="fas fa-trash-alt text-xs"></i>
+                    {{ __('admin_ui.modules.actions.clear_all') }}
+                </button>
+            </div>
+
+            <div class="mb-0">
+                <label for="modules-search" class="sr-only">Buscar modulos</label>
+                <input
+                    id="modules-search"
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Buscar modulo por nombre..."
+                    class="w-full md:w-96 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                >
+            </div>
+        </div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach($modules as $module)
@@ -95,4 +132,12 @@
         </div>
         @endforeach
     </div>
+
+    <x-starcho-popup-admin-import
+        modal-name="modal-admin-modules-import-excel"
+        submit-method="importExcel"
+        loading-target="importExcel"
+        title="{{ __('admin_ui.modules.actions.import_excel') }}"
+        file-model="importExcelFile"
+    />
 </div>

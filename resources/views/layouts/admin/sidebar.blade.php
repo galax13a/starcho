@@ -78,13 +78,32 @@
                 @endif
 
                 @foreach($sectionItems as $item)
+                @php
+                    $hasChildren = $item->children->isNotEmpty();
+                    $hasActiveChild = $hasChildren && $item->children->contains(fn($child) => $child->isCurrentRoute());
+                    $itemActive = $item->isCurrentRoute() || $hasActiveChild;
+                @endphp
                 <a href="{{ $item->resolved_url ?? '#' }}"
                    @if($item->target !== '_blank') wire:navigate @endif
                    target="{{ $item->target }}"
-                   class="sa-menu-link {{ $item->isCurrentRoute() ? 'active' : '' }}">
+                   class="sa-menu-link {{ $itemActive ? 'active' : '' }} {{ $hasChildren ? 'sa-has-children' : '' }}">
                     <i class="{{ $item->icon ?? 'fas fa-circle' }}"></i>
                     <span class="sa-lbl">{{ $item->display_name }}</span>
                 </a>
+
+                @if($hasChildren)
+                <div class="sa-submenu {{ $hasActiveChild ? 'open' : '' }}">
+                    @foreach($item->children as $child)
+                    <a href="{{ $child->resolved_url ?? '#' }}"
+                       @if($child->target !== '_blank') wire:navigate @endif
+                       target="{{ $child->target }}"
+                       class="sa-submenu-link {{ $child->isCurrentRoute() ? 'active' : '' }}">
+                        <i class="{{ $child->icon ?? 'fas fa-circle' }}"></i>
+                        <span class="sa-lbl">{{ $child->display_name }}</span>
+                    </a>
+                    @endforeach
+                </div>
+                @endif
                 @endforeach
             </div>
             @empty
@@ -153,12 +172,9 @@
                     <i class="fas fa-home"></i> {{ __('app_layout.go_to_app') }}
                 </a>
                 <div class="sa-um-divider"></div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="sa-um-item sa-um-danger">
-                        <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout') }}
-                    </button>
-                </form>
+                <button type="button" class="sa-um-item sa-um-danger" @click="userMenuOpen = false; window.dispatchEvent(new CustomEvent('starcho-logout-open'))">
+                    <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout') }}
+                </button>
             </div>
 
             {{-- User trigger --}}
@@ -209,12 +225,9 @@
                     <i class="fas fa-home"></i>
                 </a>
                 {{-- Logout --}}
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="sa-tb-btn" title="{{ __('app_layout.logout') }}">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </form>
+                <button type="button" class="sa-tb-btn" title="{{ __('app_layout.logout') }}" @click="window.dispatchEvent(new CustomEvent('starcho-logout-open'))">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
 
@@ -228,6 +241,7 @@
 </div>{{-- /.sa-app --}}
 
 {{-- ─── Toast notifications ─── --}}
+<x-starcho-popup-logout theme="admin" open-event="starcho-logout-open" />
 <x-starcho-alert theme="admin" />
 
 @fluxScripts

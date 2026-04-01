@@ -210,7 +210,7 @@
                 </a>
                 <div class="um-divider"></div>
                 <button type="button" class="um-item danger"
-                        @click="userMenuOpen=false; showLogout=true">
+                    @click="userMenuOpen=false; window.dispatchEvent(new CustomEvent('starcho-logout-open'))">
                     <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout') }}
                 </button>
             </div>
@@ -263,7 +263,7 @@
                 <x-starcho-noty theme="app" />
 
                 {{-- Logout button --}}
-                <button type="button" class="tb-btn" @click="showLogout = true"
+                <button type="button" class="tb-btn" @click="window.dispatchEvent(new CustomEvent('starcho-logout-open'))"
                         title="{{ __('app_layout.logout') }}">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
@@ -279,27 +279,7 @@
     </div>
 </div>
 
-{{-- ─── LOGOUT CONFIRMATION MODAL ─────────────────────────────────────── --}}
-<div x-show="showLogout" style="display:none">
-    <div class="modal-overlay" @click.self="showLogout = false" x-transition>
-        <div class="logout-modal" @click.stop>
-            <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
-            <h3>{{ __('app_layout.logout_title') }}</h3>
-            <p>{{ __('app_layout.logout_body') }}</p>
-            <div class="logout-btns">
-                <button type="button" class="btn btn-outline" @click="showLogout = false">
-                    <i class="fas fa-times"></i> {{ __('app_layout.logout_cancel') }}
-                </button>
-                <form method="POST" action="{{ route('logout') }}" style="display:inline">
-                    @csrf
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-sign-out-alt"></i> {{ __('app_layout.logout_confirm') }}
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<x-starcho-popup-logout theme="app" open-event="starcho-logout-open" />
 
 {{-- ─── TOAST NOTIFICATIONS ────────────────────────────────────────────── --}}
 <x-starcho-alert theme="app" />

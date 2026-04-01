@@ -403,6 +403,7 @@ return [
     'modules' => [
         'heading' => 'System modules',
         'description' => 'Install, activate or deactivate modules to add features to the app.',
+        'clear_confirm' => 'This action will uninstall all installed modules and remove their menu items. Do you want to continue?',
         'status' => [
             'active' => 'Active',
             'installed' => 'Installed',
@@ -415,12 +416,16 @@ return [
             'deactivate' => 'Deactivate',
             'config' => 'Confing',
             'uninstall' => 'Uninstall',
+            'export_excel' => 'Export Excel',
+            'import_excel' => 'Import Excel',
+            'clear_all' => 'Delete all',
         ],
         'notify' => [
             'installed_activated' => 'Module ":name" installed and activated.',
             'uninstalled' => 'Module ":name" uninstalled.',
             'activated' => 'Module ":name" activated.',
             'deactivated' => 'Module ":name" deactivated.',
+            'cleared' => 'All installed modules were uninstalled.',
         ],
     ],
 

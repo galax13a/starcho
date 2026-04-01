@@ -2,16 +2,22 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminModulesExport;
+use App\Imports\AdminModulesImport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\StarchoModule;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ModulesManager extends Component
 {
     use DispatchesStarchoNotify;
+    use WithFileUploads;
 
     public $modules = [];
+    public $importExcelFile;
     public string $search = '';
 
     public function mount(): void
@@ -106,6 +112,52 @@ class ModulesManager extends Component
         Cache::forget("starcho_module_{$module->key}");
         $this->loadModules();
         $this->notifyCrud('modules', 'deactivated', ['name' => $module->name]);
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new AdminModulesExport(), 'modules-' . now()->format('Ymd-His') . '.xlsx');
+    }
+
+    public function openImportExcelModal(): void
+    {
+        $this->reset('importExcelFile');
+        $this->resetValidation();
+        $this->js("document.dispatchEvent(new CustomEvent('modal-show',{detail:{name:'modal-admin-modules-import-excel'}}))");
+    }
+
+    public function importExcel(): void
+    {
+        $this->validate([
+            'importExcelFile' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ]);
+
+        try {
+            $import = new AdminModulesImport();
+            Excel::import($import, $this->importExcelFile->getRealPath());
+
+            $this->reset('importExcelFile');
+            $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-modules-import-excel'}}))");
+            $this->loadModules();
+            $this->dispatch('notify', type: 'success', message: __('admin_ui.common.import_result', ['created' => $import->created, 'updated' => $import->updated]));
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->dispatch('notify', type: 'error', message: __('admin_ui.common.import_error'));
+        }
+    }
+
+    public function clearAll(): void
+    {
+        StarchoModule::query()
+            ->where('installed', true)
+            ->get()
+            ->each(function (StarchoModule $module): void {
+                $module->uninstall();
+                Cache::forget("starcho_module_{$module->key}");
+            });
+
+        $this->loadModules();
+        $this->notifyCrud('modules', 'cleared');
     }
 
     public function render()

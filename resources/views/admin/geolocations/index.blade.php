@@ -14,53 +14,92 @@
         </h1>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="sa-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('admin_ui.geolocations.total_records') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $totalRecords }}</p>
-                </div>
-                <i class="fas fa-database text-4xl text-blue-500 opacity-20"></i>
-            </div>
-        </div>
+    <!-- Stats Cards (Stripe style pro) -->
+    <div class="geo-top-stats grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 mb-5">
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.geolocations.total_records')"
+            :value="$totalRecords"
+            :meta="$topCountry ? ($topCountry . ' • ' . $topCountryCount) : '—'"
+            icon="fas fa-database"
+            iconBg="rgba(59, 130, 246, .12)"
+            iconColor="#3b82f6"
+            tone="info"
+        />
 
-        <div class="sa-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('admin_ui.geolocations.total_countries') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $totalCountries }}</p>
-                </div>
-                <i class="fas fa-flag text-4xl text-green-500 opacity-20"></i>
-            </div>
-        </div>
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.geolocations.total_countries')"
+            :value="$totalCountries"
+            :meta="$topCountry ? ($topCountry . ' • ' . $topCountryCount) : '—'"
+            icon="fas fa-flag"
+            iconBg="rgba(16, 185, 129, .12)"
+            iconColor="#10b981"
+            tone="success"
+        />
 
-        <div class="sa-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('admin_ui.geolocations.total_cities') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $totalCities }}</p>
-                </div>
-                <i class="fas fa-city text-4xl text-purple-500 opacity-20"></i>
-            </div>
-        </div>
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.geolocations.total_cities')"
+            :value="$totalCities"
+            :meta="$topCity ? ($topCity . ' • ' . $topCityCount) : '—'"
+            icon="fas fa-city"
+            iconBg="rgba(124, 58, 237, .12)"
+            iconColor="#7c3aed"
+            tone="stripe"
+        />
 
-        <div class="sa-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('admin_ui.geolocations.total_users') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $totalUsers }}</p>
-                </div>
-                <i class="fas fa-users text-4xl text-orange-500 opacity-20"></i>
-            </div>
-        </div>
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.geolocations.total_users')"
+            :value="$totalUsers"
+            :meta="$latestCaptureAt ? $latestCaptureAt->format('d/m/Y H:i') : '—'"
+            icon="fas fa-users"
+            iconBg="rgba(249, 115, 22, .12)"
+            iconColor="#f97316"
+            tone="warning"
+        />
+
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.geolocations.total_isps')"
+            :value="$totalIsps"
+            :meta="$topIsp ? ($topIsp . ' • ' . $topIspCount) : '—'"
+            icon="fas fa-network-wired"
+            iconBg="rgba(236, 72, 153, .12)"
+            iconColor="#ec4899"
+            tone="danger"
+        />
     </div>
+
+    <style>
+        .geo-top-stats .sa-stat-card {
+            padding: .8rem;
+            min-height: 106px;
+        }
+
+        .geo-top-stats .sa-stat-label {
+            font-size: .68rem;
+            line-height: 1rem;
+        }
+
+        .geo-top-stats .sa-stat-value {
+            font-size: 1.15rem;
+            line-height: 1.35rem;
+        }
+
+        .geo-top-stats .sa-stat-meta {
+            font-size: .68rem;
+            line-height: 1rem;
+            margin-top: .22rem;
+        }
+
+        .geo-top-stats .sa-stat-icon {
+            width: 1.85rem;
+            height: 1.85rem;
+            font-size: .78rem;
+        }
+    </style>
 
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Por país -->
-        <div class="sa-card">
+        <div class="sa-card p-2 text-center">
             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                 {{ __('admin_ui.geolocations.charts.by_country') }}
             </h3>
@@ -76,7 +115,7 @@
         </div>
 
         <!-- Por ciudad (top 10) -->
-        <div class="sa-card">
+        <div class="sa-card p-2 text-center">
             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                 {{ __('admin_ui.geolocations.charts.by_city') }}
             </h3>
@@ -90,7 +129,7 @@
         </div>
 
         <!-- Timeline (últimos 30 días) -->
-        <div class="sa-card">
+        <div class="sa-card p-2 text-center">
             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                 {{ __('admin_ui.geolocations.charts.timeline') }}
             </h3>
@@ -105,9 +144,14 @@
 
     <!-- Tabla de registros -->
     <div class="sa-card">
-        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-            {{ __('admin_ui.geolocations.title') }}
-        </h3>
+        <div class="flex items-center justify-between gap-3 mb-4 p-3">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
+                {{ __('admin_ui.geolocations.title') }}
+            </h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                {{ __('admin_ui.geolocations.table_hint') }}
+            </p>
+        </div>
         <livewire:admin.geo-locations-table />
     </div>
 </div>
