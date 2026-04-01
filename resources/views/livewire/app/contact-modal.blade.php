@@ -143,10 +143,10 @@ new class extends Component {
                     <div class="sc-field">
                         <label class="sc-label sc-label-stripe">{{ __('contacts.field_status') }}</label>
                         <select wire:model="status" class="sc-select sc-select-stripe app-select">
-                            <option value="lead">👥 {{ __('contacts.status_lead') }}</option>
-                            <option value="prospect">🎯 {{ __('contacts.status_prospect') }}</option>
-                            <option value="customer">💼 {{ __('contacts.status_customer') }}</option>
-                            <option value="churned">❌ {{ __('contacts.status_churned') }}</option>
+                            <option value="lead">👥 {{ __('actions.statuses.lead') }}</option>
+                            <option value="prospect">🎯 {{ __('actions.statuses.prospect') }}</option>
+                            <option value="customer">💼 {{ __('actions.statuses.customer') }}</option>
+                            <option value="churned">❌ {{ __('actions.statuses.churned') }}</option>
                         </select>
                         @error('status')
                         <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>

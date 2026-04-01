@@ -941,6 +941,7 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-noty` | Icono de notificaciones con dropdown | Topbar app y admin |
 | `x-starcho-alert` | Toast/alerta de sistema (evento `notify`) | Layout app y admin |
 | `x-starcho-active` | Estado activo/inactivo con icono semántico | Columnas de estado booleano en tablas |
+| `x-starcho-status` | Estado semántico multilenguaje con color e icono | Columnas `status` en tablas de negocio |
 | `x-starcho-chart` | Gráfica ApexCharts universal (8 tipos) | Stats y dashboards en app y admin |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
 
@@ -954,6 +955,53 @@ Regla: si un bloque UI se repite en 2 o más módulos, se convierte en component
 - Edición: selector Activo/Inactivo en el modal de contacto.
 - Tabla: renderizado visual con `x-starcho-active` en PowerGrid.
 - Importación app: acepta columna opcional `active` en Excel.
+
+### 3.2) Estado de negocio reusable en app/contacts
+
+`app/contacts` renderiza la columna `status` con el componente global `x-starcho-status` para mantener UI consistente y portable a otros módulos.
+
+- Componente: `resources/views/components/starcho-status.blade.php`
+- Soporta icono + color por estado (`lead`, `prospect`, `customer`, `churned`).
+- Soporta multilenguaje por defecto con claves globales:
+    - `actions.statuses.lead`
+    - `actions.statuses.prospect`
+    - `actions.statuses.customer`
+    - `actions.statuses.churned`
+- Se puede sobreescribir etiqueta mediante prop `labels` si un módulo usa otros estados.
+
+Ejemplo de uso en tabla:
+
+```php
+->add('status_badge', fn (Contact $c) => view('components.starcho-status', ['status' => $c->status])->render())
+```
+
+### 3.3) Forma de trabajo actual (app y admin)
+
+Para mantener velocidad sin perder calidad, toda implementación nueva debe seguir este flujo operativo:
+
+1. Modelar primero seguridad y ownership:
+    - Si la tabla tiene `user_id`, aplicar control por modelo con `EnforcesOwnership`.
+    - Evitar `where()->update()` en entidades con ownership; usar instancia validada + `update()`.
+2. Construir CRUD con convención Starcho:
+    - Tabla PowerGrid + modal Livewire + rutas + traducciones.
+    - Notificaciones con `DispatchesStarchoNotify` y `notifyCrud(...)`.
+3. Usar componentes globales antes de crear HTML nuevo:
+    - Estado booleano: `x-starcho-active` (labels globales `actions.active/inactive`).
+    - Estado semántico: `x-starcho-status` (labels globales `actions.statuses.*`).
+4. Internacionalización obligatoria:
+    - Toda UI en `lang/es`, `lang/en`, `lang/pt_BR`.
+    - Reutilizar claves globales en `lang/*/actions.php` cuando aplique.
+5. Verificación mínima antes de subir:
+    - Persistencia de columnas por panel (`app`/`admin`).
+    - Create/update/delete con toast correcto.
+    - Revisión de errores (`get_errors`) y prueba básica de flujo.
+
+Checklist corto de cierre:
+- Seguridad aplicada por modelo.
+- notifyCrud aplicado en CRUD real.
+- Componentes reutilizables usados (sin duplicación inline).
+- Traducciones completas en 3 idiomas.
+- Menú/módulo consistente cuando corresponda.
 
 ### 4) Registrar el módulo en `starcho_modules`
 

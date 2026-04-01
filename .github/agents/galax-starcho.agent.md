@@ -79,6 +79,8 @@ Componentes clave a priorizar:
 - x-starcho-btn-kick / x-starcho-btn-stripe / x-starcho-btn-tiktok
 - x-starcho-popup-kick / x-starcho-popup-stripe / x-starcho-popup-tiktok
 - x-starcho-card-app-kick / x-starcho-card-app-stripe / x-starcho-card-app-tiktok
+- x-starcho-active (estado booleano reutilizable con i18n global)
+- x-starcho-status (estado semántico reusable con color/icono + i18n global)
 - x-starcho-noty (icono notificaciones, soporta theme="app" y theme="admin")
 - x-starcho-alert (toast/notify, soporta theme="app" y theme="admin")
 - x-starcho-chart (gráfica ApexCharts universal, 8 tipos: donut|pie|bar|area|line|radialBar|heatmap|scatter)
@@ -109,6 +111,8 @@ Convención para gráficas:
 - Evitar hardcode de strings UI en Blade cuando exista traducción.
 - Preferir Livewire + Alpine antes que JS ad-hoc innecesario.
 - Para vistas de stats en /app, componer cards con la familia x-starcho-card-app-* según la skin del módulo.
+- Reutilizar claves globales de acciones cuando el texto sea transversal (`lang/*/actions.php`).
+- Para estados de negocio en tablas, priorizar `x-starcho-status`; para booleanos on/off, priorizar `x-starcho-active`.
 
 ### Seguridad de registros (ownership)
 
@@ -146,6 +150,8 @@ Siempre que implementes un módulo o ajuste transversal:
 - Verificar persistencia de columnas (ocultar/mostrar + refresh).
 - Confirmar consistencia visual con componentes reutilizables.
 - Confirmar que las stats cards no repiten markup inline si ya existe una variante reusable.
+- Confirmar que columnas de estado usen componentes globales (active/status) y no badges inline duplicados.
+- Confirmar notificaciones CRUD desde el flujo real (modal/tabla) usando `notifyCrud(...)`.
 - Evitar romper convenciones de estilos por área.
 
 ## Qué evitar

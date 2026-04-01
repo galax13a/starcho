@@ -51,10 +51,10 @@ final class ContactsTable extends PowerGridComponent
     public function fields(): PowerGridFields
     {
         $statusLabels = [
-            'lead'     => __('contacts.status_lead'),
-            'prospect' => __('contacts.status_prospect'),
-            'customer' => __('contacts.status_customer'),
-            'churned'  => __('contacts.status_churned'),
+            'lead'     => __('actions.statuses.lead'),
+            'prospect' => __('actions.statuses.prospect'),
+            'customer' => __('actions.statuses.customer'),
+            'churned'  => __('actions.statuses.churned'),
         ];
 
         return PowerGrid::fields()
@@ -63,7 +63,7 @@ final class ContactsTable extends PowerGridComponent
             ->add('company', fn (Contact $c) => $c->company ?? '—')
             ->add('email', fn (Contact $c) => $c->email ?? '—')
             ->add('phone', fn (Contact $c) => $c->phone ?? '—')
-            ->add('status_label', fn (Contact $c) => $statusLabels[$c->status] ?? $c->status)
+                ->add('status_badge', fn (Contact $c) => view('components.starcho-status', ['status' => $c->status])->render())
             ->add('active_icon', fn (Contact $c) => view('components.starcho-active', ['active' => (bool) $c->active])->render())
             ->add('created_at_fmt', fn (Contact $c) => Carbon::parse($c->created_at)->format('d/m/Y'));
     }
@@ -76,7 +76,7 @@ final class ContactsTable extends PowerGridComponent
             Column::make(__('contacts.col_company'), 'company')->sortable()->searchable(),
             Column::make(__('contacts.col_email'), 'email')->sortable()->searchable(),
             Column::make(__('contacts.col_phone'), 'phone'),
-            Column::make(__('contacts.col_status'), 'status_label', 'status')->sortable(),
+            Column::make(__('contacts.col_status'), 'status_badge', 'status')->sortable(),
             Column::make(__('contacts.col_active'), 'active_icon', 'active')->sortable(),
             Column::make(__('contacts.col_created'), 'created_at_fmt', 'created_at')->sortable(),
             Column::action(__('contacts.col_actions')),
@@ -86,10 +86,10 @@ final class ContactsTable extends PowerGridComponent
     public function filters(): array
     {
         $statusLabels = [
-            'lead' => __('contacts.status_lead'),
-            'prospect' => __('contacts.status_prospect'),
-            'customer' => __('contacts.status_customer'),
-            'churned' => __('contacts.status_churned'),
+            'lead' => __('actions.statuses.lead'),
+            'prospect' => __('actions.statuses.prospect'),
+            'customer' => __('actions.statuses.customer'),
+            'churned' => __('actions.statuses.churned'),
         ];
 
         return [
