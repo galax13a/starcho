@@ -940,10 +940,20 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-card-app-kick` / `x-starcho-card-app-stripe` / `x-starcho-card-app-tiktok` | Tarjetas de métricas por skin visual | Componentes stats en /app |
 | `x-starcho-noty` | Icono de notificaciones con dropdown | Topbar app y admin |
 | `x-starcho-alert` | Toast/alerta de sistema (evento `notify`) | Layout app y admin |
+| `x-starcho-active` | Estado activo/inactivo con icono semántico | Columnas de estado booleano en tablas |
 | `x-starcho-chart` | Gráfica ApexCharts universal (8 tipos) | Stats y dashboards en app y admin |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
 
 Regla: si un bloque UI se repite en 2 o más módulos, se convierte en componente.
+
+### 3.1) Estado activo en app/contacts
+
+`app/contacts` incorpora el campo booleano `active` para reflejar si el contacto está activo o dado de baja.
+
+- Persistencia: columna `active` en tabla `contacts` (default `true`).
+- Edición: selector Activo/Inactivo en el modal de contacto.
+- Tabla: renderizado visual con `x-starcho-active` en PowerGrid.
+- Importación app: acepta columna opcional `active` en Excel.
 
 ### 4) Registrar el módulo en `starcho_modules`
 

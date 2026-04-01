@@ -27,6 +27,7 @@ return [
     'col_email'   => 'Email',
     'col_phone'   => 'Teléfono',
     'col_status'  => 'Estado',
+    'col_active'  => 'Activo',
     'col_created' => 'Creado',
     'col_actions' => 'Acciones',
 
@@ -46,6 +47,7 @@ return [
     'field_phone'      => 'Teléfono',
     'field_phone_ph'   => '+34 600 000 000',
     'field_status'     => 'Estado',
+    'field_active'     => 'Activo',
     'field_notes'      => 'Notas',
     'field_notes_ph'   => 'Notas sobre este contacto…',
 
@@ -54,6 +56,8 @@ return [
     'status_prospect' => 'Prospecto',
     'status_customer' => 'Cliente',
     'status_churned'  => 'Perdido',
+    'active_yes'      => 'Activo',
+    'active_no'       => 'Inactivo',
 
     // Botones
     'btn_cancel' => 'Cancelar',
@@ -63,7 +67,7 @@ return [
     'import_title' => 'Importar Contactos',
     'import_subtitle' => 'Sube un Excel exportado previamente para crear o actualizar contactos.',
     'import_label' => 'Archivo Excel',
-    'import_help' => 'Se usan las columnas id, name, company, email, phone, status y notes.',
+    'import_help' => 'Se usan las columnas id, name, company, email, phone, status, active y notes.',
     'import_cta' => 'Importar Contactos',
     'importing' => 'Importando…',
     'import_result' => 'Importacion completada: :created creados, :updated actualizados.',

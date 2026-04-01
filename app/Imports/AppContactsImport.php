@@ -35,6 +35,7 @@ class AppContactsImport implements ToCollection, WithHeadingRow
                 'email' => $this->stringOrNull($row['email'] ?? null, 150),
                 'phone' => $this->stringOrNull($row['phone'] ?? null, 50),
                 'status' => $this->normalizeStatus($row['status'] ?? null),
+                'active' => $this->normalizeActive($row['active'] ?? null),
                 'notes' => $this->stringOrNull($row['notes'] ?? null),
                 'user_id' => $this->userId,
             ];
@@ -76,5 +77,16 @@ class AppContactsImport implements ToCollection, WithHeadingRow
             ->value();
 
         return in_array($status, Contact::STATUSES, true) ? $status : 'lead';
+    }
+
+    private function normalizeActive(mixed $value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        $normalized = Str::of((string) $value)->trim()->lower()->value();
+
+        return in_array($normalized, ['1', 'true', 'yes', 'si', 'sí', 'active', 'activo'], true);
     }
 }
