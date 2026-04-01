@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CacheController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GeoLocationsController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -78,4 +79,8 @@ Route::prefix('admin')
         Route::post('cache/clear-permissions', [CacheController::class, 'clearPermissions'])->name('cache.clear-permissions');
         Route::post('cache/clear-menu',        [CacheController::class, 'clearMenu'])->name('cache.clear-menu');
         Route::post('cache/optimize',          [CacheController::class, 'optimize'])->name('cache.optimize');
+
+        // ── Geolocation (Starcho IP) ─────────────────────────────────────────────
+        Route::get('geolocations',                [GeoLocationsController::class, 'index'])->name('geolocations.index');
+        Route::get('geolocations/{geolocation}', [GeoLocationsController::class, 'show'])->name('geolocations.show');
     });

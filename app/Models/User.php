@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -19,6 +20,12 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
+
+    protected static function boot()
+    {
+        parent::boot();
+        // NOTA: UserObserver se registra en eventos, no en boot para evitar circular reference
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -43,5 +50,13 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Relación con geolocations
+     */
+    public function geolocations()
+    {
+        return $this->hasMany(UserGeoLocation::class);
     }
 }

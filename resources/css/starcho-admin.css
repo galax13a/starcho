@@ -1170,6 +1170,80 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   12 · STAT CARDS (Admin Stripe style)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.sa-stat-card {
+    padding:       18px;
+    display:       flex;
+    flex-direction: column;
+    gap:           6px;
+    background:    #ffffff;
+    border:        1px solid #ebebf0;
+    border-radius: var(--sa-radius-lg);
+    box-shadow:    var(--sa-shadow-sm);
+    transition:    var(--sa-transition);
+}
+.dark .sa-stat-card {
+    background:   #16161c;
+    border-color: #222230;
+}
+.sa-stat-card:hover {
+    box-shadow: var(--sa-shadow-md);
+    transform:  translateY(-2px);
+}
+
+.sa-stat-card-stripe {
+    border-color: rgba(124, 58, 237, .20);
+}
+.dark .sa-stat-card-stripe {
+    border-color: rgba(124, 58, 237, .18);
+}
+
+.sa-stat-card .sa-stat-label {
+    font-size:       10px;
+    font-weight:     700;
+    text-transform:  uppercase;
+    letter-spacing:  .08em;
+    color:           #8e8ea0;
+}
+.dark .sa-stat-card .sa-stat-label {
+    color: #6e6e82;
+}
+
+.sa-stat-card .sa-stat-value {
+    font-size:       30px;
+    font-weight:     900;
+    line-height:     1;
+    letter-spacing:  -.02em;
+    color:           #1a1a2e;
+}
+.dark .sa-stat-card .sa-stat-value {
+    color: #f0f0f5;
+}
+
+.sa-stat-card .sa-stat-icon {
+    font-size:        16px;
+    width:            34px;
+    height:           34px;
+    border-radius:    8px;
+    display:          flex;
+    align-items:      center;
+    justify-content:  center;
+    margin-bottom:    4px;
+}
+
+/* Stripe color for icons — purple/blue */
+.sa-stat-card-stripe .sa-stat-icon {
+    background: rgba(124, 58, 237, .12);
+    color:      #7c3aed;
+}
+.dark .sa-stat-card-stripe .sa-stat-icon {
+    background: rgba(124, 58, 237, .16);
+    color:      #a78bfa;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    13 · FLUX OVERRIDES — ajustes de componentes Flux en el contexto /admin
    ─────────────────────────────────────────────────────────────────────────── */
 
