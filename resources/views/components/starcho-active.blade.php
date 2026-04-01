@@ -7,8 +7,8 @@
 @php
     $isActive = filter_var($active, FILTER_VALIDATE_BOOL);
     $text = $isActive
-        ? ($labelActive ?? __('contacts.active_yes'))
-        : ($labelInactive ?? __('contacts.active_no'));
+    ? ($labelActive ?? __('actions.active'))
+    : ($labelInactive ?? __('actions.inactive'));
 @endphp
 
 <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold {{ $isActive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-zinc-500/15 text-zinc-400' }}">
