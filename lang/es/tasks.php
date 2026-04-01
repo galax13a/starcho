@@ -73,12 +73,18 @@ return [
     'importing' => 'Importando…',
     'import_result' => 'Importacion completada: :created creadas, :updated actualizadas.',
     'import_error' => 'No se pudo importar el archivo de tareas.',
+    'bulk_selected' => 'seleccionadas',
+    'bulk_delete_selected' => 'Eliminar seleccionadas',
+    'bulk_clear_selection' => 'Limpiar seleccion',
+    'bulk_delete_confirm' => 'Las tareas seleccionadas se eliminaran. Esta accion no se puede deshacer.',
 
     'notify' => [
         'created' => 'Tarea creada correctamente.',
         'updated' => 'Tarea actualizada correctamente.',
         'deleted' => 'Tarea eliminada correctamente.',
         'not_found' => 'La tarea no existe o no tienes permiso para acceder.',
+        'no_selection' => 'Selecciona al menos una tarea.',
+        'bulk_deleted' => 'Se eliminaron :count tareas correctamente.',
     ],
 
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tasks;
 
+use App\Exports\AppTasksExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Task;
@@ -10,10 +11,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class UserTasksTable extends PowerGridComponent
 {
@@ -30,6 +33,7 @@ final class UserTasksTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
         $this->persist(['columns'], 'app');
 
         return [
@@ -82,7 +86,7 @@ final class UserTasksTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('tasks.col_id'), 'id')->sortable(),
+            Column::make(__('tasks.col_id'), 'id')->sortable()->hidden(),
             Column::make(__('tasks.col_title'), 'title')->sortable()->searchable(),
             Column::make(__('tasks.col_status'), 'status_label'),
             Column::make(__('tasks.col_priority'), 'priority_label'),
@@ -108,6 +112,64 @@ final class UserTasksTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedTaskIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('tasks.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AppTasksExport((int) Auth::id(), $selectedIds),
+            'tasks-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedTaskIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('tasks.notify.no_selection'));
+            return;
+        }
+
+        $tasks = Task::query()
+            ->where('user_id', Auth::id())
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('tasks.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($tasks as $task) {
+            $task->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+
+        $this->notifyWarning(__('tasks.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('tasks-updated');
+    }
+
     #[On('deleteUserTask')]
     public function deleteUserTask(int $id): void
     {
@@ -123,5 +185,15 @@ final class UserTasksTable extends PowerGridComponent
         $this->notifyWarning(__('tasks.notify.deleted'));
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
         $this->dispatch('tasks-updated');
+    }
+
+    private function selectedTaskIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

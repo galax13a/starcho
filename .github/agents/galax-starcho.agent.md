@@ -65,6 +65,37 @@ Debes aplicar consistentemente:
 - showToggleColumns()
 - includeViewOnTop('...pg-header') cuando el módulo tenga header personalizado
 - persistencia de columnas por área
+- showCheckBox() cuando el módulo implemente acciones masivas
+
+### Convención de acciones masivas (Bulk) para tablas
+
+Cuando un módulo requiera bulk en app/admin, aplicar este contrato:
+
+1) En la tabla Livewire:
+- Implementar `clearSelection()`.
+- Implementar `exportSelected()` con validación de selección previa.
+- Implementar `deleteSelected()` con confirmación estandarizada en UI.
+- Implementar `selected*Ids()` para normalizar IDs desde `checkboxValues`.
+
+2) En el header `pg-header`:
+- Usar `x-data="{ selected: @entangle('checkboxValues').live }"`.
+- Usar `x-starcho-btn-excel` para export/import.
+- En export bulk, usar:
+	- `bulkWireMethod="exportSelected"`
+	- `:requireSelection="true"`
+- Mostrar barra bulk solo si `selected.length > 0`.
+
+3) En clases Export:
+- Aceptar IDs opcionales en constructor (`?array $ids = null`).
+- Filtrar query con `whereIn` cuando existan IDs.
+
+4) En i18n del módulo (`es/en/pt_BR`):
+- Agregar claves `bulk_selected`, `bulk_delete_selected`, `bulk_clear_selection`, `bulk_delete_confirm`.
+- Agregar `notify.no_selection` y `notify.bulk_deleted`.
+
+5) Reglas de seguridad:
+- Respetar ownership por `user_id` donde aplique.
+- Para bulk delete, operar por instancia validada; evitar patrones que salten hooks/scopes.
 
 Componente oficial para toggle de columnas:
 - x-starcho-btn-view-table

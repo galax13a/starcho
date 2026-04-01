@@ -72,12 +72,18 @@ return [
     'importing' => 'Importing…',
     'import_result' => 'Import finished: :created created, :updated updated.',
     'import_error' => 'The contacts file could not be imported.',
+    'bulk_selected' => 'selected',
+    'bulk_delete_selected' => 'Delete selected',
+    'bulk_clear_selection' => 'Clear selection',
+    'bulk_delete_confirm' => 'The selected contacts will be deleted. This action cannot be undone.',
 
     'notify' => [
         'created' => 'Contact created successfully.',
         'updated' => 'Contact updated successfully.',
         'deleted' => 'Contact deleted successfully.',
         'not_found' => 'The contact does not exist or you do not have permission.',
+        'no_selection' => 'Select at least one contact.',
+        'bulk_deleted' => ':count contacts were deleted successfully.',
     ],
 
 ];

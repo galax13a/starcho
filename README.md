@@ -179,6 +179,63 @@ Para cualquier módulo nuevo en `/app` o `/admin`:
 
 Con esto, los toasts y las validaciones de seguridad se comportan igual en todas las áreas y módulos.
 
+### Estándar de acciones masivas (PowerGrid) en app/admin
+
+Se define un patrón único para tablas con selección múltiple, exportación y eliminación masiva.
+
+Contrato técnico mínimo por tabla Livewire:
+
+- Activar selección con `showCheckBox()`.
+- Persistencia de columnas por panel:
+    - app: `persist(['columns'], 'app')`
+    - admin: `persist(['columns'], 'admin')`
+- Implementar métodos:
+    - `clearSelection()`
+    - `exportSelected()`
+    - `deleteSelected()`
+    - `selected*Ids()` (normaliza IDs desde `checkboxValues`)
+- En `exportSelected()`, exigir selección y descargar Excel con IDs filtrados.
+- En `deleteSelected()`, validar ownership/alcance del panel, borrar por instancia y refrescar PowerGrid.
+
+Contrato técnico mínimo por export (`App*Export` / `Admin*Export`):
+
+- Constructor con IDs opcionales (`?array $ids = null`).
+- Query con `->when($ids, fn ($q) => $q->whereIn('id', $ids))`.
+- Mantener orden y mapping estable para import/export.
+
+Contrato mínimo del header `pg-header`:
+
+- `x-data="{ selected: @entangle('checkboxValues').live }"`.
+- Botón export con componente reutilizable:
+    - `x-starcho-btn-excel`
+    - `bulkWireMethod="exportSelected"`
+    - `:requireSelection="true"`
+- Barra bulk condicional (`selected.length > 0`) con:
+    - contador de seleccionados
+    - botón eliminar con confirmación `window.Starcho.confirm(...)`
+    - botón limpiar selección (`wire:click="clearSelection"`)
+
+Skins visuales por módulo app:
+
+- tasks: variante Kick
+- contacts: variante Stripe
+- notes: variante TikTok
+
+Reglas de UX:
+
+- No duplicar HTML de export/import; reutilizar `x-starcho-btn-excel`.
+- Exportar todo solo cuando explícitamente se use ruta directa de export; en flujo bulk, exigir selección.
+- Mensajes de UI en i18n (`lang/es`, `lang/en`, `lang/pt_BR`) con claves `bulk_*` y `notify.no_selection` / `notify.bulk_deleted`.
+
+Validación de release para cambios bulk:
+
+1. `php artisan route:list --name=<panel>.<modulo>`
+2. Seleccionar filas en UI y validar:
+     - contador visible
+     - export de seleccionados
+     - eliminación masiva + refresh de tabla
+     - persistencia de columnas tras recarga
+
 ### UI app alineada con admin
 El área `/app` mantiene un lenguaje visual consistente con `/admin`, pero con assets y layout propios:
 

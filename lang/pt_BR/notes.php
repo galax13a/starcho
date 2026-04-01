@@ -75,11 +75,17 @@ return [
     'importing' => 'Importando...',
     'import_result' => 'Importacao concluida: :created criadas, :updated atualizadas.',
     'import_error' => 'Nao foi possivel importar o arquivo de notas.',
+    'bulk_selected' => 'selecionadas',
+    'bulk_delete_selected' => 'Excluir selecionadas',
+    'bulk_clear_selection' => 'Limpar selecao',
+    'bulk_delete_confirm' => 'As notas selecionadas serao excluidas. Esta acao nao pode ser desfeita.',
 
     'notify' => [
         'created' => 'Nota criada com sucesso.',
         'updated' => 'Nota atualizada com sucesso.',
         'deleted' => 'Nota removida com sucesso.',
         'not_found' => 'A nota nao existe ou voce nao tem permissao.',
+        'no_selection' => 'Selecione pelo menos uma nota.',
+        'bulk_deleted' => ':count notas removidas com sucesso.',
     ],
 ];

@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AppNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
-    public function __construct(private readonly int $userId)
+    public function __construct(private readonly int $userId, private readonly ?array $noteIds = null)
     {
     }
 
@@ -18,6 +18,7 @@ class AppNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
     {
         return Note::query()
             ->where('user_id', $this->userId)
+            ->when($this->noteIds, fn ($query) => $query->whereIn('id', $this->noteIds))
             ->orderByDesc('created_at');
     }
 

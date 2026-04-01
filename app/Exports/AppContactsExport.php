@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AppContactsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
-    public function __construct(private readonly int $userId)
+    public function __construct(private readonly int $userId, private readonly ?array $contactIds = null)
     {
     }
 
@@ -18,6 +18,7 @@ class AppContactsExport implements FromQuery, WithHeadings, WithMapping, ShouldA
     {
         return Contact::query()
             ->where('user_id', $this->userId)
+            ->when($this->contactIds, fn ($query) => $query->whereIn('id', $this->contactIds))
             ->orderByDesc('created_at');
     }
 
