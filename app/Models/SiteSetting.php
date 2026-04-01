@@ -13,10 +13,20 @@ class SiteSetting extends Model
 
     protected $fillable = [
         'site_name',
+        'app_name',
         'site_tagline',
         'site_description',
         'meta_keywords',
         'meta_author',
+        'support_email',
+        'business_email',
+        'company_name',
+        'company_dni',
+        'company_country',
+        'company_city',
+        'support_whatsapp',
+        'business_whatsapp',
+        'server_timezone',
         'canonical_url',
         'og_type',
         'og_title',
@@ -32,6 +42,15 @@ class SiteSetting extends Model
         'public_registration_enabled',
         'favicon_path',
         'og_image_path',
+        'social_facebook',
+        'social_x',
+        'social_telegram',
+        'social_discord',
+        'social_tiktok',
+        'social_linkedin',
+        'social_instagram',
+        'social_youtube',
+        'social_pinterest',
     ];
 
     protected $casts = [
@@ -45,10 +64,20 @@ class SiteSetting extends Model
     {
         return [
             'site_name' => config('app.name', 'Starcho'),
+            'app_name' => null,
             'site_tagline' => null,
             'site_description' => null,
             'meta_keywords' => null,
             'meta_author' => null,
+            'support_email' => null,
+            'business_email' => null,
+            'company_name' => null,
+            'company_dni' => null,
+            'company_country' => null,
+            'company_city' => null,
+            'support_whatsapp' => null,
+            'business_whatsapp' => null,
+            'server_timezone' => 'UTC',
             'canonical_url' => null,
             'og_type' => 'website',
             'og_title' => null,
@@ -64,6 +93,15 @@ class SiteSetting extends Model
             'public_registration_enabled' => true,
             'favicon_path' => null,
             'og_image_path' => null,
+            'social_facebook' => null,
+            'social_x' => null,
+            'social_telegram' => null,
+            'social_discord' => null,
+            'social_tiktok' => null,
+            'social_linkedin' => null,
+            'social_instagram' => null,
+            'social_youtube' => null,
+            'social_pinterest' => null,
         ];
     }
 

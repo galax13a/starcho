@@ -21,19 +21,29 @@
         @csrf
         @method('PUT')
 
-        <div class="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1 shadow-sm">
+        <div class="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1 shadow-sm overflow-x-auto">
             <button type="button" @click="tab = 'global'"
-                class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
                 :class="tab === 'global' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
                 {{ __('admin_ui.site.tabs.global') }}
             </button>
+            <button type="button" @click="tab = 'website'"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
+                :class="tab === 'website' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
+                {{ __('admin_ui.site.tabs.website') }}
+            </button>
+            <button type="button" @click="tab = 'social'"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
+                :class="tab === 'social' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
+                {{ __('admin_ui.site.tabs.social') }}
+            </button>
             <button type="button" @click="tab = 'access'"
-                class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
                 :class="tab === 'access' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
                 {{ __('admin_ui.site.tabs.access') }}
             </button>
             <button type="button" @click="tab = 'pages'"
-                class="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
                 :class="tab === 'pages' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
                 {{ __('admin_ui.site.tabs.pages') }}
             </button>
@@ -70,7 +80,7 @@
 
                     <flux:field>
                         <flux:label>{{ __('admin_ui.site.form.favicon') }}</flux:label>
-                        <input type="file" name="favicon" class="block w-full text-sm" accept=".ico,.png,.svg,.webp">
+                        <input type="file" name="favicon" class="block w-full text-sm" accept=".ico">
                         @if($settings->favicon_path)
                             <img src="{{ \Illuminate\Support\Facades\Storage::url($settings->favicon_path) }}" alt="favicon" class="mt-2 h-8 w-8 rounded bg-zinc-50 dark:bg-zinc-800 p-1">
                         @endif
@@ -182,6 +192,163 @@
                         <flux:label>{{ __('admin_ui.site.form.facebook_app_id') }}</flux:label>
                         <flux:input name="facebook_app_id" value="{{ old('facebook_app_id', $settings->facebook_app_id) }}" placeholder="1234567890" />
                         <flux:error name="facebook_app_id" />
+                    </flux:field>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="tab === 'website'" x-cloak class="space-y-6">
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                <flux:heading size="lg">{{ __('admin_ui.site.sections.website_info') }}</flux:heading>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.app_name') }}</flux:label>
+                        <flux:input name="app_name" value="{{ old('app_name', $settings->app_name) }}" placeholder="Mi Aplicación" />
+                        <flux:error name="app_name" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.company_name') }}</flux:label>
+                        <flux:input name="company_name" value="{{ old('company_name', $settings->company_name) }}" placeholder="Nombre de la empresa" />
+                        <flux:error name="company_name" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.company_dni') }}</flux:label>
+                        <flux:input name="company_dni" value="{{ old('company_dni', $settings->company_dni) }}" placeholder="DNI/RUC" />
+                        <flux:error name="company_dni" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.company_country') }}</flux:label>
+                        <flux:input name="company_country" value="{{ old('company_country', $settings->company_country) }}" placeholder="País" />
+                        <flux:error name="company_country" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.company_city') }}</flux:label>
+                        <flux:input name="company_city" value="{{ old('company_city', $settings->company_city) }}" placeholder="Ciudad" />
+                        <flux:error name="company_city" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.server_timezone') }}</flux:label>
+                        <select name="server_timezone" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                            @php($tz = old('server_timezone', $settings->server_timezone ?? 'UTC'))
+                            <option value="UTC" @selected($tz === 'UTC')>UTC</option>
+                            <option value="America/New_York" @selected($tz === 'America/New_York')>America/New_York</option>
+                            <option value="America/Chicago" @selected($tz === 'America/Chicago')>America/Chicago</option>
+                            <option value="America/Denver" @selected($tz === 'America/Denver')>America/Denver</option>
+                            <option value="America/Los_Angeles" @selected($tz === 'America/Los_Angeles')>America/Los_Angeles</option>
+                            <option value="America/Bogota" @selected($tz === 'America/Bogota')>America/Bogota</option>
+                            <option value="America/Lima" @selected($tz === 'America/Lima')>America/Lima</option>
+                            <option value="America/Argentina/Buenos_Aires" @selected($tz === 'America/Argentina/Buenos_Aires')>America/Argentina/Buenos_Aires</option>
+                            <option value="America/Sao_Paulo" @selected($tz === 'America/Sao_Paulo')>America/Sao_Paulo</option>
+                            <option value="Europe/London" @selected($tz === 'Europe/London')>Europe/London</option>
+                            <option value="Europe/Madrid" @selected($tz === 'Europe/Madrid')>Europe/Madrid</option>
+                            <option value="Europe/Paris" @selected($tz === 'Europe/Paris')>Europe/Paris</option>
+                            <option value="Europe/Berlin" @selected($tz === 'Europe/Berlin')>Europe/Berlin</option>
+                            <option value="Asia/Tokyo" @selected($tz === 'Asia/Tokyo')>Asia/Tokyo</option>
+                            <option value="Asia/Shanghai" @selected($tz === 'Asia/Shanghai')>Asia/Shanghai</option>
+                            <option value="Asia/Singapore" @selected($tz === 'Asia/Singapore')>Asia/Singapore</option>
+                            <option value="Asia/Dubai" @selected($tz === 'Asia/Dubai')>Asia/Dubai</option>
+                            <option value="Asia/Kolkata" @selected($tz === 'Asia/Kolkata')>Asia/Kolkata</option>
+                        </select>
+                        <flux:error name="server_timezone" />
+                    </flux:field>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                <flux:heading size="lg">{{ __('admin_ui.site.sections.contact_info') }}</flux:heading>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.support_email') }}</flux:label>
+                        <flux:input name="support_email" type="email" value="{{ old('support_email', $settings->support_email) }}" placeholder="soporte@ejemplo.com" />
+                        <flux:error name="support_email" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.business_email') }}</flux:label>
+                        <flux:input name="business_email" type="email" value="{{ old('business_email', $settings->business_email) }}" placeholder="ventas@ejemplo.com" />
+                        <flux:error name="business_email" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.support_whatsapp') }}</flux:label>
+                        <flux:input name="support_whatsapp" value="{{ old('support_whatsapp', $settings->support_whatsapp) }}" placeholder="+1234567890" />
+                        <flux:error name="support_whatsapp" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.business_whatsapp') }}</flux:label>
+                        <flux:input name="business_whatsapp" value="{{ old('business_whatsapp', $settings->business_whatsapp) }}" placeholder="+1234567890" />
+                        <flux:error name="business_whatsapp" />
+                    </flux:field>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="tab === 'social'" x-cloak class="space-y-6">
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                <flux:heading size="lg">{{ __('admin_ui.site.sections.social_networks') }}</flux:heading>
+                <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.social_help') }}</flux:text>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Facebook</flux:label>
+                        <flux:input name="social_facebook" type="url" value="{{ old('social_facebook', $settings->social_facebook) }}" placeholder="https://facebook.com/tu-pagina" />
+                        <flux:error name="social_facebook" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>X (Twitter)</flux:label>
+                        <flux:input name="social_x" type="url" value="{{ old('social_x', $settings->social_x) }}" placeholder="https://x.com/tu-usuario" />
+                        <flux:error name="social_x" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Instagram</flux:label>
+                        <flux:input name="social_instagram" type="url" value="{{ old('social_instagram', $settings->social_instagram) }}" placeholder="https://instagram.com/tu-usuario" />
+                        <flux:error name="social_instagram" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>LinkedIn</flux:label>
+                        <flux:input name="social_linkedin" type="url" value="{{ old('social_linkedin', $settings->social_linkedin) }}" placeholder="https://linkedin.com/company/tu-empresa" />
+                        <flux:error name="social_linkedin" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>TikTok</flux:label>
+                        <flux:input name="social_tiktok" type="url" value="{{ old('social_tiktok', $settings->social_tiktok) }}" placeholder="https://tiktok.com/@tu-usuario" />
+                        <flux:error name="social_tiktok" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>YouTube</flux:label>
+                        <flux:input name="social_youtube" type="url" value="{{ old('social_youtube', $settings->social_youtube) }}" placeholder="https://youtube.com/@tu-canal" />
+                        <flux:error name="social_youtube" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Telegram</flux:label>
+                        <flux:input name="social_telegram" type="url" value="{{ old('social_telegram', $settings->social_telegram) }}" placeholder="https://t.me/tu-canal" />
+                        <flux:error name="social_telegram" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Discord</flux:label>
+                        <flux:input name="social_discord" type="url" value="{{ old('social_discord', $settings->social_discord) }}" placeholder="https://discord.gg/tu-servidor" />
+                        <flux:error name="social_discord" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Pinterest</flux:label>
+                        <flux:input name="social_pinterest" type="url" value="{{ old('social_pinterest', $settings->social_pinterest) }}" placeholder="https://pinterest.com/tu-usuario" />
+                        <flux:error name="social_pinterest" />
                     </flux:field>
                 </div>
             </div>
