@@ -155,11 +155,10 @@ new class extends Component {
 
                     {{-- Activo --}}
                     <div class="sc-field">
-                        <label class="sc-label sc-label-stripe">{{ __('contacts.field_active') }}</label>
-                        <select wire:model.boolean="active" class="sc-select sc-select-stripe app-select">
-                            <option value="1">{{ __('contacts.active_yes') }}</option>
-                            <option value="0">{{ __('contacts.active_no') }}</option>
-                        </select>
+                        <x-starcho-active-switch
+                            wire:model.live="active"
+                            :label="__('contacts.field_active')"
+                        />
                         @error('active')
                         <span class="sc-field-error sc-field-error-stripe">{{ $message }}</span>
                         @enderror
