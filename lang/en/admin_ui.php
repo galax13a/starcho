@@ -570,4 +570,38 @@ return [
         'first_page' => 'First page',
         'last_page' => 'Last page',
     ],
+
+    'geolocations' => [
+        'title' => 'IP Geolocation',
+        'detail' => 'Geolocation Detail',
+        'info' => 'Information',
+        'map' => 'Map',
+        'no_coordinates' => 'No coordinates available',
+        'user_timeline' => 'User IP History',
+        'no_records' => 'No records',
+        'total_records' => 'Total Records',
+        'total_countries' => 'Unique Countries',
+        'total_cities' => 'Unique Cities',
+        'total_users' => 'Registered Users',
+        'columns' => [
+            'ip' => 'IP Address',
+            'user' => 'User',
+            'country' => 'Country',
+            'city' => 'City',
+            'region' => 'Region',
+            'isp' => 'ISP',
+            'timezone' => 'Timezone',
+            'coordinates' => 'Coordinates',
+            'captured_at' => 'Captured At',
+        ],
+        'charts' => [
+            'by_country' => 'Distribution by Country',
+            'by_city' => 'Top 10 Cities',
+            'timeline' => 'Activity per Day (Last 30 Days)',
+        ],
+        'filters' => [
+            'country' => 'Country',
+            'city' => 'City',
+        ],
+    ],
 ];

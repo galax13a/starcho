@@ -10,25 +10,54 @@
         </div>
     </div>
 
-    @php
-        $dashboardCards = [
-            ['label' => __('admin_ui.dashboard.cards.users'), 'value' => $stats['users'], 'tone' => 'indigo'],
-            ['label' => __('admin_ui.dashboard.cards.tasks_total'), 'value' => $stats['tasks_total'], 'tone' => 'cyan'],
-            ['label' => __('admin_ui.dashboard.cards.tasks_pending'), 'value' => $stats['tasks_pending'], 'tone' => 'violet'],
-            ['label' => __('admin_ui.dashboard.cards.contacts_active'), 'value' => $stats['contacts_active'], 'tone' => 'emerald'],
-            ['label' => __('admin_ui.dashboard.cards.notes_total'), 'value' => $stats['notes_total'], 'tone' => 'slate'],
-            ['label' => __('admin_ui.dashboard.cards.modules_active'), 'value' => $stats['modules_active'], 'tone' => 'blue'],
-        ];
-    @endphp
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.users')"
+            :value="$stats['users']"
+            icon="fas fa-users"
+            iconBg="rgba(124, 58, 237, .12)"
+            iconColor="#7c3aed"
+        />
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @foreach($dashboardCards as $card)
-            <x-starcho-card-statsOne
-                :label="$card['label']"
-                :value="$card['value']"
-                :tone="$card['tone']"
-            />
-        @endforeach
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.tasks_total')"
+            :value="$stats['tasks_total']"
+            icon="fas fa-tasks"
+            iconBg="rgba(37, 244, 238, .12)"
+            iconColor="#25f4ee"
+        />
+
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.tasks_pending')"
+            :value="$stats['tasks_pending']"
+            icon="fas fa-hourglass"
+            iconBg="rgba(245, 158, 11, .12)"
+            iconColor="#f59e0b"
+        />
+
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.contacts_active')"
+            :value="$stats['contacts_active']"
+            icon="fas fa-address-book"
+            iconBg="rgba(16, 185, 129, .12)"
+            iconColor="#10b981"
+        />
+
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.notes_total')"
+            :value="$stats['notes_total']"
+            icon="fas fa-sticky-note"
+            iconBg="rgba(254, 44, 85, .12)"
+            iconColor="#fe2c55"
+        />
+
+        <x-starcho-card-admin-stats
+            :label="__('admin_ui.dashboard.cards.modules_active')"
+            :value="$stats['modules_active']"
+            icon="fas fa-cube"
+            iconBg="rgba(99, 91, 255, .12)"
+            iconColor="#635bff"
+        />
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
