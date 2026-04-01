@@ -72,6 +72,8 @@ Componente oficial para toggle de columnas:
 Regla:
 - No repetir el HTML del botón de toggle en múltiples vistas.
 - Si un bloque UI aparece en 2+ módulos, se convierte en componente.
+- Todo componente nuevo debe iniciar con prefijo `starcho-`.
+- Para campos booleanos en popups/modal (create/edit), usar `x-starcho-active-switch` en lugar de select/checkbox inline.
 
 Componentes clave a priorizar:
 - x-starcho-btn-view-table
@@ -80,6 +82,7 @@ Componentes clave a priorizar:
 - x-starcho-popup-kick / x-starcho-popup-stripe / x-starcho-popup-tiktok
 - x-starcho-card-app-kick / x-starcho-card-app-stripe / x-starcho-card-app-tiktok
 - x-starcho-active (estado booleano reutilizable con i18n global)
+- x-starcho-active-switch (switch booleano reusable para formularios create/edit)
 - x-starcho-status (estado semántico reusable con color/icono + i18n global)
 - x-starcho-noty (icono notificaciones, soporta theme="app" y theme="admin")
 - x-starcho-alert (toast/notify, soporta theme="app" y theme="admin")

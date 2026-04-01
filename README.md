@@ -941,6 +941,7 @@ Para mantener consistencia visual y acelerar desarrollo, usa componentes Blade r
 | `x-starcho-noty` | Icono de notificaciones con dropdown | Topbar app y admin |
 | `x-starcho-alert` | Toast/alerta de sistema (evento `notify`) | Layout app y admin |
 | `x-starcho-active` | Estado activo/inactivo con icono semántico | Columnas de estado booleano en tablas |
+| `x-starcho-active-switch` | Switch booleano reutilizable (on/off) | Formularios create/edit en popups/modales |
 | `x-starcho-status` | Estado semántico multilenguaje con color e icono | Columnas `status` en tablas de negocio |
 | `x-starcho-chart` | Gráfica ApexCharts universal (8 tipos) | Stats y dashboards en app y admin |
 | `x-starcho-popup-admin-import` | Modal de importación en admin | Módulos administrativos |
@@ -987,6 +988,7 @@ Para mantener velocidad sin perder calidad, toda implementación nueva debe segu
     - Notificaciones con `DispatchesStarchoNotify` y `notifyCrud(...)`.
 3. Usar componentes globales antes de crear HTML nuevo:
     - Estado booleano: `x-starcho-active` (labels globales `actions.active/inactive`).
+    - Entrada booleana en formularios: `x-starcho-active-switch` en popups create/edit.
     - Estado semántico: `x-starcho-status` (labels globales `actions.statuses.*`).
 4. Internacionalización obligatoria:
     - Toda UI en `lang/es`, `lang/en`, `lang/pt_BR`.

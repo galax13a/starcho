@@ -15,6 +15,7 @@ new class extends Component {
     public string $email = '';
     public string $phone = '';
     public string $status = 'lead';
+    public bool $active = true;
     public string $notes = '';
 
     #[On('openAdminContact')]
@@ -27,6 +28,7 @@ new class extends Component {
         $this->email = '';
         $this->phone = '';
         $this->status = 'lead';
+        $this->active = true;
         $this->notes = '';
 
         if ($id > 0) {
@@ -37,6 +39,7 @@ new class extends Component {
             $this->email = $contact->email ?? '';
             $this->phone = $contact->phone ?? '';
             $this->status = $contact->status;
+            $this->active = (bool) $contact->active;
             $this->notes = $contact->notes ?? '';
         }
 
@@ -52,6 +55,7 @@ new class extends Component {
             'email' => 'nullable|email|max:150',
             'phone' => 'nullable|string|max:50',
             'status' => 'required|in:lead,prospect,customer,churned',
+            'active' => 'required|boolean',
             'notes' => 'nullable|string|max:2000',
         ]);
 
@@ -61,6 +65,7 @@ new class extends Component {
             'email' => $this->email ?: null,
             'phone' => $this->phone ?: null,
             'status' => $this->status,
+            'active' => $this->active,
             'notes' => $this->notes ?: null,
         ];
 
@@ -128,6 +133,14 @@ new class extends Component {
                     <flux:select.option value="churned">{{ __('admin_ui.contacts.status.churned') }}</flux:select.option>
                 </flux:select>
                 <flux:error name="status" />
+            </flux:field>
+
+            <flux:field>
+                <x-starcho-active-switch
+                    wire:model.live="active"
+                    :label="__('actions.active')"
+                />
+                <flux:error name="active" />
             </flux:field>
 
             <flux:field>
