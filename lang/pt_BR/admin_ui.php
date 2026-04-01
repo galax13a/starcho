@@ -8,6 +8,12 @@ return [
         'saving' => 'Salvando...',
         'save_changes' => 'Salvar alteracoes',
         'import' => 'Importar',
+        'importing' => 'Importando...',
+        'import_data' => 'Importar dados',
+        'import_result' => 'Importacao concluida: :created criados, :updated atualizados.',
+        'import_error' => 'Nao foi possivel importar o arquivo.',
+        'select_item_to_export' => 'Selecione pelo menos um item para exportar.',
+        'file' => 'Arquivo',
         'update' => 'Atualizar',
         'record_not_found' => 'Registro nao encontrado ou sem permissao.',
     ],
@@ -169,6 +175,12 @@ return [
             'all_statuses' => 'Todos os status',
             'all_priorities' => 'Todas as prioridades',
         ],
+        'bulk' => [
+            'selected' => 'selecionadas',
+            'delete_selected' => 'Excluir selecionadas',
+            'clear_selection' => 'Limpar selecao',
+            'delete_confirm' => 'As tarefas selecionadas serao excluidas. Esta acao nao pode ser desfeita.',
+        ],
         'status' => [
             'pending' => 'Pendente',
             'in_progress' => 'Em progresso',
@@ -216,6 +228,8 @@ return [
             'updated' => 'Tarefa :name atualizada com sucesso.',
             'deleted' => 'Tarefa removida com sucesso.',
             'not_found' => 'Tarefa nao encontrada ou sem permissao.',
+            'no_selection' => 'Selecione pelo menos uma tarefa.',
+            'bulk_deleted' => ':count tarefas foram excluidas com sucesso.',
         ],
     ],
 
@@ -232,6 +246,13 @@ return [
         ],
         'filters' => [
             'all_statuses' => 'Todos os status',
+        ],
+        'bulk' => [
+            'selected' => 'selecionados',
+            'export_selected' => 'Exportar selecionados',
+            'delete_selected' => 'Excluir selecionados',
+            'clear_selection' => 'Limpar selecao',
+            'delete_confirm' => 'Os contatos selecionados serao excluidos. Esta acao nao pode ser desfeita.',
         ],
         'status' => [
             'lead' => 'Lead',
@@ -270,6 +291,8 @@ return [
             'updated' => 'Contato :name atualizado com sucesso.',
             'deleted' => 'Contato removido com sucesso.',
             'not_found' => 'Contato nao encontrado ou sem permissao.',
+            'no_selection' => 'Selecione pelo menos um contato.',
+            'bulk_deleted' => ':count contatos foram excluidos com sucesso.',
         ],
     ],
 
@@ -288,6 +311,12 @@ return [
         ],
         'filters' => [
             'all_colors' => 'Todas as cores',
+        ],
+        'bulk' => [
+            'selected' => 'selecionadas',
+            'delete_selected' => 'Excluir selecionadas',
+            'clear_selection' => 'Limpar selecao',
+            'delete_confirm' => 'As notas selecionadas serao excluidas. Esta acao nao pode ser desfeita.',
         ],
         'colors' => [
             'indigo' => 'Indigo',
@@ -341,6 +370,8 @@ return [
             'updated' => 'Nota :name atualizada com sucesso.',
             'deleted' => 'Nota removida com sucesso.',
             'not_found' => 'Nota nao encontrada ou sem permissao.',
+            'no_selection' => 'Selecione pelo menos uma nota.',
+            'bulk_deleted' => ':count notas removidas com sucesso.',
         ],
     ],
 
@@ -450,6 +481,7 @@ return [
         ],
         'items_in_panel' => ':count item(s) no painel :panel',
         'new_item' => 'Novo item',
+        'drag_hint' => 'Arraste e solte para reordenar menu e submenus. Salva automaticamente ao soltar.',
         'no_items' => 'Nao ha itens no painel :panel. Crie o primeiro.',
         'sub_level' => 'sub-:depth',
         'route_label' => 'route',
@@ -460,6 +492,7 @@ return [
         'actions' => [
             'move_up' => 'Subir',
             'move_down' => 'Descer',
+            'drag' => 'Arrastar',
             'activate' => 'Ativar',
             'deactivate' => 'Desativar',
             'add_child' => 'Adicionar filho',
@@ -470,6 +503,15 @@ return [
             'item_saved' => 'Item salvo.',
             'item_deleted' => 'Item excluido.',
         ],
+        'labels' => [
+            'title' => 'Rotulos de secao',
+            'subtitle' => 'Crie ou edite rotulos globais para este painel.',
+            'placeholder' => 'Ex. Acesso, App, Sistema...',
+            'create' => 'Criar rotulo',
+            'update' => 'Atualizar rotulo',
+            'edit' => 'Editar rotulo',
+            'empty' => 'Ainda nao ha rotulos para este painel.',
+        ],
         'modal' => [
             'new_item' => 'Novo item de menu',
             'edit_item' => 'Editar item',
@@ -478,6 +520,7 @@ return [
             'panel' => 'Painel',
             'section' => 'Secao',
             'section_placeholder' => 'Acesso, Sistema...',
+            'section_hint' => 'Voce pode digitar um novo rotulo ou reutilizar um existente.',
             'icon' => 'Icone (FA class)',
             'icon_placeholder' => 'fas fa-home',
             'order' => 'Ordem',
@@ -582,6 +625,8 @@ return [
         'total_countries' => 'Países Únicos',
         'total_cities' => 'Cidades Únicas',
         'total_users' => 'Usuários Registrados',
+        'total_isps' => 'Provedores ISP Únicos',
+        'table_hint' => 'Inclui país, fuso horário, coordenadas e ISP (ative colunas no toggle).',
         'columns' => [
             'ip' => 'Endereço IP',
             'user' => 'Usuário',

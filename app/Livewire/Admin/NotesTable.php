@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminNotesExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Note;
@@ -10,10 +11,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class NotesTable extends PowerGridComponent
 {
@@ -27,6 +30,7 @@ final class NotesTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
         $this->persist(['columns'], 'admin');
 
         return [
@@ -62,7 +66,7 @@ final class NotesTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('admin_ui.notes.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.notes.columns.id'), 'id')->sortable()->hidden(),
             Column::make(__('admin_ui.notes.columns.title'), 'title')->sortable()->searchable(),
             Column::make(__('admin_ui.notes.columns.content'), 'content_excerpt', 'content')->searchable(),
             Column::make(__('admin_ui.notes.columns.color'), 'color_label', 'color')->sortable(),
@@ -88,6 +92,62 @@ final class NotesTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedNoteIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AdminNotesExport($selectedIds),
+            'admin-notes-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedNoteIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+            return;
+        }
+
+        $notes = Note::query()
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($notes->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($notes as $note) {
+            $note->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+
+        $this->notifyWarning(__('admin_ui.notes.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
     #[On('deleteAdminNote')]
     public function deleteAdminNote(int $id): void
     {
@@ -101,6 +161,16 @@ final class NotesTable extends PowerGridComponent
         $note->delete();
         $this->notifyCrud('notes', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    private function selectedNoteIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function colorLabel(string $color): string

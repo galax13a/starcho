@@ -34,10 +34,10 @@ new class extends Component {
             $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-contacts-import'}}))");
             $this->dispatch('pg:eventRefresh-admin-contacts-table');
             $this->dispatch('admin-contacts-updated');
-            $this->dispatch('notify', type: 'success', message: __('admin_ui.contacts.import_result', ['created' => $import->created, 'updated' => $import->updated]));
+            $this->dispatch('notify', type: 'success', message: __('admin_ui.common.import_result', ['created' => $import->created, 'updated' => $import->updated]));
         } catch (\Throwable $exception) {
             report($exception);
-            $this->dispatch('notify', type: 'error', message: __('admin_ui.contacts.import_error'));
+            $this->dispatch('notify', type: 'error', message: __('admin_ui.common.import_error'));
         }
     }
 }; ?>
@@ -47,7 +47,7 @@ new class extends Component {
         modal-name="modal-admin-contacts-import"
         submit-method="importContacts"
         loading-target="importContacts"
-        title="{{ __('admin_ui.contacts.import_excel') }}"
+        title="{{ __('admin_ui.common.import_data') }}"
         file-model="importFile"
     />
 </div>

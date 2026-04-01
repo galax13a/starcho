@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminContactsExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use App\Models\Contact;
@@ -9,10 +10,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class ContactsTable extends PowerGridComponent
 {
@@ -26,6 +29,7 @@ final class ContactsTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
         $this->persist(['columns'], 'admin');
 
         return [
@@ -69,7 +73,7 @@ final class ContactsTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('admin_ui.contacts.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.contacts.columns.id'), 'id')->sortable()->hidden(),
             Column::make(__('admin_ui.contacts.columns.name'), 'name')->sortable()->searchable(),
             Column::make(__('admin_ui.contacts.columns.company'), 'company')->sortable()->searchable(),
             Column::make(__('admin_ui.contacts.columns.email'), 'email')->sortable()->searchable(),
@@ -96,6 +100,62 @@ final class ContactsTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedContactIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AdminContactsExport($selectedIds),
+            'admin-contacts-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedContactIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+            return;
+        }
+
+        $contacts = Contact::query()
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($contacts->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($contacts as $contact) {
+            $contact->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+
+        $this->notifyWarning(__('admin_ui.contacts.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
     #[On('deleteAdminContact')]
     public function deleteAdminContact(int $id): void
     {
@@ -109,5 +169,15 @@ final class ContactsTable extends PowerGridComponent
         $contact->delete();
         $this->notifyCrud('contacts', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    private function selectedContactIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 }
