@@ -67,6 +67,22 @@ npm run build
 php artisan optimize
 ```
 
+Si en producción/local con build no cargan estilos en `/admin`, `/app`, `login` o `register`, validar este punto:
+
+```bash
+# Debe dar False en build (solo existe cuando corre Vite dev server)
+Test-Path public/hot
+```
+
+Si devuelve `True`, eliminar `public/hot` y limpiar cachés:
+
+```bash
+Remove-Item public/hot
+php artisan optimize:clear
+```
+
+Luego recargar el navegador con `Ctrl+F5`.
+
 Checklist mínimo antes de publicar cambios:
 
 1. Verificar rutas nuevas/modificadas:
