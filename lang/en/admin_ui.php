@@ -12,6 +12,35 @@ return [
         'record_not_found' => 'Record not found or without permission.',
     ],
 
+    'dashboard' => [
+        'heading' => 'Admin Dashboard',
+        'description' => 'Executive panel overview: activity, module health and key KPIs.',
+        'cards' => [
+            'users' => 'Users',
+            'tasks_total' => 'Total tasks',
+            'tasks_pending' => 'Pending tasks',
+            'contacts_active' => 'Active contacts',
+            'notes_total' => 'Total notes',
+            'modules_active' => 'Active modules',
+        ],
+        'charts' => [
+            'tasks' => 'Tasks',
+            'contacts' => 'Contacts',
+            'notes' => 'Notes',
+            'tasks_by_status' => 'Tasks by status',
+            'monthly_activity' => 'Monthly activity (last 6 months)',
+            'modules_health' => 'Module health',
+            'modules_on' => 'Active',
+            'modules_off' => 'Inactive',
+        ],
+        'quick' => [
+            'tasks' => 'Manage tasks',
+            'tasks_help' => 'Open tasks module to create, edit and monitor statuses.',
+            'modules' => 'Manage modules',
+            'modules_help' => 'Install, activate or deactivate modules in Starcho.',
+        ],
+    ],
+
     'roles' => [
         'heading' => 'Roles',
         'description' => 'Manage system roles and their assigned permissions.',

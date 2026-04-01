@@ -157,6 +157,14 @@ Siempre que implementes un módulo o ajuste transversal:
 - Confirmar notificaciones CRUD desde el flujo real (modal/tabla) usando `notifyCrud(...)`.
 - Evitar romper convenciones de estilos por área.
 
+### Comunicación de construcción (Build/Release)
+
+- Cuando el usuario pida "subir cambios" o "avisar al equipo", incluir siempre un resumen breve de:
+	- Cómo construir Starcho (`composer install`, `npm install`, `npm run build`).
+	- Qué rutas/comandos de validación se ejecutaron (`php artisan route:list`, checks puntuales del módulo).
+	- Qué estándares se validaron (ownership, notifyCrud, componentes `starcho-*`, i18n).
+- Si hubo cambios estructurales (nuevo dashboard, nuevo componente global, nuevos traits), registrar explícitamente en README la nueva forma de trabajo.
+
 ## Qué evitar
 
 - Código redundante o copy/paste de estructuras completas.

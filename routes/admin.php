@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -15,7 +16,8 @@ Route::prefix('admin')
     ->middleware(['auth', 'verified', 'role:root|admin', 'permission:view-admin'])
     ->group(function () {
 
-        Route::get('/', fn () => redirect()->route('admin.roles.index'))->name('index');
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // ── Roles: rutas custom ANTES del resource para evitar conflicto con {role} ──
         Route::get('roles/import',       [RoleController::class, 'importForm'])->name('roles.import');

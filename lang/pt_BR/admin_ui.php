@@ -12,6 +12,35 @@ return [
         'record_not_found' => 'Registro nao encontrado ou sem permissao.',
     ],
 
+    'dashboard' => [
+        'heading' => 'Dashboard Admin',
+        'description' => 'Visao executiva do painel: atividade, saude dos modulos e KPIs principais.',
+        'cards' => [
+            'users' => 'Usuarios',
+            'tasks_total' => 'Tarefas total',
+            'tasks_pending' => 'Tarefas pendentes',
+            'contacts_active' => 'Contatos ativos',
+            'notes_total' => 'Notas total',
+            'modules_active' => 'Modulos ativos',
+        ],
+        'charts' => [
+            'tasks' => 'Tarefas',
+            'contacts' => 'Contatos',
+            'notes' => 'Notas',
+            'tasks_by_status' => 'Tarefas por status',
+            'monthly_activity' => 'Atividade mensal (ultimos 6 meses)',
+            'modules_health' => 'Saude dos modulos',
+            'modules_on' => 'Ativos',
+            'modules_off' => 'Inativos',
+        ],
+        'quick' => [
+            'tasks' => 'Gerenciar tarefas',
+            'tasks_help' => 'Abrir modulo de tarefas para criar, editar e acompanhar status.',
+            'modules' => 'Gerenciar modulos',
+            'modules_help' => 'Instalar, ativar ou desativar modulos no Starcho.',
+        ],
+    ],
+
     'roles' => [
         'heading' => 'Papeis',
         'description' => 'Gerencie os papeis do sistema e suas permissoes atribuídas.',

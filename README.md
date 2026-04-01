@@ -49,6 +49,55 @@ El seeder crea:
 
 ---
 
+## Cómo Se Construye Starcho
+
+Flujo recomendado para desarrollo local:
+
+```bash
+composer install
+npm install
+php artisan migrate --seed
+npm run dev
+```
+
+Build de producción:
+
+```bash
+npm run build
+php artisan optimize
+```
+
+Checklist mínimo antes de publicar cambios:
+
+1. Verificar rutas nuevas/modificadas:
+
+```bash
+php artisan route:list
+```
+
+2. Validar compilación frontend:
+
+```bash
+npm run build
+```
+
+3. Confirmar consistencia de paneles:
+- `/app` mantiene sus assets/estilos/layout propios.
+- `/admin` mantiene sus assets/estilos/layout propios.
+
+4. Confirmar estándares transversales:
+- Ownership por `user_id` cuando aplique.
+- Notificaciones CRUD vía `notifyCrud(...)`.
+- Reutilización de componentes `starcho-*`.
+- Traducciones en `lang/es`, `lang/en`, `lang/pt_BR`.
+
+5. Validar funcionalidad real en UI:
+- Flujo create/edit/delete del módulo.
+- Refresco de PowerGrid y persistencia de columnas.
+- Menú dinámico y caché de menú tras instalar/activar módulo.
+
+---
+
 ## Cambios recientes
 
 ### Seguridad transversal de registros (app y admin)
