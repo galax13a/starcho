@@ -447,9 +447,11 @@ return [
             'contact_info' => 'Informacion de contacto',
             'social_networks' => 'Redes sociales',
         ],
-        'access_help' => 'Activa o desactiva el home publico y el registro de usuarios para contro
-        'social_help' => 'Agrega los enlaces a tus redes sociales. Deja en blanco los que no utilices.',lar la exposicion del sitio.',
+        'access_help' => 'Activa o desactiva el home publico y el registro de usuarios para controlar la exposicion del sitio.',
         'pages_help' => 'Se detectan rutas desde resources/views/pages (Folio) y puedes editar su SEO por idioma en linea.',
+        'pages_editor_help' => 'Edita el contenido Blade/HTML de cada pagina Folio y ajusta su SEO por idioma desde este tab.',
+        'no_folio_pages' => 'No se encontraron paginas Folio editables en resources/views/pages.',
+        'social_help' => 'Agrega los enlaces a tus redes sociales. Deja en blanco los que no utilices.',
         'pages_editor_help' => 'Edita el contenido Blade/HTML de cada pagina Folio y ajusta su SEO por idioma desde este tab.',
         'no_folio_pages' => 'No se encontraron paginas Folio editables en resources/views/pages.',
         'visual_editor' => [
