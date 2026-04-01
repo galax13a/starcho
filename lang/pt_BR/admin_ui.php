@@ -617,6 +617,7 @@ return [
         'no_route' => 'sem rota',
         'order_label' => 'ordem',
         'delete_confirm' => 'Excluir item ":name"?',
+        'clear_confirm' => 'Esta acao removera todos os itens do painel :panel. Deseja continuar?',
         'actions' => [
             'move_up' => 'Subir',
             'move_down' => 'Descer',
@@ -626,10 +627,19 @@ return [
             'add_child' => 'Adicionar filho',
             'edit' => 'Editar',
             'delete' => 'Excluir',
+            'export' => 'Exportar',
+            'import' => 'Importar',
+            'export_excel' => 'Exportar Excel',
+            'import_excel' => 'Importar Excel',
+            'clear_all' => 'Excluir tudo',
         ],
         'notify' => [
             'item_saved' => 'Item salvo.',
             'item_deleted' => 'Item excluido.',
+            'exported' => 'Menu exportado com sucesso.',
+            'imported' => 'Menu importado com sucesso.',
+            'cleared' => 'Todos os itens do painel foram removidos.',
+            'import_failed' => 'Nao foi possivel importar o arquivo. Verifique se e um JSON valido.',
         ],
         'labels' => [
             'title' => 'Rotulos de secao',

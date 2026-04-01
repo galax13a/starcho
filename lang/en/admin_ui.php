@@ -615,6 +615,7 @@ return [
         'no_route' => 'no route',
         'order_label' => 'order',
         'delete_confirm' => 'Delete item ":name"?',
+        'clear_confirm' => 'This action will remove all items from panel :panel. Do you want to continue?',
         'actions' => [
             'move_up' => 'Move up',
             'move_down' => 'Move down',
@@ -624,10 +625,19 @@ return [
             'add_child' => 'Add child',
             'edit' => 'Edit',
             'delete' => 'Delete',
+            'export' => 'Export',
+            'import' => 'Import',
+            'export_excel' => 'Export Excel',
+            'import_excel' => 'Import Excel',
+            'clear_all' => 'Delete all',
         ],
         'notify' => [
             'item_saved' => 'Item saved.',
             'item_deleted' => 'Item deleted.',
+            'exported' => 'Menu exported successfully.',
+            'imported' => 'Menu imported successfully.',
+            'cleared' => 'All panel items were removed.',
+            'import_failed' => 'Could not import file. Please verify it is valid JSON.',
         ],
         'labels' => [
             'title' => 'Section labels',

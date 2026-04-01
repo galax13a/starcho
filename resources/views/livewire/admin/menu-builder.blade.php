@@ -1,4 +1,4 @@
-<div>
+<div x-data data-menu-tree-root>
 
     {{-- Panel tabs --}}
     <div class="flex items-center gap-1 mb-5 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
@@ -19,40 +19,118 @@
         <p class="text-sm text-zinc-500 dark:text-zinc-400">
             {{ __('admin_ui.menu.items_in_panel', ['count' => count($items), 'panel' => __('admin_ui.menu.panels.'.$activePanel)]) }}
         </p>
-        <button wire:click="openCreate()"
-                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
-            {{ __('admin_ui.menu.new_item') }}
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+            <button
+                type="button"
+                wire:click="exportExcel"
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition"
+            >
+                <i class="fas fa-file-excel text-xs"></i>
+                {{ __('admin_ui.menu.actions.export_excel') }}
+            </button>
+
+            <button
+                type="button"
+                wire:click="openImportExcelModal"
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            >
+                <i class="fas fa-file-import text-xs"></i>
+                {{ __('admin_ui.menu.actions.import_excel') }}
+            </button>
+
+            <button
+                type="button"
+                @click="window.Starcho.confirm({
+                    title: @js(__('js.delete.title')),
+                    message: @js(__('admin_ui.menu.clear_confirm', ['panel' => __('admin_ui.menu.panels.'.$activePanel)])),
+                    okText: @js(__('js.delete.ok')),
+                    cancelText: @js(__('js.confirm.cancel')),
+                    onConfirm: () => $wire.clearPanelItems(),
+                })"
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition"
+            >
+                <i class="fas fa-trash-alt text-xs"></i>
+                {{ __('admin_ui.menu.actions.clear_all') }}
+            </button>
+
+            <button wire:click="openCreate()"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition">
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                {{ __('admin_ui.menu.new_item') }}
+            </button>
+        </div>
     </div>
 
-    {{-- Tree grouped by section --}}
-    @php
-        $grouped = collect($items)->groupBy(fn($i) => $i['section'] ?? '');
-    @endphp
-
-    @forelse($grouped as $section => $sectionItems)
-    <div class="mb-6">
-        @if($section)
-        <div class="flex items-center gap-2 mb-2">
-            <span class="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{{ $section }}</span>
-            <div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-700"></div>
+    {{-- Section labels manager --}}
+    <div class="mb-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ __('admin_ui.menu.labels.title') }}</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('admin_ui.menu.labels.subtitle') }}</p>
         </div>
-        @endif
 
-        <div class="space-y-2">
-            @foreach($sectionItems as $item)
+        <form wire:submit="saveSectionLabel" class="flex flex-wrap items-center gap-2 mb-3">
+            <input
+                wire:model="sectionLabelInput"
+                type="text"
+                placeholder="{{ __('admin_ui.menu.labels.placeholder') }}"
+                class="min-w-60 flex-1 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+            >
+
+            <button
+                type="submit"
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition"
+            >
+                <i class="fas {{ $editingSectionId ? 'fa-pen' : 'fa-plus' }} text-xs"></i>
+                {{ $editingSectionId ? __('admin_ui.menu.labels.update') : __('admin_ui.menu.labels.create') }}
+            </button>
+
+            @if($editingSectionId)
+                <button
+                    type="button"
+                    wire:click="cancelSectionEdit"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg transition"
+                >
+                    {{ __('admin_ui.common.cancel') }}
+                </button>
+            @endif
+        </form>
+
+        <div class="flex flex-wrap gap-2">
+            @forelse($sectionLabels as $sectionLabel)
+                <button
+                    type="button"
+                    wire:click="editSectionLabel({{ $sectionLabel['id'] }})"
+                    class="inline-flex items-center gap-2 rounded-full border border-violet-200 dark:border-violet-700/50 bg-violet-50 dark:bg-violet-900/20 px-3 py-1.5 text-xs font-medium text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/30 transition"
+                    title="{{ __('admin_ui.menu.labels.edit') }}"
+                >
+                    <i class="fas fa-tag text-[10px]"></i>
+                    <span>{{ $sectionLabel['label'] }}</span>
+                    <i class="fas fa-pen text-[10px] opacity-70"></i>
+                </button>
+            @empty
+                <p class="text-xs text-zinc-400">{{ __('admin_ui.menu.labels.empty') }}</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Draggable tree --}}
+    @if(count($items) > 0)
+        <div class="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
+            {{ __('admin_ui.menu.drag_hint') }}
+        </div>
+
+        <div class="sa-menu-dropzone space-y-2" data-parent-id="" id="menu-root-dropzone">
+            @foreach($items as $item)
                 @include('livewire.admin.partials.menu-item-row', ['item' => $item, 'depth' => 0])
             @endforeach
         </div>
-    </div>
-    @empty
+    @else
         <div class="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center">
             <p class="text-sm text-zinc-400">{{ __('admin_ui.menu.no_items', ['panel' => __('admin_ui.menu.panels.'.$activePanel)]) }}</p>
         </div>
-    @endforelse
+    @endif
 
     {{-- Modal --}}
     @if($showModal)
@@ -92,8 +170,14 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wide">{{ __('admin_ui.menu.modal.section') }}</label>
-                        <input wire:model="section" type="text" placeholder="{{ __('admin_ui.menu.modal.section_placeholder') }}"
+                        <input wire:model="section" type="text" list="menu-section-options" placeholder="{{ __('admin_ui.menu.modal.section_placeholder') }}"
                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <datalist id="menu-section-options">
+                            @foreach($sectionOptions as $sectionOpt)
+                                <option value="{{ $sectionOpt }}"></option>
+                            @endforeach
+                        </datalist>
+                        <p class="mt-1 text-[11px] text-zinc-400">{{ __('admin_ui.menu.modal.section_hint') }}</p>
                     </div>
 
                     <div>
@@ -169,5 +253,94 @@
         </div>
     </div>
     @endif
+
+    @assets
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    @endassets
+
+    <script>
+        (() => {
+            let initialized = false;
+
+            function serializeDropzone(dropzone) {
+                const nodes = Array.from(dropzone.children).filter((el) => el.classList.contains('sa-menu-node'));
+
+                return nodes.map(node => {
+                    const id = Number(node.dataset.id || 0);
+                    const childrenDropzone = Array.from(node.children)
+                        .find((child) => child.classList && child.classList.contains('sa-menu-children'));
+
+                    return {
+                        id,
+                        children: childrenDropzone ? serializeDropzone(childrenDropzone) : [],
+                    };
+                }).filter(node => node.id > 0);
+            }
+
+            function setupSortable(dropzone, onEnd) {
+                if (!dropzone || dropzone.dataset.sortableReady === '1') {
+                    return;
+                }
+
+                dropzone.dataset.sortableReady = '1';
+
+                new Sortable(dropzone, {
+                    group: 'starcho-menu-tree',
+                    animation: 180,
+                    fallbackOnBody: true,
+                    swapThreshold: 0.65,
+                    handle: '.sa-drag-handle',
+                    draggable: '.sa-menu-node',
+                    onEnd,
+                });
+            }
+
+            function initMenuDnD() {
+                const root = document.querySelector('[data-menu-tree-root]');
+
+                if (!root || typeof Sortable === 'undefined') {
+                    return;
+                }
+
+                const dropzones = root.querySelectorAll('.sa-menu-dropzone');
+                const onEnd = () => {
+                    const rootDropzone = root.querySelector('#menu-root-dropzone');
+                    if (!rootDropzone) {
+                        return;
+                    }
+
+                    const tree = serializeDropzone(rootDropzone);
+                    Livewire.dispatch('menuTreeReordered', { tree });
+                };
+
+                dropzones.forEach(zone => setupSortable(zone, onEnd));
+            }
+
+            document.addEventListener('livewire:navigated', initMenuDnD);
+            document.addEventListener('menu-dnd-refresh', () => setTimeout(initMenuDnD, 0));
+
+            if (!initialized) {
+                initialized = true;
+                setTimeout(initMenuDnD, 0);
+            }
+        })();
+    </script>
+
+    <x-starcho-popup-admin-import
+        modal-name="modal-admin-menu-import"
+        submit-method="importPanel"
+        loading-target="importPanel"
+        title="{{ __('admin_ui.menu.actions.import') }}"
+        file-model="importFile"
+        accept=".json,.txt,application/json,text/plain"
+    />
+
+    <x-starcho-popup-admin-import
+        modal-name="modal-admin-menu-import-excel"
+        submit-method="importExcel"
+        loading-target="importExcel"
+        title="{{ __('admin_ui.menu.actions.import_excel') }}"
+        file-model="importExcelFile"
+    />
 
 </div>
