@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminPermissionsExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use Spatie\Permission\Models\Permission;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class PermissionsTable extends PowerGridComponent
 {
@@ -22,6 +25,9 @@ final class PermissionsTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
+        $this->persist(['columns'], 'admin');
+
         return [
             PowerGrid::header()
                 ->showSearchInput()
@@ -30,9 +36,6 @@ final class PermissionsTable extends PowerGridComponent
             PowerGrid::footer()
                 ->showPerPage(15)
                 ->showRecordCount(),
-            PowerGrid::exportable('permissions-export')
-                ->type(\PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable::TYPE_XLS,
-                       \PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable::TYPE_CSV),
         ];
     }
 
@@ -78,6 +81,61 @@ final class PermissionsTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedPermissionIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AdminPermissionsExport($selectedIds),
+            'admin-permissions-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedPermissionIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+            return;
+        }
+
+        $permissions = Permission::query()
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($permissions->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($permissions as $permission) {
+            $permission->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+        $this->notifyWarning(__('admin_ui.permissions.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
     #[On('deletePermission')]
     public function deletePermission(int $id): void
     {
@@ -91,5 +149,15 @@ final class PermissionsTable extends PowerGridComponent
         $permission->delete();
         $this->notifyCrud('permissions', 'deleted');
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    private function selectedPermissionIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

@@ -23,17 +23,20 @@ Route::prefix('admin')
         // ── Roles: rutas custom ANTES del resource para evitar conflicto con {role} ──
         Route::get('roles/import',       [RoleController::class, 'importForm'])->name('roles.import');
         Route::post('roles/import',      [RoleController::class, 'import'])->name('roles.import.store');
+        Route::get('roles/export',       [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportRoles'])->name('roles.export');
         Route::get('roles/export-json',  [RoleController::class, 'exportJson'])->name('roles.export-json');
         Route::resource('roles', RoleController::class)->except(['show']);
 
         // ── Permissions: rutas custom ANTES del resource ───────────────────────────
         Route::get('permissions/import',      [PermissionController::class, 'importForm'])->name('permissions.import');
         Route::post('permissions/import',     [PermissionController::class, 'import'])->name('permissions.import.store');
+        Route::get('permissions/export',      [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportPermissions'])->name('permissions.export');
         Route::get('permissions/export-json', [PermissionController::class, 'exportJson'])->name('permissions.export-json');
         Route::resource('permissions', PermissionController::class)->except(['show']);
 
         // ── Users (CRUD) ─────────────────────────────────────────────────────────
         Route::get('users',               [UserController::class, 'index'])->name('users.index');
+        Route::get('users/export',        [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportUsers'])->name('users.export');
         Route::get('users/create',        [UserController::class, 'create'])->name('users.create');
         Route::post('users',              [UserController::class, 'store'])->name('users.store');
         Route::get('users/{user}/edit',   [UserController::class, 'edit'])->name('users.edit');

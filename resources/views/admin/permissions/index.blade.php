@@ -4,6 +4,7 @@
     <flux:text class="text-zinc-500 mb-6">{{ __('admin_ui.permissions.description') }}</flux:text>
 
     <livewire:admin.permissions-table />
+    <livewire:admin.permissions-import-modal />
     <livewire:admin.modals />
 
 </x-layouts::admin>
