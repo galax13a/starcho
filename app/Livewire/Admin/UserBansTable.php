@@ -21,6 +21,7 @@ final class UserBansTable extends PowerGridComponent
 
     // ── Modal state ──────────────────────────────────────────────────────────
     public bool $showBanModal = false;
+    public bool $showUnbanModal = false;
     public ?int $selectedUserId = null;
     public string $selectedUserName = '';
     public string $banReason = '';
@@ -129,7 +130,7 @@ final class UserBansTable extends PowerGridComponent
     {
         $this->selectedUserId   = $userId;
         $this->selectedUserName = $userName;
-        $this->dispatch('openUnbanConfirm', userId: $userId, userName: $userName);
+        $this->showUnbanModal   = true;
     }
 
     public function saveBan(): void
@@ -162,11 +163,16 @@ final class UserBansTable extends PowerGridComponent
         $this->dispatch('pg:eventRefresh-admin-user-bans-table');
     }
 
-    #[\Livewire\Attributes\On('doUnban')]
-    public function doUnban(int $userId): void
+    public function doUnban(): void
     {
-        $user = User::findOrFail($userId);
+        abort_if(! $this->selectedUserId, 422);
+
+        $user = User::findOrFail($this->selectedUserId);
         $user->unban(Auth::id());
+
+        $this->showUnbanModal = false;
+        $this->selectedUserId = null;
+        $this->selectedUserName = '';
 
         $this->notifySuccess(__('admin_ui.users_ban.notify.unbanned', ['name' => $user->name]));
         $this->dispatch('pg:eventRefresh-admin-user-bans-table');
