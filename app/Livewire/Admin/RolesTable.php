@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\AdminRolesExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
+use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class RolesTable extends PowerGridComponent
 {
@@ -22,6 +25,9 @@ final class RolesTable extends PowerGridComponent
 
     public function setUp(): array
     {
+        $this->showCheckBox();
+        $this->persist(['columns'], 'admin');
+
         return [
             PowerGrid::header()
                 ->showSearchInput()
@@ -30,9 +36,6 @@ final class RolesTable extends PowerGridComponent
             PowerGrid::footer()
                 ->showPerPage(10)
                 ->showRecordCount(),
-            PowerGrid::exportable('roles-export')
-                ->type(\PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable::TYPE_XLS,
-                       \PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable::TYPE_CSV),
         ];
     }
 
@@ -54,7 +57,7 @@ final class RolesTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('admin_ui.roles.columns.id'), 'id')->sortable(),
+            Column::make(__('admin_ui.roles.columns.id'), 'id')->sortable()->hidden(),
             Column::make(__('admin_ui.roles.columns.name'), 'name')->sortable()->searchable(),
             Column::make(__('admin_ui.roles.columns.guard'), 'guard_name')->sortable()->hidden(),
             Column::make(__('admin_ui.roles.columns.permissions'), 'permissions_count')->sortable(),
@@ -79,6 +82,71 @@ final class RolesTable extends PowerGridComponent
         ]);
     }
 
+    public function clearSelection(): void
+    {
+        $this->checkboxAll = false;
+        $this->checkboxValues = [];
+        $this->dispatch('pgBulkActions::clear', $this->tableName);
+    }
+
+    public function exportSelected(): BinaryFileResponse|null
+    {
+        $selectedIds = $this->selectedRoleIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+            return null;
+        }
+
+        $this->clearSelection();
+
+        return Excel::download(
+            new AdminRolesExport($selectedIds),
+            'admin-roles-selected-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function deleteSelected(): void
+    {
+        $selectedIds = $this->selectedRoleIds();
+
+        if ($selectedIds === []) {
+            $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+            return;
+        }
+
+        $roles = Role::query()
+            ->whereIn('id', $selectedIds)
+            ->get();
+
+        if ($roles->isEmpty()) {
+            $this->clearSelection();
+            $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+            return;
+        }
+
+        $deletedCount = 0;
+
+        foreach ($roles as $role) {
+            if ($role->name === 'admin') {
+                continue;
+            }
+
+            $role->delete();
+            $deletedCount++;
+        }
+
+        $this->clearSelection();
+
+        if ($deletedCount === 0) {
+            $this->notifyWarning(__('admin_ui.roles.notify.cannot_delete_admin'));
+            return;
+        }
+
+        $this->notifyWarning(__('admin_ui.roles.notify.bulk_deleted', ['count' => $deletedCount]));
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
     #[On('deleteRole')]
     public function deleteRole(int $id): void
     {
@@ -94,5 +162,15 @@ final class RolesTable extends PowerGridComponent
         $this->notifyCrud('roles', 'deleted');
 
         $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    private function selectedRoleIds(): array
+    {
+        return collect($this->checkboxValues)
+            ->map(static fn (string|int $id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

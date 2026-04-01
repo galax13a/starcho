@@ -4,6 +4,7 @@
     <flux:text class="text-zinc-500 mb-6">{{ __('admin_ui.roles.description') }}</flux:text>
 
     <livewire:admin.roles-table />
+    <livewire:admin.roles-import-modal />
     <livewire:admin.modals />
 
 </x-layouts::admin>

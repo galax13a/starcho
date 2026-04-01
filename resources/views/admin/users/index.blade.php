@@ -4,6 +4,7 @@
     <flux:text class="text-zinc-500 mb-6">{{ __('admin_ui.users.description') }}</flux:text>
 
     <livewire:admin.users-table />
+    <livewire:admin.users-import-modal />
     <livewire:admin.modals />
 
 </x-layouts::admin>
