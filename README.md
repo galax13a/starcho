@@ -29,15 +29,35 @@ Incluye panel de administración (`/admin`), área de usuario (`/app`), sistema 
 ```bash
 git clone <repo>
 cd starcho
-composer install
-npm install
-cp .env.example .env
-php artisan key:generate
-
-# Configurar base de datos en .env, luego:
-php artisan migrate --seed --seeder=StarchoInstallAppSeeder
+php artisan starcho:install
 npm run dev
 ```
+
+El comando `php artisan starcho:install` realiza automaticamente:
+- Creacion de `.env` desde `.env.example` si no existe
+- Solicitud interactiva de `DB user` y `DB pass` (y datos de conexion)
+- `composer install` y `npm install`
+- Migraciones y seeder `StarchoInstallAppSeeder`
+- Creacion de `storage:link` cuando aplica
+
+Durante la ejecucion muestra progreso por etapas con mensajes como:
+- `Paso 1/8 Preparando archivo de entorno`
+- `Paso 2/8 Configurando base de datos`
+- `Paso 5/8 Instalando dependencias`
+- `Paso 6/8 Migrando base de datos`
+- `OK: ...` al finalizar cada etapa
+
+Opciones utiles:
+
+```bash
+# Sin confirmacion inicial
+php artisan starcho:install --force
+
+# Muestra ayuda completa
+php artisan help starcho:install
+```
+
+Si usas `--no-interaction`, el comando tomara valores existentes de `.env` y defaults para campos sin valor.
 
 El seeder crea:
 - Usuario administrador: `admin@starcho.com` / `password`
