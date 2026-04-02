@@ -12,7 +12,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
-class StarchoInitSeeder extends Seeder
+class StarchoInstallAppSeeder extends Seeder
 {
     public function run(): void
     {
@@ -38,7 +38,7 @@ class StarchoInitSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         StarchoMenuItem::clearMenuCache();
 
-        $this->command?->info('Starcho init seeder ejecutado correctamente.');
+        $this->command?->info('Starcho install app seeder ejecutado correctamente.');
     }
 
     protected function loadBackupTables(): array
@@ -49,7 +49,7 @@ class StarchoInitSeeder extends Seeder
         $backupPath = $backupFiles[0] ?? null;
 
         if (! $backupPath || ! is_file($backupPath)) {
-            throw new \RuntimeException('No se encontró backup JSON en database/backups para ejecutar StarchoInitSeeder.');
+            throw new \RuntimeException('No se encontró backup JSON en database/backups para ejecutar StarchoInstallAppSeeder.');
         }
 
         $payload = json_decode((string) file_get_contents($backupPath), true);
