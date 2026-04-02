@@ -3,6 +3,7 @@
 namespace App\Services\GeoIP;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 abstract class GeoIPProvider
 {
@@ -21,7 +22,7 @@ abstract class GeoIPProvider
                 return $response->json();
             }
         } catch (\Exception $e) {
-            \Log::warning("GeoIP {$this->name} error for IP: {$e->getMessage()}");
+            Log::warning("GeoIP {$this->name} error for IP: {$e->getMessage()}");
         }
 
         return null;

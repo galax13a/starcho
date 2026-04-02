@@ -51,8 +51,28 @@ class GeoIPService
 
     public function capture(string $ip, int $userId): ?UserGeoLocation
     {
-        // Skip localhost y private IPs
-        if ($this->isLocalhost($ip) || $this->isPrivateIP($ip)) {
+        // En desarrollo, permitir guardar localhost como registro local.
+        if ($this->isLocalhost($ip)) {
+            if (!config('starcho_ip.capture_localhost', true)) {
+                return null;
+            }
+
+            return UserGeoLocation::create([
+                'user_id' => $userId,
+                'ip_address' => $ip,
+                'country' => 'Localhost',
+                'country_code' => null,
+                'city' => 'Local',
+                'region' => 'Development',
+                'latitude' => null,
+                'longitude' => null,
+                'isp' => 'Local Network',
+                'timezone' => config('app.timezone'),
+            ]);
+        }
+
+        // Skip IPs privadas si está configurado
+        if (config('starcho_ip.exclude_private_ips', true) && $this->isPrivateIP($ip)) {
             return null;
         }
 
@@ -75,7 +95,7 @@ class GeoIPService
                 'timezone' => $geoData['timezone'],
             ]);
         } catch (\Exception $e) {
-            \Log::error("GeoIP capture error: {$e->getMessage()}");
+            Log::error("GeoIP capture error: {$e->getMessage()}");
             return null;
         }
     }

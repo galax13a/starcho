@@ -35,7 +35,7 @@ cp .env.example .env
 php artisan key:generate
 
 # Configurar base de datos en .env, luego:
-php artisan migrate --seed
+php artisan migrate --seed --seeder=StarchoInitSeeder
 npm run dev
 ```
 
@@ -56,9 +56,20 @@ Flujo recomendado para desarrollo local:
 ```bash
 composer install
 npm install
-php artisan migrate --seed
+php artisan migrate --seed --seeder=StarchoInitSeeder
 npm run dev
 ```
+
+Seeder recomendado para instalación segura:
+
+```bash
+php artisan db:seed --class=StarchoInitSeeder
+```
+
+Notas:
+- `database/seeders/StarchoInitSeeder.php` es el punto único de inicialización del proyecto.
+- `database/backups/starcho_backup_2026_04_02.json` conserva una copia lógica de la base usada como respaldo del estado actual.
+- Para instalaciones nuevas, usa el seeder y reserva el backup para recuperación o auditoría.
 
 Build de producción:
 

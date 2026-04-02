@@ -47,6 +47,7 @@ window.adminLayout = function () {
         isDark:    false,
         collapsed: false,
         mobOpen:   false,
+        showLogout: false,
 
         init() {
             // Usar el sistema unificado de tema de Starcho

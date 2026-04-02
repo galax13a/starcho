@@ -41,9 +41,14 @@ final class GeoLocationsTable extends PowerGridComponent
             ->add('user_id')
             ->add('ip_address')
             ->add('country')
+            ->add('country_display', fn (UserGeoLocation $geo) => trim(($geo->country ?? '-') . ' ' . ($geo->country_code ? '(' . $geo->country_code . ')' : '')))
             ->add('city')
             ->add('region')
             ->add('isp')
+            ->add('timezone')
+            ->add('coordinates', fn (UserGeoLocation $geo) => ($geo->latitude && $geo->longitude)
+                ? number_format($geo->latitude, 4) . ', ' . number_format($geo->longitude, 4)
+                : '-')
             ->add('captured_at_formatted', fn (UserGeoLocation $geo) => Carbon::parse($geo->captured_at)->format('d/m/Y H:i'))
             ->add('user_name', fn (UserGeoLocation $geo) => $geo->user?->name ?? 'N/A');
     }
@@ -51,13 +56,15 @@ final class GeoLocationsTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make(__('User'), 'user_name')->searchable(),
-            Column::make(__('IP Address'), 'ip_address')->searchable()->sortable(),
-            Column::make(__('Country'), 'country')->searchable()->sortable(),
-            Column::make(__('City'), 'city')->searchable()->sortable(),
-            Column::make(__('Region'), 'region')->searchable(),
-            Column::make(__('ISP'), 'isp')->searchable(),
-            Column::make(__('Captured At'), 'captured_at_formatted', 'captured_at')->sortable(),
+            Column::make(__('admin_ui.geolocations.columns.user'), 'user_name')->searchable(),
+            Column::make(__('admin_ui.geolocations.columns.ip'), 'ip_address')->searchable()->sortable(),
+            Column::make(__('admin_ui.geolocations.columns.country'), 'country_display', 'country')->searchable()->sortable(),
+            Column::make(__('admin_ui.geolocations.columns.city'), 'city')->searchable()->sortable(),
+            Column::make(__('admin_ui.geolocations.columns.region'), 'region')->searchable()->toggleable(),
+            Column::make(__('admin_ui.geolocations.columns.timezone'), 'timezone')->searchable()->hidden(),
+            Column::make(__('admin_ui.geolocations.columns.coordinates'), 'coordinates')->hidden(),
+            Column::make(__('admin_ui.geolocations.columns.isp'), 'isp')->searchable()->hidden(),
+            Column::make(__('admin_ui.geolocations.columns.captured_at'), 'captured_at_formatted', 'captured_at')->sortable(),
         ];
     }
 
