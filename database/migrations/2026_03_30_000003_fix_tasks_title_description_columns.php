@@ -9,9 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            // Convert JSON columns to TEXT (Spatie Translatable handles JSON serialization)
-            $table->text('title')->change();
-            $table->text('description')->nullable()->change();
+            if (Schema::getColumnType('tasks', 'title') !== 'text') {
+                $table->text('title')->change();
+            }
+
+            if (Schema::getColumnType('tasks', 'description') !== 'text') {
+                $table->text('description')->nullable()->change();
+            }
         });
     }
 
