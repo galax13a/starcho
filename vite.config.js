@@ -20,6 +20,9 @@ export default defineConfig({
                 // CSS específico de auth (cargado en layouts/auth/simple.blade.php)
                 'resources/css/starcho-auth.css',
 
+                // CSS específico del home público Folio (cargado en pages/index.blade.php)
+                'resources/css/starcho-home.css',
+
                 // JS de /app: starcho.js + PowerGrid
                 'resources/js/app.js',
 
