@@ -1,11 +1,10 @@
-@php $indent = $depth * 24; @endphp
-<div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm"
-     style="margin-left: {{ $indent }}px;">
+<div class="sa-menu-node" data-id="{{ $item['id'] }}">
+    <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
     <div class="flex items-center gap-3 px-4 py-3">
         {{-- Drag handle (visual only) --}}
-        <svg class="size-4 text-zinc-300 dark:text-zinc-600 flex-shrink-0 cursor-grab" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"/>
-        </svg>
+        <button type="button" class="inline-flex items-center justify-center size-8 rounded-lg text-zinc-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 cursor-grab active:cursor-grabbing sa-drag-handle" title="{{ __('admin_ui.menu.actions.drag') }}">
+            <i class="fas fa-grip-vertical text-sm"></i>
+        </button>
 
         {{-- Status dot --}}
         <span class="w-2 h-2 rounded-full flex-shrink-0 {{ $item['active'] ? 'bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-600' }}"></span>
@@ -38,18 +37,7 @@
 
         {{-- Actions --}}
         <div class="flex items-center gap-1 flex-shrink-0">
-            <button wire:click="moveUp({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.move_up') }}"
-                    class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75 12 8.25l7.5 7.5"/>
-                </svg>
-            </button>
-            <button wire:click="moveDown({{ $item['id'] }})" title="{{ __('admin_ui.menu.actions.move_down') }}"
-                    class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                </svg>
-            </button>
+            <span class="text-[11px] text-zinc-400 px-1">{{ __('admin_ui.menu.actions.drag') }}</span>
 
             <button wire:click="toggleActive({{ $item['id'] }})" title="{{ $item['active'] ? __('admin_ui.menu.actions.deactivate') : __('admin_ui.menu.actions.activate') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg transition
@@ -88,11 +76,14 @@
             </button>
         </div>
     </div>
-</div>
+    </div>
 
 {{-- Children --}}
-@if(!empty($item['all_children']))
-    @foreach($item['all_children'] as $child)
-        @include('livewire.admin.partials.menu-item-row', ['item' => $child, 'depth' => $depth + 1])
-    @endforeach
-@endif
+    <div class="sa-menu-children sa-menu-dropzone mt-2 ml-8 space-y-2" data-parent-id="{{ $item['id'] }}">
+        @if(!empty($item['all_children']))
+            @foreach($item['all_children'] as $child)
+                @include('livewire.admin.partials.menu-item-row', ['item' => $child, 'depth' => $depth + 1])
+            @endforeach
+        @endif
+    </div>
+</div>

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\StarchoModule;
 use App\Models\User;
 use App\Services\GeoIP\GeoIPService;
 use Illuminate\Bus\Queueable;
@@ -23,8 +24,8 @@ class CaptureGeoIPJob implements ShouldQueue
 
     public function handle(GeoIPService $service): void
     {
-        // Valida que el usuario exista y el módulo esté activo
-        if (!config('starcho_ip.enabled')) {
+        // Valida que el switch global y el módulo estén activos
+        if (!config('starcho_ip.enabled', true) || !StarchoModule::isActive('starcho-ip')) {
             return;
         }
 

@@ -3,6 +3,7 @@
 namespace App\Services\GeoIP\Providers;
 
 use App\Services\GeoIP\GeoIPProvider;
+use Illuminate\Support\Facades\Log;
 
 class IPQueryProvider extends GeoIPProvider
 {
@@ -18,7 +19,7 @@ class IPQueryProvider extends GeoIPProvider
         }
 
         if (isset($response['status']) && $response['status'] === 'fail') {
-            \Log::warning("IPQuery failed for IP {$ip}: " . ($response['message'] ?? 'Unknown error'));
+            Log::warning("IPQuery failed for IP {$ip}: " . ($response['message'] ?? 'Unknown error'));
             return null;
         }
 

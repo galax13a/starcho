@@ -1,8 +1,4 @@
-@extends('layouts.admin.base')
-
-@section('title', __('admin_ui.geolocations.detail'))
-
-@section('content')
+<x-layouts::admin>
 <div class="sa-page">
     <!-- Header -->
     <div class="sa-page-header flex justify-between items-center">
@@ -117,4 +113,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-layouts::admin>

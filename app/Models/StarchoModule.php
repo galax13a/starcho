@@ -41,6 +41,15 @@ class StarchoModule extends Model
                 continue;
             }
 
+            $panel = $item['panel'] ?? 'app';
+            $parentId = $item['parent_id'] ?? null;
+
+            if (!$parentId && !empty($item['parent_route'])) {
+                $parentId = StarchoMenuItem::where('panel', $panel)
+                    ->where('route', $item['parent_route'])
+                    ->value('id');
+            }
+
             $existingItem = StarchoMenuItem::where('module_key', $this->key)
                 ->where('route', $item['route'])
                 ->first();
@@ -49,8 +58,9 @@ class StarchoModule extends Model
                 $nameData = $item['name'] ?? $item['label'] ?? null;
 
                 $menuItem = new StarchoMenuItem([
-                    'panel'      => $item['panel'] ?? 'app',
+                    'panel'      => $panel,
                     'module_key' => $this->key,
+                    'parent_id'  => $parentId,
                     'section'    => $item['section'] ?? null,
                     'icon'       => $item['icon'] ?? null,
                     'route'      => $item['route'],
@@ -70,7 +80,10 @@ class StarchoModule extends Model
 
                 $menuItem->save();
             } else {
-                $existingItem->update(['active' => true]);
+                $existingItem->update([
+                    'active'    => true,
+                    'parent_id' => $parentId,
+                ]);
             }
         }
     }
