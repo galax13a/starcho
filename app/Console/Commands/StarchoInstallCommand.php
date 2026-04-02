@@ -101,10 +101,13 @@ class StarchoInstallCommand extends Command
         $this->newLine();
         $this->components->twoColumnDetail('Paso', 'Configuracion de base de datos');
 
+        $currentConnection = $this->getEnvValue('DB_CONNECTION', 'mysql');
+        $defaultConnection = $currentConnection === 'pgsql' ? 'pgsql' : 'mysql';
+
         $dbConnection = $this->choice(
-            'Driver de base de datos',
-            ['mysql', 'pgsql', 'sqlite', 'sqlsrv'],
-            $this->getEnvValue('DB_CONNECTION', 'mysql')
+            'Tipo de base de datos (MySQL o PostgreSQL)',
+            ['mysql', 'pgsql'],
+            $defaultConnection
         );
 
         $dbHost = $this->ask('DB host', $this->getEnvValue('DB_HOST', '127.0.0.1'));

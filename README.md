@@ -35,7 +35,7 @@ npm run dev
 
 El comando `php artisan starcho:install` realiza automaticamente:
 - Creacion de `.env` desde `.env.example` si no existe
-- Solicitud interactiva de `DB user` y `DB pass` (y datos de conexion)
+- Solicitud interactiva del motor (`mysql` o `pgsql`) y de `DB user` / `DB pass`
 - `composer install` y `npm install`
 - Migraciones y seeder `StarchoInstallAppSeeder`
 - Creacion de `storage:link` cuando aplica
