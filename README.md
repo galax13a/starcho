@@ -39,12 +39,14 @@ El comando `php artisan starcho:install` realiza automaticamente:
 - `composer install` y `npm install`
 - Migraciones y seeder `StarchoInstallAppSeeder`
 - Creacion de `storage:link` cuando aplica
+- Build de frontend con `npm run build` al final
 
 Durante la ejecucion muestra progreso por etapas con mensajes como:
-- `Paso 1/8 Preparando archivo de entorno`
-- `Paso 2/8 Configurando base de datos`
-- `Paso 5/8 Instalando dependencias`
-- `Paso 6/8 Migrando base de datos`
+- `Paso 1/9 Preparando archivo de entorno`
+- `Paso 2/9 Configurando base de datos`
+- `Paso 5/9 Instalando dependencias`
+- `Paso 6/9 Migrando base de datos`
+- `Paso 8/9 Generando assets de produccion`
 - `OK: ...` al finalizar cada etapa
 
 Opciones utiles:

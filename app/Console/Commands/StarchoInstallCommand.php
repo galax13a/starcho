@@ -11,11 +11,11 @@ class StarchoInstallCommand extends Command
 {
     protected int $currentStep = 0;
 
-    protected int $totalSteps = 8;
+    protected int $totalSteps = 9;
 
     protected $signature = 'starcho:install {--force : Ejecuta instalacion sin confirmaciones}';
 
-    protected $description = 'Starcho Install: configura .env, instala dependencias, migra y ejecuta seeder';
+    protected $description = 'Starcho Install: configura .env, instala dependencias, migra, ejecuta seeder y build';
 
     public function handle(): int
     {
@@ -59,12 +59,16 @@ class StarchoInstallCommand extends Command
             $this->ensureStorageLink();
             $this->finishStep('Storage validado');
 
+            $this->startStep('Generando assets de produccion');
+            $this->runFrontendBuild();
+            $this->finishStep('Assets compilados con npm run build');
+
             $this->startStep('Finalizando instalacion');
             $this->finishStep('Instalacion finalizada');
 
             $this->newLine();
             $this->components->info('Starcho instalado correctamente. Ya puedes levantar el proyecto.');
-            $this->line('Siguiente paso recomendado: npm run dev');
+            $this->line('Siguiente paso recomendado: php artisan serve');
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
@@ -181,6 +185,11 @@ class StarchoInstallCommand extends Command
 
         $this->line('Creando enlace simbolico public/storage...');
         $this->call('storage:link');
+    }
+
+    protected function runFrontendBuild(): void
+    {
+        $this->runExternalCommand('npm run build');
     }
 
     protected function startStep(string $message): void
