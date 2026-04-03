@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SitePageSetting;
+use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
 use App\Models\StarchoModule;
+use App\Models\SiteSocialNetwork;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -29,7 +31,10 @@ class SiteController extends Controller
         $folioPages = $this->discoverFolioPages();
         $pageSeoRows = $this->buildPageSeoRows($locales, $folioPages, $settings);
 
-        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows'));
+        $socialNetworks = SiteSocialNetwork::allOrdered();
+        $siteLanguages = SiteLanguage::allOrdered();
+
+        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -71,6 +76,8 @@ class SiteController extends Controller
             'robots_follow' => ['nullable', 'boolean'],
             'home_page_enabled' => ['nullable', 'boolean'],
             'public_registration_enabled' => ['nullable', 'boolean'],
+            'hide_language_switcher' => ['nullable', 'boolean'],
+            'default_site_locale' => ['required', 'string', 'max:20'],
             'favicon' => ['nullable', 'file', 'mimes:ico', 'max:1024'],
             'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'social_facebook' => ['nullable', 'url', 'max:255'],
@@ -82,6 +89,17 @@ class SiteController extends Controller
             'social_instagram' => ['nullable', 'url', 'max:255'],
             'social_youtube' => ['nullable', 'url', 'max:255'],
             'social_pinterest' => ['nullable', 'url', 'max:255'],
+                'social_onlyfans' => ['nullable', 'url', 'max:255'],
+                'slogan' => ['nullable', 'string', 'max:200'],
+                'dark_mode_enabled' => ['nullable', 'boolean'],
+                'address' => ['nullable', 'string', 'max:500'],
+                'founding_year' => ['nullable', 'integer', 'min:1800', 'max:' . (int) now()->year],
+                'google_maps_url' => ['nullable', 'url', 'max:1000'],
+                'social_networks' => ['nullable', 'array'],
+                'social_networks.*.active' => ['nullable', 'boolean'],
+                'social_networks.*.url' => ['nullable', 'url', 'max:255'],
+                'site_languages' => ['nullable', 'array'],
+                'site_languages.*.active' => ['nullable', 'boolean'],
             'page_settings' => ['nullable', 'array'],
             'page_settings.*.locale' => ['required_with:page_settings', 'string', 'max:20'],
             'page_settings.*.path' => ['required_with:page_settings', 'string', 'max:255'],
@@ -101,6 +119,7 @@ class SiteController extends Controller
         $payload = [
             'site_name' => $data['site_name'],
             'app_name' => $data['app_name'] ?? null,
+            'slogan' => $data['slogan'] ?? null,
             'site_tagline' => $data['site_tagline'] ?? null,
             'site_description' => $data['site_description'] ?? null,
             'meta_keywords' => $data['meta_keywords'] ?? null,
@@ -111,6 +130,9 @@ class SiteController extends Controller
             'company_dni' => $data['company_dni'] ?? null,
             'company_country' => $data['company_country'] ?? null,
             'company_city' => $data['company_city'] ?? null,
+            'address' => $data['address'] ?? null,
+            'founding_year' => isset($data['founding_year']) ? (int) $data['founding_year'] : null,
+            'google_maps_url' => $data['google_maps_url'] ?? null,
             'support_whatsapp' => $data['support_whatsapp'] ?? null,
             'business_whatsapp' => $data['business_whatsapp'] ?? null,
             'server_timezone' => $data['server_timezone'] ?? 'UTC',
@@ -127,6 +149,9 @@ class SiteController extends Controller
             'robots_follow' => $request->boolean('robots_follow'),
             'home_page_enabled' => $request->boolean('home_page_enabled'),
             'public_registration_enabled' => $request->boolean('public_registration_enabled'),
+            'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
+            'hide_language_switcher' => $request->boolean('hide_language_switcher'),
+            'default_site_locale' => $data['default_site_locale'],
             'social_facebook' => $data['social_facebook'] ?? null,
             'social_x' => $data['social_x'] ?? null,
             'social_telegram' => $data['social_telegram'] ?? null,
@@ -136,6 +161,7 @@ class SiteController extends Controller
             'social_instagram' => $data['social_instagram'] ?? null,
             'social_youtube' => $data['social_youtube'] ?? null,
             'social_pinterest' => $data['social_pinterest'] ?? null,
+            'social_onlyfans' => $data['social_onlyfans'] ?? null,
         ];
 
         if ($request->hasFile('favicon')) {
@@ -157,8 +183,59 @@ class SiteController extends Controller
         $settings->update($payload);
         $this->savePageSeoSettings($request->input('page_settings', []));
         $this->saveFolioPageFiles($request->input('page_files', []));
+        $this->saveSocialNetworks($request->input('social_networks', []));
+        $this->saveSiteLanguages($request->input('site_languages', []), $data['default_site_locale']);
 
         return back()->with('success', __('admin_ui.site.notify.saved'));
+    }
+
+    private function saveSocialNetworks(array $rows): void
+    {
+        foreach ($rows as $key => $data) {
+            $network = SiteSocialNetwork::where('key', $key)->first();
+
+            if (! $network) {
+                continue;
+            }
+
+            $network->update([
+                'active' => isset($data['active']) ? (bool) $data['active'] : false,
+                'url' => filled($data['url'] ?? null) ? $data['url'] : null,
+            ]);
+        }
+    }
+
+    private function saveSiteLanguages(array $rows, string $defaultLocale): void
+    {
+        $activeCodes = [];
+
+        foreach ($rows as $code => $data) {
+            $language = SiteLanguage::where('code', $code)->first();
+
+            if (! $language) {
+                continue;
+            }
+
+            $isActive = isset($data['active']) && (bool) $data['active'];
+
+            $language->update([
+                'active' => $isActive,
+            ]);
+
+            if ($isActive) {
+                $activeCodes[] = $code;
+            }
+        }
+
+        if ($activeCodes === []) {
+            SiteLanguage::whereIn('code', ['es', 'en'])->update(['active' => true]);
+
+            return;
+        }
+
+        if (! in_array($defaultLocale, $activeCodes, true)) {
+            SiteLanguage::where('code', $defaultLocale)->update(['active' => true]);
+        }
     }
 
     public function editPage(Request $request): View|RedirectResponse

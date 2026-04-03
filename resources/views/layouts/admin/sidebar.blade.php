@@ -30,6 +30,12 @@
             'message' => $errors->first(),
         ];
     }
+
+    try {
+        $adminBrandName = \App\Models\SiteSetting::appName();
+    } catch (\Throwable) {
+        $adminBrandName = 'Starcho';
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -58,7 +64,7 @@
             <a href="{{ route('admin.index') }}" wire:navigate class="sa-sb-brand" aria-label="Ir al dashboard admin">
                 <div class="sa-sb-logo"><i class="fas fa-bolt"></i></div>
                 <span class="sa-sb-title">
-                    Starcho<span class="sa-sb-badge">Admin</span>
+                    {{ $adminBrandName }}<span class="sa-sb-badge">Admin</span>
                 </span>
             </a>
             <button class="sa-collapse-btn"
