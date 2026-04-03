@@ -43,10 +43,15 @@
                 {{ __('admin_ui.site.tabs.access') }}
             </button>
             <button type="button" @click="tab = 'pages'"
-                class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
+                    class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap mr-0"
                 :class="tab === 'pages' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
                 {{ __('admin_ui.site.tabs.pages') }}
             </button>
+                <button type="button" @click="tab = 'location'"
+                    class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
+                    :class="tab === 'location' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-600 dark:text-zinc-300'">
+                    {{ __('admin_ui.site.tabs.location') }}
+                </button>
         </div>
 
         <div x-show="tab === 'global'" x-cloak class="space-y-6">
@@ -67,6 +72,21 @@
                             <flux:error name="site_tagline" />
                         </flux:field>
                     </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <flux:field>
+                                <flux:label>{{ __('admin_ui.site.form.app_name') }}</flux:label>
+                                <flux:input name="app_name" value="{{ old('app_name', $settings->app_name) }}" placeholder="Mi Aplicación" />
+                                <flux:description>{{ __('admin_ui.site.form.app_name_help') }}</flux:description>
+                                <flux:error name="app_name" />
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label>{{ __('admin_ui.site.form.slogan') }}</flux:label>
+                                <flux:input name="slogan" value="{{ old('slogan', $settings->slogan) }}" placeholder="{{ __('admin_ui.site.form.slogan_placeholder') }}" />
+                                <flux:error name="slogan" />
+                            </flux:field>
+                        </div>
 
                     <flux:field>
                         <flux:label>{{ __('admin_ui.site.form.site_description') }}</flux:label>
@@ -203,12 +223,6 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:field>
-                        <flux:label>{{ __('admin_ui.site.form.app_name') }}</flux:label>
-                        <flux:input name="app_name" value="{{ old('app_name', $settings->app_name) }}" placeholder="Mi Aplicación" />
-                        <flux:error name="app_name" />
-                    </flux:field>
-
-                    <flux:field>
                         <flux:label>{{ __('admin_ui.site.form.company_name') }}</flux:label>
                         <flux:input name="company_name" value="{{ old('company_name', $settings->company_name) }}" placeholder="Nombre de la empresa" />
                         <flux:error name="company_name" />
@@ -296,61 +310,57 @@
                 <flux:heading size="lg">{{ __('admin_ui.site.sections.social_networks') }}</flux:heading>
                 <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.social_help') }}</flux:text>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <flux:field>
-                        <flux:label>Facebook</flux:label>
-                        <flux:input name="social_facebook" type="url" value="{{ old('social_facebook', $settings->social_facebook) }}" placeholder="https://facebook.com/tu-pagina" />
-                        <flux:error name="social_facebook" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>X (Twitter)</flux:label>
-                        <flux:input name="social_x" type="url" value="{{ old('social_x', $settings->social_x) }}" placeholder="https://x.com/tu-usuario" />
-                        <flux:error name="social_x" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Instagram</flux:label>
-                        <flux:input name="social_instagram" type="url" value="{{ old('social_instagram', $settings->social_instagram) }}" placeholder="https://instagram.com/tu-usuario" />
-                        <flux:error name="social_instagram" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>LinkedIn</flux:label>
-                        <flux:input name="social_linkedin" type="url" value="{{ old('social_linkedin', $settings->social_linkedin) }}" placeholder="https://linkedin.com/company/tu-empresa" />
-                        <flux:error name="social_linkedin" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>TikTok</flux:label>
-                        <flux:input name="social_tiktok" type="url" value="{{ old('social_tiktok', $settings->social_tiktok) }}" placeholder="https://tiktok.com/@tu-usuario" />
-                        <flux:error name="social_tiktok" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>YouTube</flux:label>
-                        <flux:input name="social_youtube" type="url" value="{{ old('social_youtube', $settings->social_youtube) }}" placeholder="https://youtube.com/@tu-canal" />
-                        <flux:error name="social_youtube" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Telegram</flux:label>
-                        <flux:input name="social_telegram" type="url" value="{{ old('social_telegram', $settings->social_telegram) }}" placeholder="https://t.me/tu-canal" />
-                        <flux:error name="social_telegram" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Discord</flux:label>
-                        <flux:input name="social_discord" type="url" value="{{ old('social_discord', $settings->social_discord) }}" placeholder="https://discord.gg/tu-servidor" />
-                        <flux:error name="social_discord" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Pinterest</flux:label>
-                        <flux:input name="social_pinterest" type="url" value="{{ old('social_pinterest', $settings->social_pinterest) }}" placeholder="https://pinterest.com/tu-usuario" />
-                        <flux:error name="social_pinterest" />
-                    </flux:field>
-                </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs uppercase tracking-wide">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">#</th>
+                                    <th class="px-3 py-2 text-left">{{ __('admin_ui.site.social_table.network') }}</th>
+                                    <th class="px-3 py-2 text-left">{{ __('admin_ui.site.social_table.url') }}</th>
+                                    <th class="px-3 py-2 text-center">{{ __('admin_ui.site.social_table.active') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                @foreach ($socialNetworks as $sn)
+                                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+                                        <td class="px-3 py-3 text-zinc-400 text-xs">{{ $sn->sort_order }}</td>
+                                        <td class="px-3 py-3">
+                                            <div class="flex items-center gap-2">
+                                                <span style="color:{{ $sn->color }};width:1.2rem;text-align:center">
+                                                    <i class="{{ $sn->icon }}"></i>
+                                                </span>
+                                                <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $sn->label }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-3 w-full max-w-xs">
+                                            <input
+                                                type="url"
+                                                name="social_networks[{{ $sn->key }}][url]"
+                                                value="{{ old('social_networks.'.$sn->key.'.url', $sn->url) }}"
+                                                placeholder="https://..."
+                                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                            >
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <input type="hidden" name="social_networks[{{ $sn->key }}][active]" value="0">
+                                            <label class="inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    class="sr-only peer"
+                                                    name="social_networks[{{ $sn->key }}][active]"
+                                                    value="1"
+                                                    @checked(old('social_networks.'.$sn->key.'.active', $sn->active))
+                                                >
+                                                <div class="relative w-11 h-6 bg-zinc-300 dark:bg-zinc-700 rounded-full peer peer-checked:bg-emerald-500 transition-colors">
+                                                    <div class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></div>
+                                                </div>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
             </div>
         </div>
 
@@ -378,6 +388,69 @@
                         </div>
                     </label>
                 </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <label class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 flex items-start gap-3">
+                            <input type="hidden" name="dark_mode_enabled" value="0">
+                            <input type="checkbox" name="dark_mode_enabled" value="1" class="mt-1" @checked(old('dark_mode_enabled', $settings->dark_mode_enabled))>
+                            <div>
+                                <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('admin_ui.site.form.dark_mode_enabled') }}</div>
+                                <div class="text-xs text-zinc-500">{{ __('admin_ui.site.form.dark_mode_enabled_help') }}</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
+                        <flux:heading size="lg">{{ __('admin_ui.site.sections.languages') }}</flux:heading>
+                        <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.languages_help') }}</flux:text>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <flux:field>
+                                <flux:label>{{ __('admin_ui.site.form.default_site_locale') }}</flux:label>
+                                <select name="default_site_locale" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                                    @foreach ($siteLanguages as $lang)
+                                        <option value="{{ $lang->code }}" @selected(old('default_site_locale', $settings->default_site_locale ?? 'es') === $lang->code)>
+                                            {{ $lang->native_name ?: $lang->name }} ({{ $lang->code }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <flux:error name="default_site_locale" />
+                            </flux:field>
+
+                            <label class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 flex items-start gap-3">
+                                <input type="hidden" name="hide_language_switcher" value="0">
+                                <input type="checkbox" name="hide_language_switcher" value="1" class="mt-1" @checked(old('hide_language_switcher', $settings->hide_language_switcher))>
+                                <div>
+                                    <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('admin_ui.site.form.hide_language_switcher') }}</div>
+                                    <div class="text-xs text-zinc-500">{{ __('admin_ui.site.form.hide_language_switcher_help') }}</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs uppercase tracking-wide">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">{{ __('admin_ui.site.languages_table.code') }}</th>
+                                        <th class="px-3 py-2 text-left">{{ __('admin_ui.site.languages_table.name') }}</th>
+                                        <th class="px-3 py-2 text-center">{{ __('admin_ui.site.languages_table.active') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                                    @foreach ($siteLanguages as $lang)
+                                        <tr>
+                                            <td class="px-3 py-3 font-mono text-xs text-zinc-500">{{ $lang->code }}</td>
+                                            <td class="px-3 py-3 text-zinc-800 dark:text-zinc-100">{{ $lang->native_name ?: $lang->name }}</td>
+                                            <td class="px-3 py-3 text-center">
+                                                <input type="hidden" name="site_languages[{{ $lang->code }}][active]" value="0">
+                                                <input type="checkbox" name="site_languages[{{ $lang->code }}][active]" value="1" @checked(old('site_languages.'.$lang->code.'.active', $lang->active))>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
             </div>
         </div>
 
@@ -476,6 +549,50 @@
         <div class="flex justify-end">
             <flux:button type="submit" variant="primary">{{ __('admin_ui.common.save_changes') }}</flux:button>
         </div>
+            {{-- ── TAB: Ubicación ── --}}
+            <div x-show="tab === 'location'" x-cloak class="space-y-6">
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                    <flux:heading size="lg">{{ __('admin_ui.site.sections.location') }}</flux:heading>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>{{ __('admin_ui.site.form.founding_year') }}</flux:label>
+                            <flux:input name="founding_year" type="number" min="1800" max="{{ now()->year }}"
+                                value="{{ old('founding_year', $settings->founding_year) }}"
+                                placeholder="{{ now()->year }}" />
+                            <flux:error name="founding_year" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>{{ __('admin_ui.site.form.address') }}</flux:label>
+                            <flux:input name="address"
+                                value="{{ old('address', $settings->address) }}"
+                                placeholder="{{ __('admin_ui.site.form.address_placeholder') }}" />
+                            <flux:error name="address" />
+                        </flux:field>
+                    </div>
+
+                    <flux:field>
+                        <flux:label>{{ __('admin_ui.site.form.google_maps_url') }}</flux:label>
+                        <flux:input name="google_maps_url" type="url"
+                            value="{{ old('google_maps_url', $settings->google_maps_url) }}"
+                            placeholder="https://maps.google.com/..." />
+                        <flux:description>{{ __('admin_ui.site.form.google_maps_url_help') }}</flux:description>
+                        <flux:error name="google_maps_url" />
+                    </flux:field>
+
+                    @if (filled($settings->google_maps_url))
+                        <div class="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 mt-2">
+                            <iframe
+                                src="{{ $settings->google_maps_url }}"
+                                width="100%" height="300" style="border:0"
+                                allowfullscreen loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    @endif
+                </div>
+            </div>
     </form>
 
 </x-layouts::admin>

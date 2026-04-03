@@ -15,56 +15,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   @vite('resources/css/starcho-home.css')
 </head>
-<body x-data="app()" x-init="init()" :class="isLight ? 'light' : ''">
+@php($__darkMode = \App\Models\SiteSetting::isDarkModeEnabled())
 @php($registrationUrl = \App\Models\SiteSetting::isPublicRegistrationEnabled() ? route('register') : route('login'))
+<body x-data="starchoHome({{ json_encode(['darkModeEnabled' => $__darkMode]) }})" x-init="init()" :class="isLight ? 'light' : ''">
 
-<!-- ── NAV ── -->
-<nav class="nav">
-  <div class="container">
-    <div class="nav-inner">
-      <div class="logo" @click="scrollTo('home')">
-        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-        <span>Starcho</span>
-      </div>
-      <div class="nav-center">
-        <a @click="scrollTo('features')" x-text="t('nav_features')"></a>
-        <a @click="scrollTo('crud')" x-text="t('nav_crud')"></a>
-        <a @click="scrollTo('demo')" x-text="t('nav_demo')"></a>
-        <a @click="scrollTo('pricing')" x-text="t('nav_pricing')"></a>
-      </div>
-      <div class="nav-right">
-        <select class="lang-btn" x-model="lang" @change="switchLang(lang)">
-          <option value="es">ES</option>
-          <option value="en">EN</option>
-          <option value="pt_BR">PT</option>
-        </select>
-        <button class="theme-btn" @click="toggleTheme">
-          <i :class="isLight ? 'fas fa-moon' : 'fas fa-sun'"></i>
-        </button>
-        @auth
-          <a href="{{ route('app.dashboard') }}" class="btn btn-neon btn-sm"><i class="fas fa-bolt"></i> <span x-text="t('go_app')"></span></a>
-        @else
-          <a href="{{ route('login') }}" class="btn btn-ghost btn-sm" x-text="t('login')"></a>
-          <a href="{{ $registrationUrl }}" class="btn btn-neon btn-sm" x-text="t('register')"></a>
-        @endauth
-        <button class="mobile-toggle" @click="mobileOpen=!mobileOpen"><i class="fas fa-bars"></i></button>
-      </div>
-    </div>
-    <div class="mobile-menu" x-show="mobileOpen" x-transition>
-      <a @click="scrollTo('features');mobileOpen=false" x-text="t('nav_features')"></a>
-      <a @click="scrollTo('crud');mobileOpen=false" x-text="t('nav_crud')"></a>
-      <a @click="scrollTo('demo');mobileOpen=false" x-text="t('nav_demo')"></a>
-      <a @click="scrollTo('pricing');mobileOpen=false" x-text="t('nav_pricing')"></a>
-      @auth
-        <a href="{{ route('app.dashboard') }}" class="btn btn-neon" style="text-align:center"><i class="fas fa-bolt"></i> <span x-text="t('go_app')"></span></a>
-      @else
-        <a href="{{ route('login') }}" x-text="t('login')"></a>
-        <a href="{{ $registrationUrl }}" class="btn btn-neon" style="text-align:center" x-text="t('register')"></a>
-      @endauth
-    </div>
-  </div>
-</nav>
-
+<x-starcho-home-header />
 <!-- ── HERO ── -->
 <section id="home" class="hero">
   <div class="blob blob-1"></div>
@@ -427,46 +382,7 @@
   </div>
 </section>
 
-<!-- ── FOOTER ── -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <div class="logo"><div class="logo-icon"><i class="fas fa-bolt"></i></div><span>Starcho</span></div>
-        <p x-text="t('footer_desc')"></p>
-      </div>
-      <div class="footer-col">
-        <h4 x-text="t('ft_product')"></h4>
-        <a @click="scrollTo('features')" x-text="t('nav_features')" style="cursor:pointer"></a>
-        <a @click="scrollTo('crud')" x-text="t('nav_crud')" style="cursor:pointer"></a>
-        <a @click="scrollTo('pricing')" x-text="t('nav_pricing')" style="cursor:pointer"></a>
-        <a @click="scrollTo('demo')" style="cursor:pointer">Demo</a>
-      </div>
-      <div class="footer-col">
-        <h4 x-text="t('ft_resources')"></h4>
-        <a href="https://packagist.org/packages/galax13a/live4crud-tailwind" target="_blank">Packagist</a>
-        <a href="#">Docs</a>
-        <a href="#">Changelog</a>
-        <a href="#">API Reference</a>
-      </div>
-      <div class="footer-col">
-        <h4 x-text="t('ft_legal')"></h4>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-        <a href="#">MIT License</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <div>&copy; 2025 Starcho Labs. <span x-text="t('footer_rights')"></span></div>
-      <div class="footer-socials">
-        <a href="#"><i class="fab fa-github"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-        <a href="#"><i class="fab fa-discord"></i></a>
-        <a href="#"><i class="fab fa-youtube"></i></a>
-      </div>
-    </div>
-  </div>
-</footer>
+<x-starcho-home-footer />
 
 <script>
 // ── Laravel routes available to Alpine ──
@@ -474,11 +390,14 @@ const _routes = {
   langSwitch: '{{ route("language.switch", ["locale" => "__LOCALE__"]) }}'
 };
 
-function app(){
+function starchoHome(opts){
+  opts = opts || {};
+  const _darkEnabled = !!opts.darkModeEnabled;
+
   return {
     // Server-detected locale initializes the Alpine lang
-    lang: '{{ in_array(app()->getLocale(), ["en", "pt_BR"]) ? app()->getLocale() : "es" }}',
-    isLight: false,
+    lang: '{{ app()->getLocale() }}',
+    isLight: !_darkEnabled,
     mobileOpen: false,
 
     translations:{
@@ -643,21 +562,28 @@ function app(){
     },
 
     init(){
-      try{
-        const st = localStorage.getItem('starcho_theme');
-        this.isLight = st === 'light' || (st === null && !window.matchMedia('(prefers-color-scheme: dark)').matches);
-      }catch(e){}
+      if (_darkEnabled) {
+        try {
+          const st = localStorage.getItem('starcho_theme');
+          this.isLight = st === 'light' || (st === null && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+        } catch (e) {}
+      }
     },
 
     toggleTheme(){
+      if (!_darkEnabled) return;
+
       this.isLight = !this.isLight;
-      try{ localStorage.setItem('starcho_theme', this.isLight ? 'light' : 'dark') }catch(e){}
+
+      try {
+        localStorage.setItem('starcho_theme', this.isLight ? 'light' : 'dark');
+      } catch (e) {}
     },
 
     scrollTo(id){
       document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
     }
-  }
+  };
 }
 </script>
 </body>

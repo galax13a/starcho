@@ -14,6 +14,7 @@ class SiteSetting extends Model
     protected $fillable = [
         'site_name',
         'app_name',
+        'slogan',
         'site_tagline',
         'site_description',
         'meta_keywords',
@@ -24,6 +25,9 @@ class SiteSetting extends Model
         'company_dni',
         'company_country',
         'company_city',
+        'address',
+        'founding_year',
+        'google_maps_url',
         'support_whatsapp',
         'business_whatsapp',
         'server_timezone',
@@ -40,6 +44,9 @@ class SiteSetting extends Model
         'robots_follow',
         'home_page_enabled',
         'public_registration_enabled',
+        'dark_mode_enabled',
+        'hide_language_switcher',
+        'default_site_locale',
         'favicon_path',
         'og_image_path',
         'social_facebook',
@@ -51,6 +58,7 @@ class SiteSetting extends Model
         'social_instagram',
         'social_youtube',
         'social_pinterest',
+        'social_onlyfans',
     ];
 
     protected $casts = [
@@ -58,6 +66,8 @@ class SiteSetting extends Model
         'robots_follow' => 'boolean',
         'home_page_enabled' => 'boolean',
         'public_registration_enabled' => 'boolean',
+        'dark_mode_enabled' => 'boolean',
+        'hide_language_switcher' => 'boolean',
     ];
 
     public static function defaults(): array
@@ -65,6 +75,7 @@ class SiteSetting extends Model
         return [
             'site_name' => config('app.name', 'Starcho'),
             'app_name' => null,
+            'slogan' => null,
             'site_tagline' => null,
             'site_description' => null,
             'meta_keywords' => null,
@@ -75,6 +86,9 @@ class SiteSetting extends Model
             'company_dni' => null,
             'company_country' => null,
             'company_city' => null,
+            'address' => null,
+            'founding_year' => null,
+            'google_maps_url' => null,
             'support_whatsapp' => null,
             'business_whatsapp' => null,
             'server_timezone' => 'UTC',
@@ -91,6 +105,9 @@ class SiteSetting extends Model
             'robots_follow' => true,
             'home_page_enabled' => true,
             'public_registration_enabled' => true,
+            'dark_mode_enabled' => false,
+            'hide_language_switcher' => false,
+            'default_site_locale' => 'es',
             'favicon_path' => null,
             'og_image_path' => null,
             'social_facebook' => null,
@@ -102,6 +119,7 @@ class SiteSetting extends Model
             'social_instagram' => null,
             'social_youtube' => null,
             'social_pinterest' => null,
+            'social_onlyfans' => null,
         ];
     }
 
@@ -118,6 +136,42 @@ class SiteSetting extends Model
 
         return $settings?->public_registration_enabled ?? true;
     }
+
+    /**
+     * Nombre de la aplicación desde la BD, con fallback a "Starcho".
+     */
+        public static function appName(): string
+        {
+            $settings = static::cached();
+            $name = $settings?->app_name;
+
+            return filled($name) ? $name : 'Starcho';
+        }
+
+        /**
+         * ¿Está habilitado el modo oscuro en el home público?
+         */
+        public static function isDarkModeEnabled(): bool
+        {
+            $settings = static::cached();
+
+            return $settings?->dark_mode_enabled ?? false;
+        }
+
+        public static function isLanguageSwitcherHidden(): bool
+        {
+            $settings = static::cached();
+
+            return $settings?->hide_language_switcher ?? false;
+        }
+
+        public static function defaultSiteLocale(): string
+        {
+            $settings = static::cached();
+            $locale = $settings?->default_site_locale;
+
+            return filled($locale) ? (string) $locale : 'es';
+        }
 
     public static function singleton(): self
     {

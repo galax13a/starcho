@@ -29,6 +29,7 @@ class StarchoInstallAppSeeder extends Seeder
             );
             $this->seedAdminUser($tables['users'] ?? []);
             $this->seedSiteSettings($tables['site_settings'] ?? []);
+            $this->seedSiteLanguages($tables['site_languages'] ?? []);
             $this->seedSitePageSettings($tables['site_page_settings'] ?? []);
             $this->seedModules($tables['starcho_modules'] ?? []);
             $this->seedMenuSections($tables['starcho_menu_sections'] ?? []);
@@ -159,10 +160,54 @@ class StarchoInstallAppSeeder extends Seeder
         $row = $rows[0];
         $id = $row['id'] ?? 1;
 
+        $payload = array_merge($row, ['id' => $id]);
+
+        if (Schema::hasColumn('site_settings', 'default_site_locale') && ! isset($payload['default_site_locale'])) {
+            $payload['default_site_locale'] = 'es';
+        }
+
+        if (Schema::hasColumn('site_settings', 'hide_language_switcher') && ! isset($payload['hide_language_switcher'])) {
+            $payload['hide_language_switcher'] = false;
+        }
+
         DB::table('site_settings')->updateOrInsert(
             ['id' => $id],
-            array_merge($row, ['id' => $id])
+            $payload
         );
+    }
+
+    protected function seedSiteLanguages(array $rows): void
+    {
+        if (! Schema::hasTable('site_languages')) {
+            return;
+        }
+
+        $defaults = [
+            ['code' => 'es', 'name' => 'Spanish', 'native_name' => 'Espanol', 'active' => true, 'sort_order' => 1],
+            ['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'active' => true, 'sort_order' => 2],
+            ['code' => 'pt_BR', 'name' => 'Portuguese (Brazil)', 'native_name' => 'Portugues (Brasil)', 'active' => false, 'sort_order' => 3],
+            ['code' => 'fr', 'name' => 'French', 'native_name' => 'Francais', 'active' => false, 'sort_order' => 4],
+            ['code' => 'de', 'name' => 'German', 'native_name' => 'Deutsch', 'active' => false, 'sort_order' => 5],
+            ['code' => 'it', 'name' => 'Italian', 'native_name' => 'Italiano', 'active' => false, 'sort_order' => 6],
+            ['code' => 'zh_CN', 'name' => 'Chinese (Simplified)', 'native_name' => 'JianTi ZhongWen', 'active' => false, 'sort_order' => 7],
+            ['code' => 'ja', 'name' => 'Japanese', 'native_name' => 'Nihongo', 'active' => false, 'sort_order' => 8],
+        ];
+
+        $source = $rows === [] ? $defaults : $rows;
+
+        foreach ($source as $row) {
+            DB::table('site_languages')->updateOrInsert(
+                ['code' => $row['code']],
+                [
+                    'name' => $row['name'] ?? $row['code'],
+                    'native_name' => $row['native_name'] ?? null,
+                    'active' => (bool) ($row['active'] ?? false),
+                    'sort_order' => (int) ($row['sort_order'] ?? 0),
+                    'created_at' => $row['created_at'] ?? now(),
+                    'updated_at' => $row['updated_at'] ?? now(),
+                ]
+            );
+        }
     }
 
     protected function seedSitePageSettings(array $rows): void
