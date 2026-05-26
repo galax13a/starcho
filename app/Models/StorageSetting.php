@@ -21,6 +21,7 @@ class StorageSetting extends Model
         'r2_account_id', 'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint', 'r2_public_url', 'r2_folder',
         // Local
         'local_folder',
+        'local_url',
     ];
 
     protected $casts = [
@@ -64,5 +65,17 @@ class StorageSetting extends Model
             'r2'        => 'starcho_r2',
             default     => 'public',
         };
+    }
+
+    /**
+     * Base URL for building public URLs when driver is local.
+     * Uses the configured local_url (e.g. http://starcho.test) trimmed of trailing slash.
+     * Falls back to config('app.url').
+     */
+    public function localBaseUrl(): string
+    {
+        $url = filled($this->local_url) ? $this->local_url : config('app.url', 'http://localhost');
+
+        return rtrim((string) $url, '/');
     }
 }

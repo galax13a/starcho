@@ -36,23 +36,49 @@ class Media extends Model
 
     // ── Accessors ─────────────────────────────────────────────────────
 
-    /** Public URL for the media file. Prefers explicit URL, then Storage::url(). */
+    /**
+     * Public URL for the media file.
+     *
+     * Priority:
+     *  1. Explicit URL column (cloud drivers store it here).
+     *  2. Local driver with a custom local_url configured in StorageSetting:
+     *     builds {local_url}/storage/{path}  so Herd / Valet custom domains work.
+     *  3. Fallback: Storage::url() — uses APP_URL / default disk config.
+     */
     public function getPublicUrlAttribute(): string
     {
         if (filled($this->url)) {
             return $this->url;
         }
 
+        // For local disk, respect the custom base URL configured in admin/site → Storage
+        if ($this->disk === 'public' || $this->driver === 'local') {
+            $settings = \App\Models\StorageSetting::singleton();
+
+            if ($settings->isLocal() && filled($settings->local_url)) {
+                $base = rtrim($settings->local_url, '/');
+
+                return $base . '/storage/' . ltrim($this->path, '/');
+            }
+        }
+
         return Storage::disk($this->disk)->url($this->path);
     }
 
-    /** Public URL for the WebP version (fallback to original). */
+    /**
+     * Public URL for the WebP version (fallback to original public_url).
+     */
     public function getWebpUrlAttribute(): string
     {
         if (filled($this->webp_path)) {
-            if (filled($this->url)) {
-                // Build WebP URL by swapping the filename
-                return Storage::disk($this->disk)->url($this->webp_path);
+            if ($this->disk === 'public' || $this->driver === 'local') {
+                $settings = \App\Models\StorageSetting::singleton();
+
+                if ($settings->isLocal() && filled($settings->local_url)) {
+                    $base = rtrim($settings->local_url, '/');
+
+                    return $base . '/storage/' . ltrim($this->webp_path, '/');
+                }
             }
 
             return Storage::disk($this->disk)->url($this->webp_path);
@@ -64,6 +90,27 @@ class Media extends Model
     public function isImage(): bool
     {
         return str_starts_with($this->mime_type ?? '', 'image/');
+    }
+
+    public function isVideo(): bool
+    {
+        return str_starts_with($this->mime_type ?? '', 'video/');
+    }
+
+    public function isDocument(): bool
+    {
+        return ! $this->isImage() && ! $this->isVideo();
+    }
+
+    /**
+     * Returns a canonical type string: 'image' | 'video' | 'document'
+     */
+    public function fileType(): string
+    {
+        if ($this->isImage()) return 'image';
+        if ($this->isVideo()) return 'video';
+
+        return 'document';
     }
 
     /** Human-readable file size. */

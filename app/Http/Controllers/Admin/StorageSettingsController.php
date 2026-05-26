@@ -43,6 +43,8 @@ class StorageSettingsController extends Controller
             'do_folder'         => 'nullable|string|max:120',
             'r2_folder'         => 'nullable|string|max:120',
             'local_folder'      => 'nullable|string|max:120',
+            // Custom base URL for local driver (Herd / Valet domains)
+            'local_url'         => 'nullable|url|max:255',
         ]);
 
         $validated['s3_use_path_style'] = $request->boolean('s3_use_path_style');

@@ -843,17 +843,44 @@
                     </div>
 
                     {{-- Local info --}}
-                    <div x-show="driver === 'local'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 p-4 space-y-3">
-                        <p class="text-sm text-zinc-500">
-                            <i class="fas fa-circle-info mr-1"></i>
-                            Los archivos se guardan en <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">storage/app/public</code>.
-                            Ejecuta <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">php artisan storage:link</code> una vez para exponerlos en <code>/storage/...</code>.
-                        </p>
-                        <flux:field>
-                            <flux:label>Carpeta raíz de uploads</flux:label>
-                            <flux:input name="local_folder" value="{{ old('local_folder', $storageSetting->local_folder ?? 'uploads') }}" placeholder="uploads" />
-                            <flux:description>Prefijo dentro de <code>storage/app/public/</code>. Ej: <code>uploads</code> → <code>/storage/uploads/media/...</code></flux:description>
-                        </flux:field>
+                    <div x-show="driver === 'local'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 p-4 space-y-4">
+                        <div class="flex items-start gap-2 text-sm text-zinc-500">
+                            <i class="fas fa-circle-info mt-0.5 shrink-0"></i>
+                            <span>
+                                Los archivos se guardan en <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">storage/app/public</code>.
+                                Ejecuta <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">php artisan storage:link</code> una vez para exponerlos en <code>/storage/…</code>.
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <flux:field>
+                                <flux:label>Carpeta raíz de uploads</flux:label>
+                                <flux:input name="local_folder" value="{{ old('local_folder', $storageSetting->local_folder ?? 'uploads') }}" placeholder="uploads" />
+                                <flux:description>Prefijo dentro de <code>storage/app/public/</code>. Ej: <code>uploads</code> → <code>/storage/uploads/media/…</code></flux:description>
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label>URL base del sitio (local_url)</flux:label>
+                                <flux:input name="local_url"
+                                            value="{{ old('local_url', $storageSetting->local_url) }}"
+                                            placeholder="http://starcho.test" />
+                                <flux:description>
+                                    URL raíz de tu entorno local (Herd, Valet, Laravel). Se usa para construir las URLs públicas de los archivos en lugar de
+                                    <code>localhost</code>. Ej: <code>http://starcho.test</code> →
+                                    <code>http://starcho.test/storage/uploads/media/…</code>
+                                </flux:description>
+                            </flux:field>
+                        </div>
+
+                        @if(filled($storageSetting->local_url))
+                        <div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 px-3 py-2 flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-300">
+                            <i class="fas fa-circle-check mt-0.5 shrink-0"></i>
+                            <span>
+                                URL activa: los archivos se sirven desde
+                                <code class="font-mono">{{ rtrim($storageSetting->local_url, '/') }}/storage/{{ rtrim($storageSetting->uploadFolder(), '/') }}/media/…</code>
+                            </span>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- Test result --}}
