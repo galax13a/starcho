@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\ContentSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GeoLocationsController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteController;
+use App\Http\Controllers\Admin\StorageSettingsController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserBanController;
@@ -36,13 +40,14 @@ Route::prefix('admin')
         Route::resource('permissions', PermissionController::class)->except(['show']);
 
         // ── Users (CRUD) ─────────────────────────────────────────────────────────
-        Route::get('users',               [UserController::class, 'index'])->name('users.index');
-        Route::get('users/export',        [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportUsers'])->name('users.export');
-        Route::get('users/create',        [UserController::class, 'create'])->name('users.create');
-        Route::post('users',              [UserController::class, 'store'])->name('users.store');
-        Route::get('users/{user}/edit',   [UserController::class, 'edit'])->name('users.edit');
-        Route::put('users/{user}',        [UserController::class, 'update'])->name('users.update');
-        Route::delete('users/{user}',     [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('users',                    [UserController::class, 'index'])->name('users.index');
+        Route::get('users/export',             [\App\Http\Controllers\Admin\AdminDataTransferController::class, 'exportUsers'])->name('users.export');
+        Route::get('users/create',             [UserController::class, 'create'])->name('users.create');
+        Route::post('users',                   [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}/edit',        [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}',             [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}',          [UserController::class, 'destroy'])->name('users.destroy');
+        Route::patch('users/{user}/plan',      [UserController::class, 'updatePlan'])->name('users.plan');
 
         // ── Tasks (Index + Export + Import) ───────────────────────────────────────
         Route::get('tasks',             [TaskController::class, 'index'])->name('tasks.index');
@@ -92,4 +97,53 @@ Route::prefix('admin')
         Route::get('users-ban',               [UserBanController::class, 'index'])->name('users-ban.index');
         Route::post('users-ban/{user}/ban',   [UserBanController::class, 'ban'])->name('users-ban.ban');
         Route::post('users-ban/{user}/unban', [UserBanController::class, 'unban'])->name('users-ban.unban');
+
+        // ── Storage settings ──────────────────────────────────────────────────────
+        Route::put('storage',                          [StorageSettingsController::class, 'update'])->name('storage.update');
+        Route::post('storage/test',                    [StorageSettingsController::class, 'test'])->name('storage.test');
+        Route::post('storage/plans',                   [StorageSettingsController::class, 'storePlan'])->name('storage.plans.store');
+        Route::put('storage/plans/{plan}',             [StorageSettingsController::class, 'updatePlan'])->name('storage.plans.update');
+        Route::delete('storage/plans/{plan}',          [StorageSettingsController::class, 'destroyPlan'])->name('storage.plans.destroy');
+
+        // ── Multimedia gallery ────────────────────────────────────────────────────
+        Route::get('media',              [MediaController::class, 'index'])->name('media.index');
+        Route::post('media/upload',      [MediaController::class, 'upload'])->name('media.upload');
+        Route::delete('media/{media}',   [MediaController::class, 'destroy'])->name('media.destroy');
+
+        // ── Posts (blog) ──────────────────────────────────────────────────────────
+        Route::post('posts/upload-image',                  [PostController::class, 'uploadEditorImage'])->name('posts.upload-image');
+        Route::post('posts/generate-slug',                 [PostController::class, 'generateSlug'])->name('posts.generate-slug');
+        Route::post('posts/{post}/gallery',                [PostController::class, 'uploadGalleryImage'])->name('posts.gallery.upload');
+        Route::delete('posts/{post}/gallery/{media}',      [PostController::class, 'destroyGalleryImage'])->name('posts.gallery.destroy');
+        Route::get('posts',                                [PostController::class, 'index'])->name('posts.index');
+        Route::get('posts/create',                         [PostController::class, 'create'])->name('posts.create');
+        Route::post('posts',                               [PostController::class, 'store'])->name('posts.store');
+        Route::get('posts/{post}/edit',                    [PostController::class, 'edit'])->name('posts.edit');
+        Route::put('posts/{post}',                         [PostController::class, 'update'])->name('posts.update');
+        Route::delete('posts/{post}',                      [PostController::class, 'destroy'])->name('posts.destroy');
+
+        // ── Pages (sitio) ─────────────────────────────────────────────────────────
+        Route::get('pages',                  [PostController::class, 'pagesIndex'])->name('pages.index');
+        Route::get('pages/create',           [PostController::class, 'pagesCreate'])->name('pages.create');
+        Route::post('pages',                 [PostController::class, 'pagesStore'])->name('pages.store');
+        Route::get('pages/{post}/edit',      [PostController::class, 'pagesEdit'])->name('pages.edit');
+        Route::put('pages/{post}',           [PostController::class, 'pagesUpdate'])->name('pages.update');
+        Route::delete('pages/{post}',        [PostController::class, 'pagesDestroy'])->name('pages.destroy');
+
+        // ── Post Categories ───────────────────────────────────────────────────────
+        Route::view('post-categories', 'admin.post-categories.index')->name('post-categories.index');
+
+        // ── Post Tags ─────────────────────────────────────────────────────────────
+        Route::view('post-tags', 'admin.post-tags.index')->name('post-tags.index');
+
+        // ── Content Settings & Broken Links ───────────────────────────────────────
+        Route::get('content/settings',                        [ContentSettingsController::class, 'index'])->name('content.settings');
+        Route::put('content/settings',                        [ContentSettingsController::class, 'update'])->name('content.settings.update');
+        Route::post('content/sitemap/generate',               [ContentSettingsController::class, 'generateSitemap'])->name('content.sitemap.generate');
+        Route::get('content/broken-links',                    [ContentSettingsController::class, 'brokenLinks'])->name('content.broken-links');
+        Route::patch('content/broken-links/{link}/ignore',    [ContentSettingsController::class, 'ignoreLink'])->name('content.broken-links.ignore');
+        Route::patch('content/broken-links/{link}/restore',   [ContentSettingsController::class, 'restoreLink'])->name('content.broken-links.restore');
+        Route::patch('content/broken-links/{link}/redirect',  [ContentSettingsController::class, 'redirectLink'])->name('content.broken-links.redirect');
+        Route::delete('content/broken-links/{link}',          [ContentSettingsController::class, 'destroyLink'])->name('content.broken-links.destroy');
+        Route::delete('content/broken-links',                 [ContentSettingsController::class, 'clearIgnored'])->name('content.broken-links.clear-ignored');
     });

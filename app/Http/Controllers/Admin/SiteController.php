@@ -8,6 +8,7 @@ use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
 use App\Models\StarchoModule;
 use App\Models\SiteSocialNetwork;
+use App\Models\StoragePlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -32,9 +33,10 @@ class SiteController extends Controller
         $pageSeoRows = $this->buildPageSeoRows($locales, $folioPages, $settings);
 
         $socialNetworks = SiteSocialNetwork::allOrdered();
-        $siteLanguages = SiteLanguage::allOrdered();
+        $siteLanguages  = SiteLanguage::allOrdered();
+        $storagePlans   = StoragePlan::orderBy('sort_order')->get();
 
-        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages'));
+        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages', 'storagePlans'));
     }
 
     public function update(Request $request): RedirectResponse

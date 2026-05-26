@@ -89,14 +89,30 @@
         />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a href="{{ route('admin.tasks.index') }}" wire:navigate class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm hover:border-cyan-300 dark:hover:border-cyan-600 transition">
-            <div class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('admin_ui.dashboard.quick.tasks') }}</div>
-            <div class="text-xs text-zinc-500 mt-1">{{ __('admin_ui.dashboard.quick.tasks_help') }}</div>
+    @php
+        $quickLinks = [
+            ['route' => 'admin.posts.index',    'icon' => 'fas fa-newspaper',    'color' => '#7c3aed', 'label' => __('Posts'),            'help' => $stats['posts_published'] . ' ' . __('published')],
+            ['route' => 'admin.pages.index',    'icon' => 'fas fa-file-alt',     'color' => '#06b6d4', 'label' => __('Pages'),            'help' => $stats['pages_published'] . ' ' . __('published')],
+            ['route' => 'admin.tasks.index',    'icon' => 'fas fa-clipboard-list','color' => '#10b981', 'label' => __('admin_ui.dashboard.quick.tasks'),   'help' => __('admin_ui.dashboard.quick.tasks_help')],
+            ['route' => 'admin.users.index',    'icon' => 'fas fa-users',        'color' => '#f59e0b', 'label' => __('Users'),            'help' => $stats['users'] . ' ' . __('total')],
+            ['route' => 'admin.site.index',     'icon' => 'fas fa-globe',        'color' => '#ef4444', 'label' => __('Website'),          'help' => __('SEO, metadata, branding')],
+            ['route' => 'admin.modules.index',  'icon' => 'fas fa-puzzle-piece', 'color' => '#635bff', 'label' => __('admin_ui.dashboard.quick.modules'), 'help' => $stats['modules_active'] . ' ' . __('active')],
+        ];
+    @endphp
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        @foreach ($quickLinks as $link)
+        <a href="{{ route($link['route']) }}" wire:navigate
+           class="group flex flex-col gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 p-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
+           style="border-top: 3px solid {{ $link['color'] }}20; hover:border-color:{{ $link['color'] }}">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm"
+                 style="background:{{ $link['color'] }}18; color:{{ $link['color'] }}">
+                <i class="{{ $link['icon'] }}"></i>
+            </div>
+            <div>
+                <div class="text-sm font-semibold text-zinc-800 dark:text-zinc-200 leading-tight">{{ $link['label'] }}</div>
+                <div class="text-xs text-zinc-400 mt-0.5 truncate">{{ $link['help'] }}</div>
+            </div>
         </a>
-        <a href="{{ route('admin.modules.index') }}" wire:navigate class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm hover:border-cyan-300 dark:hover:border-cyan-600 transition">
-            <div class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('admin_ui.dashboard.quick.modules') }}</div>
-            <div class="text-xs text-zinc-500 mt-1">{{ __('admin_ui.dashboard.quick.modules_help') }}</div>
-        </a>
+        @endforeach
     </div>
 </x-layouts::admin>

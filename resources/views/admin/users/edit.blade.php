@@ -57,4 +57,51 @@
         </div>
     </form>
 
+    {{-- Storage Plan --}}
+    @if($storagePlans->count())
+    <div class="mt-8 max-w-2xl">
+        <flux:heading size="lg" class="mb-1">Plan de almacenamiento</flux:heading>
+        <flux:text class="text-zinc-500 mb-4">
+            Espacio usado: <strong>{{ $user->sizeLabel ?? '—' }}</strong>
+            @if($user->storage_plan_id && $user->storagePlan)
+                · Plan actual: <strong>{{ $user->storagePlan->name }}</strong>
+                ({{ $user->storagePlan->limitLabel() }})
+                · Usado: {{ number_format(($user->storage_used_bytes ?? 0) / 1_048_576, 2) }} MB
+                @php $pct = $user->storagePct(); @endphp
+                <span class="ml-2 inline-flex items-center">
+                    <span class="inline-block w-24 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                        <span class="block h-full rounded-full {{ $pct >= 90 ? 'bg-rose-500' : ($pct >= 70 ? 'bg-amber-500' : 'bg-violet-600') }}"
+                              style="width:{{ $pct }}%"></span>
+                    </span>
+                    <span class="text-xs ml-1.5 text-zinc-500">{{ $pct }}%</span>
+                </span>
+            @endif
+        </flux:text>
+
+        <form method="POST" action="{{ route('admin.users.plan', $user) }}"
+              class="flex flex-wrap items-end gap-3">
+            @csrf @method('PATCH')
+
+            <div>
+                <flux:label class="mb-1.5 block text-xs">Cambiar plan</flux:label>
+                <select name="storage_plan_id"
+                        class="h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800
+                               text-sm text-zinc-700 dark:text-zinc-300 px-3 pr-8 focus:outline-none
+                               focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition">
+                    @foreach($storagePlans as $plan)
+                        <option value="{{ $plan->id }}"
+                            {{ $user->storage_plan_id == $plan->id ? 'selected' : '' }}>
+                            {{ $plan->name }}
+                            ({{ $plan->limitLabel() }}
+                            @if($plan->is_free) — Gratis @else · ${{ number_format($plan->monthly_price, 2) }}/mes @endif)
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <flux:button type="submit" variant="primary" size="sm">Actualizar plan</flux:button>
+        </form>
+    </div>
+    @endif
+
 </x-layouts::admin>

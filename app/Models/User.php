@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -95,5 +96,50 @@ class User extends Authenticatable
     public function hasPaidSubscription(): bool
     {
         return $this->subscription_level !== 'free';
+    }
+
+    // ── Storage plan ─────────────────────────────────────────────────
+
+    public function storagePlan(): BelongsTo
+    {
+        return $this->belongsTo(StoragePlan::class, 'storage_plan_id');
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(Media::class);
+    }
+
+    /** Remaining storage bytes. Returns null if no plan assigned (treat as unlimited). */
+    public function storageRemaining(): ?int
+    {
+        if (! $this->storage_plan_id) {
+            return null;
+        }
+
+        return max(0, ($this->storagePlan->storage_limit_bytes ?? 0) - ($this->storage_used_bytes ?? 0));
+    }
+
+    public function storageExceeded(int $extraBytes = 0): bool
+    {
+        if (! $this->storage_plan_id) {
+            return false;
+        }
+
+        $limit = $this->storagePlan->storage_limit_bytes ?? 0;
+        $used  = ($this->storage_used_bytes ?? 0) + $extraBytes;
+
+        return $used > $limit;
+    }
+
+    public function storagePct(): int
+    {
+        if (! $this->storage_plan_id) {
+            return 0;
+        }
+
+        $limit = $this->storagePlan->storage_limit_bytes ?? 1;
+
+        return (int) min(100, round(($this->storage_used_bytes ?? 0) / $limit * 100));
     }
 }

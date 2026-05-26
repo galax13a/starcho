@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Observers\UserObserver;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerListeners();
+
+        Blade::anonymousComponentPath(resource_path('views/layouts'), 'layouts');
     }
 
     /**

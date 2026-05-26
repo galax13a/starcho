@@ -250,6 +250,7 @@
 <x-starcho-popup-logout theme="admin" open-event="starcho-logout-open" />
 <x-starcho-alert theme="admin" />
 
+@stack('scripts')
 @fluxScripts
 </body>
 </html>

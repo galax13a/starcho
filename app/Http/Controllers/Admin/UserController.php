@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\StoragePlan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -56,10 +57,11 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles     = Role::orderBy('name')->get();
-        $userRoles = $user->roles->pluck('id')->toArray();
+        $roles         = Role::orderBy('name')->get();
+        $userRoles     = $user->roles->pluck('id')->toArray();
+        $storagePlans  = StoragePlan::active();
 
-        return view('admin.users.edit', compact('user', 'roles', 'userRoles'));
+        return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'storagePlans'));
     }
 
     public function update(Request $request, User $user)
@@ -82,5 +84,16 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', "Usuario '{$name}' eliminado correctamente.");
+    }
+
+    public function updatePlan(Request $request, User $user)
+    {
+        $request->validate([
+            'storage_plan_id' => 'required|exists:storage_plans,id',
+        ]);
+
+        $user->update(['storage_plan_id' => $request->storage_plan_id]);
+
+        return back()->with('success', "Plan de almacenamiento actualizado para '{$user->name}'.");
     }
 }

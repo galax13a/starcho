@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Note;
+use App\Models\Post;
 use App\Models\StarchoModule;
 use App\Models\Task;
 use App\Models\User;
@@ -20,7 +21,9 @@ class DashboardController extends Controller
             'tasks_pending' => Task::where('status', 'pending')->count(),
             'contacts_active' => Contact::where('active', true)->count(),
             'notes_total' => Note::count(),
-            'modules_active' => StarchoModule::where('installed', true)->where('active', true)->count(),
+            'modules_active'   => StarchoModule::where('installed', true)->where('active', true)->count(),
+            'posts_published'  => Post::where('type', 'post')->where('status', 'published')->count(),
+            'pages_published'  => Post::where('type', 'page')->where('status', 'published')->count(),
         ];
 
         $tasksByStatus = collect(Task::STATUS)

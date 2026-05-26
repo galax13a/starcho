@@ -57,6 +57,18 @@ class SiteLanguage extends Model
         return $codes === [] ? ['es', 'en'] : $codes;
     }
 
+    public static function active(): \Illuminate\Support\Collection
+    {
+        if (! Schema::hasTable('site_languages')) {
+            return collect([
+                (object)['code' => 'es', 'name' => 'Español'],
+                (object)['code' => 'en', 'name' => 'English'],
+            ]);
+        }
+
+        return static::query()->where('active', true)->orderBy('sort_order')->orderBy('name')->get();
+    }
+
     public static function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY_ACTIVE_CODES);
