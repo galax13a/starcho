@@ -159,13 +159,13 @@ class MenuSeeder extends Seeder
             ],
             [
                 'panel'      => 'admin',
-                'module_key' => 'posts',
+                'module_key' => null,
                 'section'    => 'Contenido',
                 'name'       => ['es' => 'Multimedia', 'en' => 'Media Gallery', 'pt_BR' => 'Multimídia'],
                 'icon'       => 'fas fa-photo-film',
                 'route'      => 'admin.media.index',
                 'sort_order' => 64,
-                'active'     => false,
+                'active'     => true,
             ],
             [
                 'panel'      => 'admin',
