@@ -78,17 +78,20 @@ class Media extends Model
      */
     public function getPublicUrlAttribute(): string
     {
-        if (filled($this->url)) {
-            return $this->url;
-        }
-
-        // For local disk, respect the custom base URL configured in admin/site → Storage
+        // Local files must always respect the configured site/storage URL.
+        // Some older rows stored APP_URL/localhost in url, so rebuild instead.
         if ($this->disk === 'public' || $this->driver === 'local') {
             $settings = \App\Models\StorageSetting::singleton();
 
-            if ($settings->isLocal() && filled($settings->local_url)) {
-                return $settings->localPublicUrl($this->path);
-            }
+            return $settings->localPublicUrl($this->path);
+        }
+
+        if ($this->isR2()) {
+            return $this->r2Url($this->path);
+        }
+
+        if (filled($this->url)) {
+            return $this->url;
         }
 
         return Storage::disk($this->disk)->url($this->path);
@@ -113,17 +116,35 @@ class Media extends Model
     {
         if (filled($this->webp_path)) {
             if ($this->disk === 'public' || $this->driver === 'local') {
-                $settings = \App\Models\StorageSetting::singleton();
+                return \App\Models\StorageSetting::singleton()->localPublicUrl($this->webp_path);
+            }
 
-                if ($settings->isLocal() && filled($settings->local_url)) {
-                    return $settings->localPublicUrl($this->webp_path);
-                }
+            if ($this->isR2()) {
+                return $this->r2Url($this->webp_path);
             }
 
             return Storage::disk($this->disk)->url($this->webp_path);
         }
 
         return $this->public_url;
+    }
+
+    private function isR2(): bool
+    {
+        return $this->driver === 'r2' || $this->disk === 'starcho_r2';
+    }
+
+    private function r2Url(string $path): string
+    {
+        $settings = \App\Models\StorageSetting::singleton();
+
+        if (filled($settings->r2_public_url)) {
+            return rtrim((string) $settings->r2_public_url, '/') . '/' . ltrim($path, '/');
+        }
+
+        return app(\App\Services\StorageService::class)
+            ->diskFor($this)
+            ->temporaryUrl($path, now()->addMinutes(30));
     }
 
     public function isImage(): bool

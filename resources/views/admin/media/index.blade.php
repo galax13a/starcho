@@ -192,8 +192,16 @@
                         class="relative aspect-square overflow-hidden rounded-t-xl bg-zinc-950 {{ $item->isImage() || $item->isVideo() ? 'cursor-zoom-in' : '' }}"
                         @if($item->isImage() || $item->isVideo()) @click="openViewerById({{ $item->id }})" @endif
                     >
-                        <label class="absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-lg bg-white/90 shadow dark:bg-zinc-900/90" @click.stop>
-                            <input type="checkbox" class="rounded border-zinc-300" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                        <label
+                            class="absolute left-2 top-2 z-10 grid size-8 cursor-pointer place-items-center rounded-lg bg-white/95 text-zinc-900 shadow ring-1 ring-black/10 transition dark:bg-zinc-900/95 dark:text-white dark:ring-white/15"
+                            :class="selected.includes({{ $item->id }}) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                            @click.stop
+                            title="Seleccionar"
+                        >
+                            <input type="checkbox" class="peer sr-only" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                            <span class="grid size-4 place-items-center rounded border border-zinc-400 bg-white text-transparent transition peer-checked:border-violet-600 peer-checked:bg-violet-600 peer-checked:text-white dark:bg-zinc-800">
+                                <flux:icon.check class="size-3" />
+                            </span>
                         </label>
 
                         @if($item->isImage())
@@ -271,8 +279,11 @@
                     class="grid grid-cols-[44px_1fr_130px_120px_170px] items-center gap-3 border-b border-zinc-100 px-4 py-3 last:border-b-0 dark:border-zinc-800 {{ $item->isImage() || $item->isVideo() ? 'cursor-zoom-in hover:bg-zinc-50 dark:hover:bg-zinc-800/70' : '' }}"
                     @if($item->isImage() || $item->isVideo()) @click="openViewerById({{ $item->id }})" @endif
                 >
-                    <label class="flex size-8 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800" @click.stop>
-                        <input type="checkbox" class="rounded border-zinc-300" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                    <label class="grid size-8 cursor-pointer place-items-center rounded-lg bg-zinc-50 dark:bg-zinc-800" @click.stop title="Seleccionar">
+                        <input type="checkbox" class="peer sr-only" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                        <span class="grid size-4 place-items-center rounded border border-zinc-300 bg-white text-transparent transition peer-checked:border-violet-600 peer-checked:bg-violet-600 peer-checked:text-white dark:border-zinc-600 dark:bg-zinc-900">
+                            <flux:icon.check class="size-3" />
+                        </span>
                     </label>
                     <div class="min-w-0">
                         <p class="truncate text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $item->name }}</p>

@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Media;
+use App\Models\MediaComment;
 use App\Services\StorageService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -18,6 +19,7 @@ class MediaViewer extends Component
     public array $mediaIds = [];
     public int $rating = 1;
     public string $comment = '';
+    public bool $commentsOpen = false;
 
     #[On('openAdminMediaViewer')]
     public function openViewer(int $id, array $ids = []): void
@@ -31,6 +33,7 @@ class MediaViewer extends Component
 
         $this->mediaId = $id;
         $this->open = true;
+        $this->commentsOpen = false;
         $this->comment = '';
         $this->syncRating();
     }
@@ -38,6 +41,7 @@ class MediaViewer extends Component
     public function closeViewer(): void
     {
         $this->open = false;
+        $this->commentsOpen = false;
     }
 
     public function previous(): void
@@ -91,6 +95,57 @@ class MediaViewer extends Component
         $this->comment = '';
         unset($this->media);
         $this->notifySuccess('Comentario agregado.');
+    }
+
+    public function openComments(): void
+    {
+        $this->commentsOpen = true;
+    }
+
+    public function closeComments(): void
+    {
+        $this->commentsOpen = false;
+    }
+
+    public function confirmDeleteComment(int $commentId): void
+    {
+        $message = json_encode(
+            '¿Eliminar este comentario? Esta acción no se puede deshacer.',
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+        );
+
+        $this->js("window.Starcho.confirm({
+            title: 'Eliminar comentario',
+            message: {$message},
+            okText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            onConfirm: () => Livewire.dispatch('deleteAdminMediaComment', { id: {$commentId} })
+        })");
+    }
+
+    #[On('deleteAdminMediaComment')]
+    public function deleteComment(int $id): void
+    {
+        $media = $this->media;
+
+        if (! $media) {
+            return;
+        }
+
+        $comment = MediaComment::query()
+            ->whereKey($id)
+            ->where('commentable_type', Media::class)
+            ->where('commentable_id', $media->id)
+            ->first();
+
+        if (! $comment) {
+            $this->notifyWarning('El comentario ya no existe.');
+            return;
+        }
+
+        $comment->delete();
+        unset($this->media);
+        $this->notifyWarning('Comentario eliminado.');
     }
 
     public function toggleFavorite(): void
@@ -189,6 +244,7 @@ class MediaViewer extends Component
         $nextIndex = ($this->currentIndex + $direction + $count) % $count;
         $this->mediaId = $this->mediaIds[$nextIndex];
         $this->comment = '';
+        $this->commentsOpen = false;
         unset($this->media);
         $this->syncRating();
     }

@@ -98,8 +98,9 @@ class StorageService
             $disk->put($path, file_get_contents($file->getRealPath()), 'public');
         }
 
-        // For cloud drivers, capture the full URL
-        if (! $this->settings->isLocal()) {
+        // For cloud drivers, capture only truly public URLs. R2's S3 endpoint is private
+        // unless a public/custom domain is configured, so the UI will use Laravel's proxy.
+        if (! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
             $storedUrl = $disk->url($path);
         }
 
@@ -143,7 +144,7 @@ class StorageService
      */
     public function delete(Media $media): void
     {
-        $disk = Storage::disk($media->disk);
+        $disk = $this->diskFor($media);
 
         if ($media->path && $disk->exists($media->path)) {
             $disk->delete($media->path);
@@ -162,6 +163,25 @@ class StorageService
         }
 
         $media->delete();
+    }
+
+    /**
+     * Return the filesystem disk for an existing Media record.
+     * Cloud disks are configured at runtime, so persisted disk names like
+     * starcho_r2 must be registered before Storage::disk() is called.
+     */
+    public function diskFor(Media $media): Filesystem
+    {
+        if ($media->driver === 'local' || $media->disk === 'public') {
+            return Storage::disk('public');
+        }
+
+        $driver = $media->driver ?: $this->settings->default_driver;
+        $diskName = $media->disk ?: $this->diskNameForDriver($driver);
+
+        config(['filesystems.disks.' . $diskName => $this->buildDiskConfig($driver)]);
+
+        return Storage::disk($diskName);
     }
 
     /**
@@ -264,6 +284,16 @@ class StorageService
                 'visibility'              => 'public',
             ],
             default => ['driver' => 'local', 'root' => storage_path('app/public'), 'visibility' => 'public'],
+        };
+    }
+
+    private function diskNameForDriver(string $driver): string
+    {
+        return match ($driver) {
+            's3'        => 'starcho_s3',
+            'do_spaces' => 'starcho_do',
+            'r2'        => 'starcho_r2',
+            default     => 'public',
         };
     }
 }

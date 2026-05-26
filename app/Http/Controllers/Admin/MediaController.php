@@ -128,7 +128,7 @@ class MediaController extends Controller
     {
         $name = $media->name ?: $media->original_name;
 
-        return \Illuminate\Support\Facades\Storage::disk($media->disk)->download($media->path, $name);
+        return $this->storage->diskFor($media)->download($media->path, $name);
     }
 
     public function rate(Request $request, Media $media): RedirectResponse
