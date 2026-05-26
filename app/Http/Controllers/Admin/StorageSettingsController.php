@@ -9,6 +9,8 @@ use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class StorageSettingsController extends Controller
 {
@@ -66,7 +68,9 @@ class StorageSettingsController extends Controller
 
             $disk->put($path, $content);
 
-            $url = $disk->url($path);
+            $url = StorageSetting::singleton()->isLocal()
+                ? StorageSetting::singleton()->localPublicUrl($path)
+                : $disk->url($path);
 
             return response()->json([
                 'success' => true,
@@ -81,6 +85,24 @@ class StorageSettingsController extends Controller
                 'driver'  => StorageSetting::singleton()->default_driver,
                 'message' => $e->getMessage(),
             ], 422);
+        }
+    }
+
+    public function link(): RedirectResponse
+    {
+        try {
+            if (File::exists(public_path('storage'))) {
+                return redirect()->route('admin.site.index', ['tab' => 'storage'])
+                    ->with('success', 'El enlace public/storage ya existe.');
+            }
+
+            Artisan::call('storage:link');
+
+            return redirect()->route('admin.site.index', ['tab' => 'storage'])
+                ->with('success', trim(Artisan::output()) ?: 'Storage link creado correctamente.');
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.site.index', ['tab' => 'storage'])
+                ->with('warning', 'No se pudo crear el enlace de storage: ' . $e->getMessage());
         }
     }
 

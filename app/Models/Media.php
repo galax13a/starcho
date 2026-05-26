@@ -4,14 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
 {
     protected $fillable = [
         'user_id', 'driver', 'disk', 'path', 'webp_path', 'url',
-        'original_name', 'mime_type', 'size', 'width', 'height',
+        'original_name', 'display_name', 'mime_type', 'size', 'width', 'height',
         'mediable_type', 'mediable_id', 'context',
         'alt', 'caption',
     ];
@@ -32,6 +36,33 @@ class Media extends Model
     public function mediable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function albums(): BelongsToMany
+    {
+        return $this->belongsToMany(MediaAlbum::class, 'media_album_media')
+            ->withPivot('sort_order')
+            ->withTimestamps();
+    }
+
+    public function tags(): MorphToMany
+    {
+        return $this->morphToMany(MediaTag::class, 'taggable', 'media_taggables')->withTimestamps();
+    }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(MediaComment::class, 'commentable')->latest();
+    }
+
+    public function ratings(): MorphMany
+    {
+        return $this->morphMany(MediaRating::class, 'ratable');
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(MediaFavorite::class);
     }
 
     // ── Accessors ─────────────────────────────────────────────────────
@@ -56,13 +87,23 @@ class Media extends Model
             $settings = \App\Models\StorageSetting::singleton();
 
             if ($settings->isLocal() && filled($settings->local_url)) {
-                $base = rtrim($settings->local_url, '/');
-
-                return $base . '/storage/' . ltrim($this->path, '/');
+                return $settings->localPublicUrl($this->path);
             }
         }
 
         return Storage::disk($this->disk)->url($this->path);
+    }
+
+    public function getNameAttribute(): string
+    {
+        return $this->display_name ?: $this->original_name;
+    }
+
+    public function getAverageRatingAttribute(): ?float
+    {
+        $average = $this->ratings()->avg('rating');
+
+        return $average === null ? null : round((float) $average, 1);
     }
 
     /**
@@ -75,9 +116,7 @@ class Media extends Model
                 $settings = \App\Models\StorageSetting::singleton();
 
                 if ($settings->isLocal() && filled($settings->local_url)) {
-                    $base = rtrim($settings->local_url, '/');
-
-                    return $base . '/storage/' . ltrim($this->webp_path, '/');
+                    return $settings->localPublicUrl($this->webp_path);
                 }
             }
 

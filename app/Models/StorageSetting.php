@@ -74,8 +74,16 @@ class StorageSetting extends Model
      */
     public function localBaseUrl(): string
     {
-        $url = filled($this->local_url) ? $this->local_url : config('app.url', 'http://localhost');
+        $siteUrl = SiteSetting::cached()?->canonical_url;
+        $url = filled($this->local_url)
+            ? $this->local_url
+            : (filled($siteUrl) ? $siteUrl : config('app.url', 'http://localhost'));
 
         return rtrim((string) $url, '/');
+    }
+
+    public function localPublicUrl(string $path): string
+    {
+        return $this->localBaseUrl() . '/storage/' . ltrim($path, '/');
     }
 }

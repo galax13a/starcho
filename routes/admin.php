@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CacheController;
 use App\Http\Controllers\Admin\ContentSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GeoLocationsController;
+use App\Http\Controllers\Admin\MediaAlbumController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
@@ -100,6 +101,7 @@ Route::prefix('admin')
 
         // ── Storage settings ──────────────────────────────────────────────────────
         Route::put('storage',                          [StorageSettingsController::class, 'update'])->name('storage.update');
+        Route::post('storage/link',                    [StorageSettingsController::class, 'link'])->name('storage.link');
         Route::post('storage/test',                    [StorageSettingsController::class, 'test'])->name('storage.test');
         Route::post('storage/test-delete',             [StorageSettingsController::class, 'deleteTestFile'])->name('storage.test-delete');
         Route::post('storage/plans',                   [StorageSettingsController::class, 'storePlan'])->name('storage.plans.store');
@@ -109,6 +111,28 @@ Route::prefix('admin')
         // ── Multimedia gallery ────────────────────────────────────────────────────
         Route::get('media',              [MediaController::class, 'index'])->name('media.index');
         Route::post('media/upload',      [MediaController::class, 'upload'])->name('media.upload');
+        Route::post('media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('media.bulk-delete');
+        Route::post('media/bulk-attach', [MediaController::class, 'bulkAttach'])->name('media.bulk-attach');
+        Route::get('media/albums',       [MediaAlbumController::class, 'index'])->name('media.albums.index');
+        Route::post('media/albums',      [MediaAlbumController::class, 'store'])->name('media.albums.store');
+        Route::put('media/albums/{album}', [MediaAlbumController::class, 'update'])->name('media.albums.update');
+        Route::delete('media/albums/{album}', [MediaAlbumController::class, 'destroy'])->name('media.albums.destroy');
+        Route::post('media/albums/{album}/upload', [MediaAlbumController::class, 'upload'])->name('media.albums.upload');
+        Route::post('media/albums/{album}/attach', [MediaAlbumController::class, 'attach'])->name('media.albums.attach');
+        Route::delete('media/albums/{album}/files/{media}', [MediaAlbumController::class, 'detach'])->name('media.albums.files.detach');
+        Route::post('media/albums/{album}/files/bulk-detach', [MediaAlbumController::class, 'bulkDetach'])->name('media.albums.files.bulk-detach');
+        Route::patch('media/albums/{album}/files/{media}/move', [MediaAlbumController::class, 'move'])->name('media.albums.files.move');
+        Route::put('media/albums/files/{media}', [MediaAlbumController::class, 'updateMedia'])->name('media.albums.files.update');
+        Route::delete('media/albums/files/{media}', [MediaAlbumController::class, 'destroyMedia'])->name('media.albums.files.destroy');
+        Route::post('media/albums/files/bulk-destroy', [MediaAlbumController::class, 'bulkDestroyMedia'])->name('media.albums.files.bulk-destroy');
+        Route::post('media/albums/{type}/{id}/comments', [MediaAlbumController::class, 'comment'])->name('media.albums.comments.store');
+        Route::delete('media/albums/comments/{comment}', [MediaAlbumController::class, 'destroyComment'])->name('media.albums.comments.destroy');
+        Route::post('media/albums/{type}/{id}/rating', [MediaAlbumController::class, 'rate'])->name('media.albums.rating.store');
+        Route::post('media/{media}/rating', [MediaController::class, 'rate'])->name('media.rating');
+        Route::post('media/{media}/comments', [MediaController::class, 'comment'])->name('media.comments');
+        Route::post('media/{media}/favorite', [MediaController::class, 'favorite'])->name('media.favorite');
+        Route::get('media/{media}/download', [MediaController::class, 'download'])->name('media.download');
+        Route::put('media/{media}',      [MediaController::class, 'update'])->name('media.update');
         Route::delete('media/{media}',   [MediaController::class, 'destroy'])->name('media.destroy');
 
         // ── Posts (blog) ──────────────────────────────────────────────────────────

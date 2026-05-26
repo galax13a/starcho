@@ -1,4 +1,10 @@
 <x-layouts::admin :title="__('admin_pages.site_index')">
+    @php
+        $siteStorageSetting = \App\Models\StorageSetting::singleton();
+        $siteAssetUrl = fn (?string $path): ?string => filled($path)
+            ? ($siteStorageSetting->isLocal() ? $siteStorageSetting->localPublicUrl($path) : \Illuminate\Support\Facades\Storage::disk('public')->url($path))
+            : null;
+    @endphp
 
     <div class="mb-6">
         <flux:heading size="xl" level="1" class="mb-0.5">{{ __('admin_ui.site.heading') }}</flux:heading>
@@ -17,10 +23,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.site.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ tab: '{{ request('tab', 'global') }}' }">
-        @csrf
-        @method('PUT')
-
+    <div class="space-y-6" x-data="{ tab: '{{ request('tab', 'global') }}' }">
         {{-- ── Tab bar ── --}}
         <div class="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1 shadow-sm overflow-x-auto">
             @foreach ([
@@ -39,6 +42,10 @@
             </button>
             @endforeach
         </div>
+
+        <form method="POST" action="{{ route('admin.site.update') }}" enctype="multipart/form-data" class="space-y-6">
+        @csrf
+        @method('PUT')
 
         {{-- ════ GLOBAL ════ --}}
         <div x-show="tab === 'global'" x-cloak class="space-y-6">
@@ -89,7 +96,7 @@
                         <flux:label>{{ __('admin_ui.site.form.favicon') }}</flux:label>
                         <input type="file" name="favicon" class="block w-full text-sm" accept=".ico">
                         @if($settings->favicon_path)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($settings->favicon_path) }}" alt="favicon" class="mt-2 h-8 w-8 rounded bg-zinc-50 dark:bg-zinc-800 p-1">
+                            <img src="{{ $siteAssetUrl($settings->favicon_path) }}" alt="favicon" class="mt-2 h-8 w-8 rounded bg-zinc-50 dark:bg-zinc-800 p-1">
                         @endif
                         <flux:error name="favicon" />
                     </flux:field>
@@ -98,7 +105,7 @@
                         <flux:label>{{ __('admin_ui.site.form.og_image') }}</flux:label>
                         <input type="file" name="og_image" class="block w-full text-sm" accept="image/png,image/jpeg,image/webp">
                         @if($settings->og_image_path)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($settings->og_image_path) }}" alt="og image" class="mt-2 rounded-lg border border-zinc-200 dark:border-zinc-700 max-h-36">
+                            <img src="{{ $siteAssetUrl($settings->og_image_path) }}" alt="og image" class="mt-2 rounded-lg border border-zinc-200 dark:border-zinc-700 max-h-36">
                         @endif
                         <flux:error name="og_image" />
                     </flux:field>
@@ -634,8 +641,10 @@
             </div>
         </div>
 
-        {{-- ════ STORAGE ════ --}}
-        <div x-show="tab === 'storage'" x-cloak
+    </form>
+
+    {{-- ════ STORAGE ════ --}}
+    <div x-show="tab === 'storage'" x-cloak
              x-data="{
                  testing: false,
                  testResult: null,
@@ -851,6 +860,13 @@
                                 Ejecuta <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">php artisan storage:link</code> una vez para exponerlos en <code>/storage/…</code>.
                             </span>
                         </div>
+
+                        <button type="button"
+                                onclick="event.preventDefault(); const f = document.createElement('form'); f.method = 'POST'; f.action = '{{ route('admin.storage.link') }}'; const token = document.createElement('input'); token.type = 'hidden'; token.name = '_token'; token.value = '{{ csrf_token() }}'; f.appendChild(token); document.body.appendChild(f); f.submit();"
+                                class="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-zinc-300 dark:border-zinc-600 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                            <i class="fas fa-link text-xs"></i>
+                            Crear / verificar storage link
+                        </button>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <flux:field>
@@ -1087,6 +1103,6 @@
             </div>
         </div>
 
-    </form>
+    </div>
 
 </x-layouts::admin>
