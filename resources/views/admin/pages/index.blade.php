@@ -16,19 +16,33 @@
 
     @php
         $statCards = [
-            ['label' => 'Total', 'value' => $stats['total'], 'tone' => 'default'],
-            ['label' => 'Publicadas', 'value' => $stats['published'], 'tone' => 'emerald'],
-            ['label' => 'Borradores', 'value' => $stats['draft'], 'tone' => 'muted'],
-            ['label' => 'Programadas', 'value' => $stats['scheduled'], 'tone' => 'blue'],
-            ['label' => 'Privadas', 'value' => $stats['private'], 'tone' => 'violet'],
+            ['label' => 'Total',       'value' => $stats['total'],     'icon' => 'fas fa-file-alt',     'iconBg' => 'rgba(124,58,237,.12)',  'iconColor' => '#7c3aed', 'tone' => 'stripe'],
+            ['label' => 'Publicadas',  'value' => $stats['published'], 'icon' => 'fas fa-circle-check', 'iconBg' => 'rgba(16,185,129,.12)',  'iconColor' => '#10b981', 'tone' => 'success'],
+            ['label' => 'Borradores',  'value' => $stats['draft'],     'icon' => 'fas fa-pen',          'iconBg' => 'rgba(113,113,122,.12)', 'iconColor' => '#71717a', 'tone' => 'stripe'],
+            ['label' => 'Programadas', 'value' => $stats['scheduled'], 'icon' => 'fas fa-clock',        'iconBg' => 'rgba(59,130,246,.12)',  'iconColor' => '#3b82f6', 'tone' => 'info'],
+            ['label' => 'Privadas',    'value' => $stats['private'],   'icon' => 'fas fa-lock',         'iconBg' => 'rgba(236,72,153,.12)',  'iconColor' => '#ec4899', 'tone' => 'danger'],
         ];
     @endphp
 
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div class="posts-top-stats grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         @foreach($statCards as $card)
-            <x-starcho-card-statsOne :label="$card['label']" :value="$card['value']" :tone="$card['tone']" />
+            <x-starcho-card-admin-stats
+                :label="$card['label']"
+                :value="$card['value']"
+                :icon="$card['icon']"
+                :iconBg="$card['iconBg']"
+                :iconColor="$card['iconColor']"
+                :tone="$card['tone']"
+            />
         @endforeach
     </div>
+
+    <style>
+        .posts-top-stats .sa-stat-card { padding: .8rem; min-height: 106px; }
+        .posts-top-stats .sa-stat-label { font-size: .68rem; line-height: 1rem; }
+        .posts-top-stats .sa-stat-value { font-size: 1.15rem; line-height: 1.35rem; }
+        .posts-top-stats .sa-stat-icon  { width: 1.85rem; height: 1.85rem; font-size: .78rem; }
+    </style>
 
     <livewire:admin.pages-table />
 

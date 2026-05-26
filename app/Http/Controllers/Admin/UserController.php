@@ -59,7 +59,7 @@ class UserController extends Controller
     {
         $roles         = Role::orderBy('name')->get();
         $userRoles     = $user->roles->pluck('id')->toArray();
-        $storagePlans  = StoragePlan::active();
+        $storagePlans  = StoragePlan::orderBy('sort_order')->get();
 
         return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'storagePlans'));
     }

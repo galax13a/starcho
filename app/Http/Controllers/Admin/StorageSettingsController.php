@@ -9,7 +9,6 @@ use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class StorageSettingsController extends Controller
 {
@@ -39,6 +38,11 @@ class StorageSettingsController extends Controller
             'r2_bucket'         => 'nullable|string|max:120',
             'r2_endpoint'       => 'nullable|url|max:255',
             'r2_public_url'     => 'nullable|url|max:255',
+            // Upload folder prefixes
+            's3_folder'         => 'nullable|string|max:120',
+            'do_folder'         => 'nullable|string|max:120',
+            'r2_folder'         => 'nullable|string|max:120',
+            'local_folder'      => 'nullable|string|max:120',
         ]);
 
         $validated['s3_use_path_style'] = $request->boolean('s3_use_path_style');
@@ -52,16 +56,22 @@ class StorageSettingsController extends Controller
     public function test(): JsonResponse
     {
         try {
-            $disk    = app(StorageService::class)->disk();
-            $path    = '.starcho-test-' . time() . '.txt';
+            $storage = app(StorageService::class);
+            $disk    = $storage->disk();
             $driver  = StorageSetting::singleton()->default_driver;
-            $disk->put($path, 'starcho-test');
-            $disk->delete($path);
+            $path    = '.starcho-test/test-' . time() . '.txt';
+            $content = "Starcho storage test\nDriver: {$driver}\nDate: " . now()->toDateTimeString();
+
+            $disk->put($path, $content);
+
+            $url = $disk->url($path);
 
             return response()->json([
                 'success' => true,
                 'driver'  => $driver,
-                'message' => "Conexión exitosa con el driver «{$driver}». Archivo de prueba creado y eliminado correctamente.",
+                'path'    => $path,
+                'url'     => $url,
+                'message' => "Conexión exitosa con el driver «{$driver}». Archivo de prueba subido correctamente.",
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -69,6 +79,24 @@ class StorageSettingsController extends Controller
                 'driver'  => StorageSetting::singleton()->default_driver,
                 'message' => $e->getMessage(),
             ], 422);
+        }
+    }
+
+    public function deleteTestFile(Request $request): JsonResponse
+    {
+        $path = $request->input('path', '');
+
+        if (! str_starts_with($path, '.starcho-test/')) {
+            return response()->json(['success' => false, 'message' => 'Ruta no permitida.'], 403);
+        }
+
+        try {
+            $disk = app(StorageService::class)->disk();
+            $disk->delete($path);
+
+            return response()->json(['success' => true, 'message' => 'Archivo de prueba eliminado.']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
 

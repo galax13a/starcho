@@ -93,7 +93,8 @@
                             {{ $user->storage_plan_id == $plan->id ? 'selected' : '' }}>
                             {{ $plan->name }}
                             ({{ $plan->limitLabel() }}
-                            @if($plan->is_free) — Gratis @else · ${{ number_format($plan->monthly_price, 2) }}/mes @endif)
+                            @if($plan->is_free) — Gratis @else · ${{ number_format($plan->monthly_price, 2) }}/mes @endif
+                            @if(!$plan->is_active) [inactivo] @endif)
                         </option>
                     @endforeach
                 </select>

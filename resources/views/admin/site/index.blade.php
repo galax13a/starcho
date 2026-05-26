@@ -639,6 +639,9 @@
              x-data="{
                  testing: false,
                  testResult: null,
+                 testPath: null,
+                 testUrl: null,
+                 deleting: false,
                  showPlan: false,
                  editPlan: null,
                  pName: '', pSlug: '', pBytes: 5242880, pPrice: '0.00', pIsFree: false, pActive: true,
@@ -655,17 +658,36 @@
                      this.showPlan = true;
                  },
                  async testConn() {
-                     this.testing = true; this.testResult = null;
+                     this.testing = true; this.testResult = null; this.testPath = null; this.testUrl = null;
                      try {
                          const r = await fetch('{{ route('admin.storage.test') }}', {
                              method: 'POST',
                              headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                          });
-                         this.testResult = await r.json();
+                         const d = await r.json();
+                         this.testResult = d;
+                         if (d.success) { this.testPath = d.path; this.testUrl = d.url; }
                      } catch (e) {
                          this.testResult = { success: false, message: e.message };
                      }
                      this.testing = false;
+                 },
+                 async deleteTest() {
+                     if (!this.testPath) return;
+                     this.deleting = true;
+                     try {
+                         const r = await fetch('{{ route('admin.storage.test-delete') }}', {
+                             method: 'POST',
+                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ path: this.testPath })
+                         });
+                         const d = await r.json();
+                         this.testResult = d;
+                         if (d.success) { this.testPath = null; this.testUrl = null; }
+                     } catch (e) {
+                         this.testResult = { success: false, message: e.message };
+                     }
+                     this.deleting = false;
                  }
              }">
             @php($storageSetting = \App\Models\StorageSetting::singleton())
@@ -743,6 +765,11 @@
                             </div>
                             <span class="text-sm text-zinc-700 dark:text-zinc-300">Use path-style endpoint</span>
                         </label>
+                        <flux:field>
+                            <flux:label>Carpeta raíz de uploads</flux:label>
+                            <flux:input name="s3_folder" value="{{ old('s3_folder', $storageSetting->s3_folder ?? 'uploads') }}" placeholder="uploads" />
+                            <flux:description>Prefijo base para todos los archivos subidos. Ej: <code>uploads</code> → <code>bucket/uploads/media/...</code></flux:description>
+                        </flux:field>
                     </div>
 
                     {{-- ── DigitalOcean Spaces ── --}}
@@ -774,6 +801,9 @@
                                 <flux:description>Format: https://{region}.digitaloceanspaces.com</flux:description></flux:field>
                             <flux:field><flux:label>CDN URL (opcional)</flux:label>
                                 <flux:input name="do_cdn_url" value="{{ old('do_cdn_url', $storageSetting->do_cdn_url) }}" placeholder="https://my-space.nyc3.cdn.digitaloceanspaces.com" /></flux:field>
+                            <flux:field><flux:label>Carpeta raíz de uploads</flux:label>
+                                <flux:input name="do_folder" value="{{ old('do_folder', $storageSetting->do_folder ?? 'uploads') }}" placeholder="uploads" />
+                                <flux:description>Prefijo base para todos los archivos subidos.</flux:description></flux:field>
                         </div>
                     </div>
 
@@ -806,23 +836,49 @@
                                 <flux:description>Format: https://{account_id}.r2.cloudflarestorage.com</flux:description></flux:field>
                             <flux:field><flux:label>Public Bucket URL (opcional)</flux:label>
                                 <flux:input name="r2_public_url" value="{{ old('r2_public_url', $storageSetting->r2_public_url) }}" placeholder="https://pub-abc.r2.dev" /></flux:field>
+                            <flux:field><flux:label>Carpeta raíz de uploads</flux:label>
+                                <flux:input name="r2_folder" value="{{ old('r2_folder', $storageSetting->r2_folder ?? 'uploads') }}" placeholder="uploads" />
+                                <flux:description>Prefijo base para todos los archivos subidos.</flux:description></flux:field>
                         </div>
                     </div>
 
                     {{-- Local info --}}
-                    <div x-show="driver === 'local'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 p-4 text-sm text-zinc-500">
-                        <i class="fas fa-circle-info mr-1"></i>
-                        Los archivos se guardan en <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">storage/app/public</code>.
-                        Ejecuta <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">php artisan storage:link</code> una vez para exponerlos en <code>/storage/...</code>.
+                    <div x-show="driver === 'local'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 p-4 space-y-3">
+                        <p class="text-sm text-zinc-500">
+                            <i class="fas fa-circle-info mr-1"></i>
+                            Los archivos se guardan en <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">storage/app/public</code>.
+                            Ejecuta <code class="font-mono text-xs bg-zinc-200 dark:bg-zinc-700 px-1 rounded">php artisan storage:link</code> una vez para exponerlos en <code>/storage/...</code>.
+                        </p>
+                        <flux:field>
+                            <flux:label>Carpeta raíz de uploads</flux:label>
+                            <flux:input name="local_folder" value="{{ old('local_folder', $storageSetting->local_folder ?? 'uploads') }}" placeholder="uploads" />
+                            <flux:description>Prefijo dentro de <code>storage/app/public/</code>. Ej: <code>uploads</code> → <code>/storage/uploads/media/...</code></flux:description>
+                        </flux:field>
                     </div>
 
                     {{-- Test result --}}
-                    <div x-show="testResult !== null" x-cloak class="rounded-lg border px-4 py-3 text-sm"
+                    <div x-show="testResult !== null" x-cloak class="rounded-lg border px-4 py-3 text-sm space-y-2"
                          :class="testResult?.success
                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/20 dark:text-emerald-300'
                              : 'border-red-200 bg-red-50 text-red-700 dark:border-red-700/50 dark:bg-red-900/20 dark:text-red-300'">
-                        <i :class="testResult?.success ? 'fas fa-circle-check' : 'fas fa-circle-xmark'" class="mr-1.5"></i>
-                        <span x-text="testResult?.message"></span>
+                        <div class="flex items-start justify-between gap-3 flex-wrap">
+                            <div>
+                                <i :class="testResult?.success ? 'fas fa-circle-check' : 'fas fa-circle-xmark'" class="mr-1.5"></i>
+                                <span x-text="testResult?.message"></span>
+                            </div>
+                            <div x-show="testResult?.success && testUrl" class="flex items-center gap-2 flex-wrap">
+                                <a :href="testUrl" target="_blank"
+                                   class="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border border-emerald-300 dark:border-emerald-700 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors">
+                                    <i class="fas fa-external-link-alt text-[10px]"></i> Ver archivo
+                                </a>
+                                <button type="button" @click="deleteTest()" :disabled="deleting"
+                                        class="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border border-red-300 dark:border-red-700 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50">
+                                    <i :class="deleting ? 'fas fa-spinner fa-spin' : 'fas fa-trash'" class="text-[10px]"></i>
+                                    <span x-text="deleting ? 'Eliminando...' : 'Eliminar archivo'"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div x-show="testResult?.success && testUrl" class="font-mono text-[11px] opacity-70 break-all" x-text="testUrl"></div>
                     </div>
 
                     <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700">

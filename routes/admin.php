@@ -101,6 +101,7 @@ Route::prefix('admin')
         // ── Storage settings ──────────────────────────────────────────────────────
         Route::put('storage',                          [StorageSettingsController::class, 'update'])->name('storage.update');
         Route::post('storage/test',                    [StorageSettingsController::class, 'test'])->name('storage.test');
+        Route::post('storage/test-delete',             [StorageSettingsController::class, 'deleteTestFile'])->name('storage.test-delete');
         Route::post('storage/plans',                   [StorageSettingsController::class, 'storePlan'])->name('storage.plans.store');
         Route::put('storage/plans/{plan}',             [StorageSettingsController::class, 'updatePlan'])->name('storage.plans.update');
         Route::delete('storage/plans/{plan}',          [StorageSettingsController::class, 'destroyPlan'])->name('storage.plans.destroy');

@@ -77,10 +77,12 @@ class StorageService
         }
 
         // ── Build destination path ───────────────────────────────────
-        $ext      = $isImage ? 'webp' : strtolower($file->getClientOriginalExtension());
-        $folder   = $context === 'editor' ? 'media/editor' : 'media/' . date('Y/m');
-        $filename = Str::uuid() . '.' . $ext;
-        $path     = $folder . '/' . $filename;
+        $ext        = $isImage ? 'webp' : strtolower($file->getClientOriginalExtension());
+        $root       = $this->settings->uploadFolder();
+        $subfolder  = $context === 'editor' ? 'media/editor' : 'media/' . date('Y/m');
+        $folder     = $root . '/' . $subfolder;
+        $filename   = Str::uuid() . '.' . $ext;
+        $path       = $folder . '/' . $filename;
 
         // ── Process & store ──────────────────────────────────────────
         $disk      = $this->disk();
