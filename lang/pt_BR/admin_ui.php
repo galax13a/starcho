@@ -827,4 +827,12 @@ return [
             'country' => 'País',
             'city' => 'Cidade',
         ],
-    ],];
+    ],
+
+    'content' => [
+        'notify' => [
+            'settings_saved' => 'Configurações de conteúdo salvas com sucesso.',
+            'sitemap_generated' => 'Sitemap gerado com :count URLs.',
+        ],
+    ],
+];

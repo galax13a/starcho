@@ -3,7 +3,13 @@
     $primaryLocale = $languages[0] ?? 'es';
     $currentStatus = old('status', $isEditing ? $post->status : 'draft');
     $currentAuthor = old('author_id', $isEditing ? $post->author_id : auth()->id());
-    $currentSlug   = old('slug', $isEditing ? $post->slug : '');
+    $allSlugs = collect($languages)->mapWithKeys(
+        fn($locale) => [$locale => $isEditing ? ($post->getTranslation('slug', $locale, false) ?? '') : '']
+    )->all();
+    $currentSlug   = old('slug', $allSlugs[$primaryLocale] ?? ($isEditing ? $post->slug : ''));
+    $publicUrls    = collect($languages)->mapWithKeys(
+        fn($locale) => [$locale => $isEditing ? $post->publicUrl($locale) : '']
+    )->all();
     $isPage        = $type === 'page';
 
     $mkTrans = fn(string $field) => collect($languages)->mapWithKeys(
@@ -190,6 +196,17 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-2 shrink-0">
+                @if($isEditing)
+                    <a id="btn-public-link"
+                       href="{{ $publicUrls[$primaryLocale] ?? $post->publicUrl($primaryLocale) }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="{{ $isPage ? 'Ver página actual' : 'Ver post actual' }}"
+                       class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-violet-700/60 dark:hover:bg-violet-900/20 dark:hover:text-violet-200">
+                        <i class="fas fa-link text-xs"></i>
+                        <span class="sr-only">{{ $isPage ? 'Ver página actual' : 'Ver post actual' }}</span>
+                    </a>
+                @endif
                 <button type="button" id="btn-draft" onclick="editorSave('draft')"
                     class="hidden sm:inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-zinc-200 dark:border-zinc-700
                            bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-600 dark:text-zinc-300
@@ -292,7 +309,14 @@
                         </span>
                         @endif
                     </div>
-                    <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <div class="flex items-center gap-2 text-xs text-zinc-400">
+                        @if($isPage && $isEditing)
+                            <button type="button" onclick="editorOpenAiAssistant('content')"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:bg-violet-700">
+                                <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
+                                AI
+                            </button>
+                        @endif
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono">Tab</kbd>
                         <span class="hidden sm:inline text-zinc-300 dark:text-zinc-600">para bloques</span>
                     </div>
@@ -316,7 +340,16 @@
                               class="px-2 py-0.5 rounded-md bg-violet-50 dark:bg-violet-900/20 text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase">{{ $primaryLocale }}</span>
                         @endif
                     </div>
-                    <span class="text-[11px] text-zinc-400">Resumen corto para listados y SEO</span>
+                    <div class="flex items-center gap-2">
+                        <span class="hidden text-[11px] text-zinc-400 sm:inline">Resumen corto para listados y SEO</span>
+                        @if($isPage && $isEditing)
+                            <button type="button" onclick="editorOpenAiAssistant('excerpt')"
+                                    class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-violet-900/50 dark:bg-zinc-900 dark:text-violet-200 dark:hover:bg-violet-950/30">
+                                <i class="fas fa-wand-magic-sparkles text-[10px]"></i>
+                                AI
+                            </button>
+                        @endif
+                    </div>
                 </div>
                 <textarea id="v-excerpt" rows="3"
                     oninput="editorOnExcerpt(this.value)"
@@ -704,6 +737,20 @@
                 {{-- ══ TAB: SEO ══ --}}
                 <div id="tab-panel-seo" class="ep-panel {{ $defaultTab === 'seo' ? 'ep-visible' : '' }} p-4 space-y-0">
 
+                    @if($isPage && $isEditing)
+                        <div class="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50/70 px-3.5 py-3 dark:border-violet-900/50 dark:bg-violet-950/20">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-violet-800 dark:text-violet-200">SEO con AI</p>
+                                <p class="truncate text-[11px] text-violet-600/80 dark:text-violet-300/70">Analiza el contenido y rellena título, descripción, keywords y Open Graph.</p>
+                            </div>
+                            <button type="button" onclick="editorOpenAiAssistant('seo')"
+                                    class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:-translate-y-0.5 hover:bg-violet-700">
+                                <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
+                                Generar
+                            </button>
+                        </div>
+                    @endif
+
                     {{-- SERP Preview --}}
                     <div class="mb-4 rounded-xl border border-zinc-200 dark:border-zinc-700/60
                                 bg-zinc-50 dark:bg-zinc-800/60 p-3.5">
@@ -940,6 +987,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/warning@latest/dist/warning.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest/dist/inline-code.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest/dist/marker.umd.min.js"></script>
+<script src="{{ asset('js/starcho-html-editor.js') }}"></script>
 
 <script>
 (function () {
@@ -951,6 +999,8 @@
     const CSRF       = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
     const PLACEHOLDER = IS_PAGE ? 'Empieza a escribir el contenido de la página…' : 'Empieza a escribir tu post aquí…';
     const CRUMB_EMPTY = IS_PAGE ? 'Nueva página' : 'Nuevo post';
+    const PUBLIC_URLS = @json($publicUrls);
+    const PUBLIC_BASE = '{{ rtrim(url('/'), '/') }}';
 
     let currentLocale = PRIMARY;
     let slugLocked    = IS_EDITING;
@@ -969,6 +1019,7 @@
 
     const d = {
         titles:      @json($allTitles),
+        slugs:       @json($allSlugs),
         excerpts:    @json($allExcerpts),
         featAlts:    @json($allFeaturedAlts),
         seoTitles:   @json($allSeoTitles),
@@ -1001,6 +1052,24 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    function publicUrlFor(locale, slug) {
+        const cleanLocale = encodeURIComponent(locale || PRIMARY);
+        const cleanSlug = String(slug || '').replace(/^\/+|\/+$/g, '');
+
+        if (cleanSlug) {
+            return PUBLIC_BASE + '/' + cleanLocale + (IS_PAGE ? '/' : '/blog/') + cleanSlug;
+        }
+
+        return PUBLIC_URLS[locale] || PUBLIC_URLS[PRIMARY] || PUBLIC_BASE;
+    }
+
+    function updatePublicLink() {
+        const link = document.getElementById('btn-public-link');
+        if (!link) return;
+
+        link.href = publicUrlFor(currentLocale, gv('v-slug') || d.slugs?.[currentLocale]);
+    }
+
     // ── Tabs ─────────────────────────────────────────────────────────────────
     window.editorSwitchTab = function(tab) {
         ['pub','seo','img'].forEach(t => {
@@ -1017,36 +1086,43 @@
             try { await editor.isReady; editor.destroy(); } catch(e) {}
             editor = null;
         }
+        const editorTools = {
+            header:     { class: Header,    config: { levels: [2,3,4], defaultLevel: 2 }, shortcut: 'CMD+SHIFT+H' },
+            paragraph:  { class: Paragraph, inlineToolbar: true },
+            list:       { class: List,       inlineToolbar: true, config: { defaultStyle: 'unordered' }, shortcut: 'CMD+SHIFT+L' },
+            quote:      { class: Quote,     inlineToolbar: true, shortcut: 'CMD+SHIFT+O' },
+            code:       { class: CodeTool,  shortcut: 'CMD+SHIFT+C' },
+            delimiter:  Delimiter,
+            image: {
+                class: ImageTool,
+                config: {
+                    endpoints: { byFile: UPLOAD_URL },
+                    additionalRequestHeaders: { 'X-CSRF-TOKEN': CSRF },
+                },
+            },
+            embed:     { class: Embed, config: { services: { youtube: true, vimeo: true, twitter: true, instagram: true } } },
+            table:     { class: Table,     inlineToolbar: true },
+            warning:   { class: Warning,   inlineToolbar: true },
+            inlineCode:{ class: InlineCode, shortcut: 'CMD+SHIFT+M' },
+            marker:    { class: Marker,    shortcut: 'CMD+SHIFT+A' },
+        };
+
+        if (window.StarchoHtmlEditor) {
+            editorTools.starchoHtml = { class: window.StarchoHtmlEditor };
+        }
+
         editor = new EditorJS({
             holder: 'editorjs',
             data:   data || {},
             placeholder: PLACEHOLDER,
-            tools: {
-                header:     { class: Header,    config: { levels: [2,3,4], defaultLevel: 2 }, shortcut: 'CMD+SHIFT+H' },
-                paragraph:  { class: Paragraph, inlineToolbar: true },
-                list:       { class: List,       inlineToolbar: true, config: { defaultStyle: 'unordered' }, shortcut: 'CMD+SHIFT+L' },
-                quote:      { class: Quote,     inlineToolbar: true, shortcut: 'CMD+SHIFT+O' },
-                code:       { class: CodeTool,  shortcut: 'CMD+SHIFT+C' },
-                delimiter:  Delimiter,
-                image: {
-                    class: ImageTool,
-                    config: {
-                        endpoints: { byFile: UPLOAD_URL },
-                        additionalRequestHeaders: { 'X-CSRF-TOKEN': CSRF },
-                    },
-                },
-                embed:     { class: Embed, config: { services: { youtube: true, vimeo: true, twitter: true, instagram: true } } },
-                table:     { class: Table,     inlineToolbar: true },
-                warning:   { class: Warning,   inlineToolbar: true },
-                inlineCode:{ class: InlineCode, shortcut: 'CMD+SHIFT+M' },
-                marker:    { class: Marker,    shortcut: 'CMD+SHIFT+A' },
-            },
+            tools: editorTools,
         });
     }
 
     // ── Locale sync ──────────────────────────────────────────────────────────
     function syncFromVisible() {
         d.titles[currentLocale]      = gv('v-title');
+        d.slugs[currentLocale]       = gv('v-slug');
         d.excerpts[currentLocale]    = gv('v-excerpt');
         d.featAlts[currentLocale]    = gv('v-feat-alt');
         d.seoTitles[currentLocale]   = gv('v-seo-title');
@@ -1058,6 +1134,8 @@
 
     function syncToVisible() {
         sv('v-title',     d.titles[currentLocale]);
+        sv('v-slug',      d.slugs[currentLocale] || gv('v-slug'));
+        sv('form-slug',   gv('v-slug'));
         sv('v-excerpt',   d.excerpts[currentLocale]);
         sv('v-feat-alt',  d.featAlts[currentLocale]);
         sv('v-seo-title', d.seoTitles[currentLocale]);
@@ -1070,6 +1148,7 @@
         const badgeIds = ['editor-locale-badge','excerpt-locale-badge','feat-alt-locale-badge',
                           'seo-title-locale-badge','seo-desc-locale-badge','og-locale-badge','current-locale-label'];
         badgeIds.forEach(id => st(id, currentLocale));
+        updatePublicLink();
     }
 
     function updateLocaleBtns() {
@@ -1092,6 +1171,8 @@
         updateLocaleBtns();
         syncToVisible();
         await startEditor(contentPerLocale[locale] || {});
+        updateSerpUrl(gv('v-slug'));
+        updatePublicLink();
     };
 
     // ── Title / Slug ─────────────────────────────────────────────────────────
@@ -1102,14 +1183,18 @@
             const slug = toSlug(val);
             sv('v-slug', slug);
             sv('form-slug', slug);
+            d.slugs[currentLocale] = slug;
             updateSerpUrl(slug);
+            updatePublicLink();
         }
     };
 
     window.editorOnSlugInput = function(val) {
         sv('form-slug', val);
+        d.slugs[currentLocale] = val;
         slugLocked = true;
         updateSerpUrl(val);
+        updatePublicLink();
     };
 
     window.editorRegenerateSlug = function() {
@@ -1118,13 +1203,15 @@
         const slug = toSlug(title);
         sv('v-slug', slug);
         sv('form-slug', slug);
+        d.slugs[currentLocale] = slug;
         slugLocked = false;
         updateSerpUrl(slug);
+        updatePublicLink();
     };
 
     function updateSerpUrl(slug) {
         const el = document.getElementById('serp-url');
-        if (el) el.textContent = '{{ url("/") }}/' + (IS_PAGE ? '' : 'blog/') + (slug || 'mi-url-aqui');
+        if (el) el.textContent = publicUrlFor(currentLocale, slug || 'mi-url-aqui');
     }
 
     // ── Status ────────────────────────────────────────────────────────────────
@@ -1311,10 +1398,136 @@
         document.getElementById('post-form').submit();
     };
 
+    function textToEditorData(text) {
+        const blocks = [];
+        const chunks = String(text || '')
+            .replace(/\r\n/g, '\n')
+            .split(/\n{2,}/)
+            .map(chunk => chunk.trim())
+            .filter(Boolean);
+
+        chunks.forEach(chunk => {
+            if (/^#{1,3}\s+/.test(chunk)) {
+                const level = Math.min((chunk.match(/^#+/)?.[0].length || 2) + 1, 4);
+                blocks.push({
+                    type: 'header',
+                    data: { text: esc(chunk.replace(/^#{1,3}\s+/, '')), level }
+                });
+                return;
+            }
+
+            blocks.push({
+                type: 'paragraph',
+                data: { text: esc(chunk).replace(/\n/g, '<br>') }
+            });
+        });
+
+        return { time: Date.now(), blocks, version: '2.30.0' };
+    }
+
+    function aiSnapshot() {
+        return {
+            content: contentPerLocale[currentLocale] || {},
+            title: d.titles[currentLocale] || '',
+            excerpt: d.excerpts[currentLocale] || '',
+            seo_title: d.seoTitles[currentLocale] || '',
+            seo_description: d.seoDescs[currentLocale] || '',
+            seo_keywords: d.seoKeywords[currentLocale] || '',
+            og_title: d.ogTitles[currentLocale] || '',
+            og_description: d.ogDescs[currentLocale] || '',
+        };
+    }
+
+    function parseAiJson(text) {
+        const raw = String(text || '').trim()
+            .replace(/^```(?:json)?/i, '')
+            .replace(/```$/i, '')
+            .trim();
+
+        try { return JSON.parse(raw); }
+        catch {
+            const start = raw.indexOf('{');
+            const end = raw.lastIndexOf('}');
+            if (start >= 0 && end > start) {
+                try { return JSON.parse(raw.slice(start, end + 1)); } catch {}
+            }
+        }
+
+        return {};
+    }
+
+    function applyAiSeo(text) {
+        const seo = parseAiJson(text);
+        const words = Array.isArray(seo.seo_keywords || seo.keywords)
+            ? (seo.seo_keywords || seo.keywords).join(', ')
+            : (seo.seo_keywords || seo.keywords || '');
+
+        d.seoTitles[currentLocale] = (seo.seo_title || seo.title || '').slice(0, 70);
+        d.seoDescs[currentLocale] = (seo.seo_description || seo.description || '').slice(0, 160);
+        d.seoKeywords[currentLocale] = words;
+        d.ogTitles[currentLocale] = seo.og_title || d.seoTitles[currentLocale] || '';
+        d.ogDescs[currentLocale] = seo.og_description || d.seoDescs[currentLocale] || '';
+
+        sv('v-seo-title', d.seoTitles[currentLocale]);
+        sv('v-seo-desc', d.seoDescs[currentLocale]);
+        sv('v-seo-kw', d.seoKeywords[currentLocale]);
+        sv('v-og-title', d.ogTitles[currentLocale]);
+        sv('v-og-desc', d.ogDescs[currentLocale]);
+        updateSeoCounters();
+        updateSerp();
+    }
+
+    window.editorOpenAiAssistant = async function(target = 'content') {
+        syncFromVisible();
+        try { contentPerLocale[currentLocale] = await editor.save(); }
+        catch { contentPerLocale[currentLocale] = {}; }
+
+        if (window.Livewire) {
+            window.Livewire.dispatch('openPageAiAssistant', {
+                locale: currentLocale,
+                content: JSON.stringify(aiSnapshot()),
+                target: target
+            });
+        }
+    };
+
+    window.addEventListener('applyPageAiContent', async function(event) {
+        const detail = event.detail || {};
+        const target = detail.target || 'content';
+
+        if (target === 'excerpt') {
+            const excerpt = String(detail.content || '').trim();
+            d.excerpts[currentLocale] = excerpt;
+            sv('v-excerpt', excerpt);
+            return;
+        }
+
+        if (target === 'seo') {
+            applyAiSeo(detail.content || '');
+            return;
+        }
+
+        const incoming = textToEditorData(detail.content || '');
+        const current = contentPerLocale[currentLocale] || {};
+        const mode = detail.mode || 'replace';
+
+        const nextData = mode === 'append'
+            ? { time: Date.now(), blocks: [...(current.blocks || []), ...(incoming.blocks || [])], version: incoming.version }
+            : incoming;
+
+        contentPerLocale[currentLocale] = nextData;
+        await startEditor(nextData);
+    });
+
     // ── Init ─────────────────────────────────────────────────────────────────
     renderTags();
     startEditor(contentPerLocale[PRIMARY] || {});
+    updatePublicLink();
 })();
 </script>
+
+@if($isPage && $isEditing)
+    <livewire:admin.page-ai-assistant :post="$post" :locale="$primaryLocale" />
+@endif
 
 </x-layouts::admin>

@@ -5,13 +5,20 @@
             <flux:heading size="xl" level="1" class="mb-0.5">Posts del Blog</flux:heading>
             <flux:text class="text-zinc-500">Gestiona los artículos publicados en el blog del sitio.</flux:text>
         </div>
-        <a href="{{ route('admin.posts.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition shadow-sm">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
-            Nuevo post
-        </a>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            <button type="button" onclick="Livewire.dispatch('openPostAiCreator')"
+                    class="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-violet-900/50 dark:bg-zinc-900 dark:text-violet-200">
+                <i class="fas fa-wand-magic-sparkles text-xs"></i>
+                Crear post con AI
+            </button>
+            <a href="{{ route('admin.posts.create') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition shadow-sm">
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                Nuevo post
+            </a>
+        </div>
     </div>
 
     {{-- Stats --}}
@@ -46,5 +53,6 @@
     </style>
 
     <livewire:admin.posts-table />
+    <livewire:admin.post-ai-creator />
 
 </x-layouts::admin>

@@ -835,4 +835,11 @@ return [
             'city' => 'City',
         ],
     ],
+
+    'content' => [
+        'notify' => [
+            'settings_saved' => 'Content settings saved successfully.',
+            'sitemap_generated' => 'Sitemap generated with :count URLs.',
+        ],
+    ],
 ];

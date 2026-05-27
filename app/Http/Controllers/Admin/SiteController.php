@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiSetting;
+use App\Models\Post;
 use App\Models\SitePageSetting;
 use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
@@ -35,8 +37,13 @@ class SiteController extends Controller
         $socialNetworks = SiteSocialNetwork::allOrdered();
         $siteLanguages  = SiteLanguage::allOrdered();
         $storagePlans   = StoragePlan::orderBy('sort_order')->get();
+        $aiSetting      = AiSetting::singleton();
+        $cmsPages       = Post::query()
+            ->where('type', Post::TYPE_PAGE)
+            ->orderBy('title')
+            ->get(['id', 'title', 'status']);
 
-        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages', 'storagePlans'));
+        return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages', 'storagePlans', 'aiSetting', 'cmsPages'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -77,6 +84,8 @@ class SiteController extends Controller
             'robots_index' => ['nullable', 'boolean'],
             'robots_follow' => ['nullable', 'boolean'],
             'home_page_enabled' => ['nullable', 'boolean'],
+            'home_source' => ['nullable', 'in:folio,dynamic'],
+            'home_page_id' => ['nullable', 'integer', 'exists:posts,id'],
             'public_registration_enabled' => ['nullable', 'boolean'],
             'hide_language_switcher' => ['nullable', 'boolean'],
             'default_site_locale' => ['required', 'string', 'max:20'],
@@ -150,6 +159,8 @@ class SiteController extends Controller
             'robots_index' => $request->boolean('robots_index'),
             'robots_follow' => $request->boolean('robots_follow'),
             'home_page_enabled' => $request->boolean('home_page_enabled'),
+            'home_source' => $data['home_source'] ?? 'folio',
+            'home_page_id' => ($data['home_source'] ?? 'folio') === 'dynamic' ? ($data['home_page_id'] ?? null) : null,
             'public_registration_enabled' => $request->boolean('public_registration_enabled'),
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
             'hide_language_switcher' => $request->boolean('hide_language_switcher'),

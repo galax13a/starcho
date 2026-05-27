@@ -21,26 +21,34 @@
 @endphp
 
 <div x-data="mediaAlbumsDashboard()" class="space-y-5">
-<div class="flex flex-wrap items-start justify-between gap-4">
-    <div>
-        <flux:heading size="xl" level="1" class="mb-0.5">Álbumes Multimedia</flux:heading>
-        <flux:text class="text-sm text-zinc-500">Dashboard para carpetas, archivos, tags, comentarios, password y calificaciones.</flux:text>
+<section class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-900/25 dark:text-violet-300">
+                <i class="fas fa-folder-tree text-[11px]"></i>
+                Biblioteca organizada
+            </div>
+            <flux:heading size="xl" level="1" class="mb-0.5">Álbumes Multimedia</flux:heading>
+            <flux:text class="max-w-3xl text-sm text-zinc-500">
+                Administra carpetas, archivos, tags, comentarios, password y calificaciones desde un solo panel.
+            </flux:text>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <flux:button type="button" onclick="Livewire.dispatch('openMediaAlbum', {id: 0})" variant="primary" icon="plus" size="sm">
+                Nuevo álbum
+            </flux:button>
+            <a href="{{ route('admin.media.index') }}"
+               class="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                <i class="fas fa-photo-film text-xs"></i>
+                Ver galería
+            </a>
+        </div>
     </div>
-    <div class="flex flex-wrap gap-2">
-        <flux:button type="button" onclick="Livewire.dispatch('openMediaAlbum', {id: 0})" variant="primary" icon="plus" size="sm">
-            Nuevo álbum
-        </flux:button>
-        <a href="{{ route('admin.media.index') }}"
-           class="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
-            <i class="fas fa-photo-film text-xs"></i>
-            Ver galería
-        </a>
-    </div>
-</div>
+</section>
 
 @include('admin.partials.alerts')
 
-<div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
     @foreach([
         ['label' => 'Álbumes', 'value' => $totals['albums'], 'icon' => 'fa-folder-tree', 'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'],
         ['label' => 'Archivos', 'value' => $totals['files'], 'icon' => 'fa-layer-group', 'class' => 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'],
@@ -60,22 +68,30 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-    <aside class="space-y-4">
+    <aside class="space-y-4 xl:sticky xl:top-20 xl:self-start">
         <section class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <h2 class="mb-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100">Carpetas</h2>
-            <div class="space-y-2">
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <h2 class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Álbumes</h2>
+                <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-500 dark:bg-zinc-800 dark:text-zinc-300">{{ $albums->count() }}</span>
+            </div>
+            <div class="max-h-[560px] space-y-2 overflow-y-auto pr-1">
                 @forelse($albums as $album)
                     <a href="{{ route('admin.media.albums.index', ['album' => $album->id]) }}"
-                       class="block rounded-lg border px-3 py-2 transition {{ $selectedAlbum?->id === $album->id ? 'border-violet-400 bg-violet-50 dark:border-violet-600 dark:bg-violet-900/20' : 'border-zinc-200 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800' }}">
+                       class="block rounded-lg border px-3 py-2.5 transition {{ $selectedAlbum?->id === $album->id ? 'border-violet-400 bg-violet-50 shadow-sm dark:border-violet-600 dark:bg-violet-900/20' : 'border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800' }}">
                         <div class="flex items-center justify-between gap-3">
                             <div class="min-w-0">
-                                <div class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <span class="grid size-8 shrink-0 place-items-center rounded-lg {{ $selectedAlbum?->id === $album->id ? 'bg-violet-600 text-white' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                                        <i class="fas fa-folder text-xs"></i>
+                                    </span>
+                                    <span class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                                     {{ $album->name }}
+                                    </span>
                                     @if($album->password_enabled)
-                                        <i class="fas fa-lock ml-1 text-[10px] text-amber-500"></i>
+                                        <i class="fas fa-lock text-[10px] text-amber-500"></i>
                                     @endif
                                 </div>
-                                <div class="text-[11px] text-zinc-500">
+                                <div class="mt-1 pl-10 text-[11px] text-zinc-500">
                                     {{ $album->media_count }} archivos
                                     @if($album->ratings_avg_rating)
                                         · {{ number_format($album->ratings_avg_rating, 1) }}/10
@@ -95,14 +111,32 @@
     <main class="space-y-4">
         @if($selectedAlbum)
             <section class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <h2 class="text-lg font-bold text-zinc-900 dark:text-zinc-100">{{ $selectedAlbum->name }}</h2>
-                        <p class="mt-1 max-w-2xl text-sm text-zinc-500">{{ $selectedAlbum->description ?: 'Sin descripción.' }}</p>
+                <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                            <h2 class="truncate text-xl font-bold text-zinc-900 dark:text-zinc-100">{{ $selectedAlbum->name }}</h2>
+                            @if($selectedAlbum->password_enabled)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-900/25 dark:text-amber-300">
+                                    <i class="fas fa-lock text-[10px]"></i>
+                                    Protegido
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-300">
+                                    <i class="fas fa-unlock text-[10px]"></i>
+                                    Público
+                                </span>
+                            @endif
+                        </div>
+                        <p class="max-w-3xl text-sm text-zinc-500">{{ $selectedAlbum->description ?: 'Sin descripción.' }}</p>
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach($selectedAlbum->tags as $tag)
                                 <span class="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">#{{ $tag->name }}</span>
                             @endforeach
+                        </div>
+                        <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->media->count() }} archivos</span>
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->comments->count() }} comentarios</span>
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->average_rating ? $selectedAlbum->average_rating . '/10' : 'Sin calificar' }}</span>
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
@@ -127,9 +161,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div class="space-y-3">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-zinc-400">Acciones rápidas</h3>
+                <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/40">
+                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Subir archivos</h3>
                         <form method="POST" action="{{ route('admin.media.albums.upload', $selectedAlbum) }}" enctype="multipart/form-data" class="space-y-2">
                             @csrf
                             <input type="file" name="files[]" multiple required
@@ -139,10 +173,13 @@
                                 Subir al álbum
                             </button>
                         </form>
+                    </div>
 
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/40">
+                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Agregar existentes</h3>
                         <form method="POST" action="{{ route('admin.media.albums.attach', $selectedAlbum) }}" class="space-y-2">
                             @csrf
-                            <select name="media_ids[]" multiple required class="min-h-28 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                            <select name="media_ids[]" multiple required class="min-h-24 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
                                 @foreach($availableMedia as $item)
                                     <option value="{{ $item->id }}">{{ $item->name }} @if($item->albums->isNotEmpty())({{ $item->albums->pluck('name')->implode(', ') }})@endif</option>
                                 @endforeach
@@ -152,7 +189,10 @@
                                 Agregar existentes
                             </button>
                         </form>
+                    </div>
 
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/40">
+                        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Feedback del álbum</h3>
                         <form method="POST" action="{{ route('admin.media.albums.rating.store', ['type' => 'album', 'id' => $selectedAlbum->id]) }}" class="flex items-center gap-2">
                             @csrf
                             <input type="number" name="rating" min="1" max="10" value="{{ optional($selectedAlbum->ratings->firstWhere('user_id', auth()->id()))->rating }}"
@@ -224,20 +264,28 @@
                                 $moveAlbums = $albums->where('id', '!=', $selectedAlbum->id);
                             @endphp
                             <article class="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:z-20 hover:-translate-y-1 hover:border-zinc-300 hover:shadow-2xl dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-500">
-                                <div class="relative aspect-square overflow-hidden bg-zinc-950">
-                                    <label class="absolute left-2 top-2 z-20 flex size-7 items-center justify-center rounded-lg bg-white/90 shadow dark:bg-zinc-900/90" @click.stop>
-                                        <input type="checkbox" class="rounded border-zinc-300" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                                <div class="relative w-full overflow-hidden bg-zinc-950" style="aspect-ratio: 1 / 1;">
+                                    <label
+                                        class="absolute left-2 top-2 z-20 grid size-8 cursor-pointer place-items-center rounded-full bg-black/45 text-white shadow ring-1 ring-white/20 backdrop-blur transition"
+                                        :class="selected.includes({{ $item->id }}) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                                        @click.stop
+                                        title="Seleccionar"
+                                    >
+                                        <input type="checkbox" class="peer sr-only" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                                        <span class="grid size-6 place-items-center rounded-full border border-white/70 bg-black/30 text-transparent transition peer-checked:border-[#1db954] peer-checked:bg-[#1db954] peer-checked:text-black">
+                                            <flux:icon.check class="size-4 stroke-[2.4]" />
+                                        </span>
                                     </label>
 
                                     @if($item->isImage() || $item->isVideo())
-                                        <button type="button" onclick="Livewire.dispatch('openAdminMediaViewer', {id: {{ $item->id }}, ids: @js($albumViewerIds)})" class="block h-full w-full">
+                                        <button type="button" onclick="Livewire.dispatch('openAdminMediaViewer', {id: {{ $item->id }}, ids: @js($albumViewerIds)})" class="block h-full w-full overflow-hidden">
                                     @else
-                                        <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block h-full w-full">
+                                        <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block h-full w-full overflow-hidden">
                                     @endif
                                         @if($item->isImage())
-                                            <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                                            <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                                         @elseif($item->isVideo())
-                                            <video src="{{ $item->public_url }}" class="h-full w-full object-cover" preload="metadata"></video>
+                                            <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                                         @else
                                             <div class="flex h-full w-full items-center justify-center {{ $badge }}">
                                                 <i class="fas {{ $icon }} text-3xl"></i>
@@ -269,6 +317,9 @@
                                             <a href="{{ route('admin.media.download', $item) }}" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Descargar">
                                                 <i class="fas fa-download text-xs leading-none"></i>
                                             </a>
+                                            <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
+                                                <i class="fas fa-copy text-xs leading-none"></i>
+                                            </button>
                                             <button type="button" onclick="Livewire.dispatch('openMediaTags', {id: {{ $item->id }}})" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Tags">
                                                 <i class="fas fa-tags text-xs leading-none"></i>
                                             </button>
@@ -304,8 +355,8 @@
                                 </div>
 
                                 <details class="border-t border-zinc-100 px-2.5 py-2 dark:border-zinc-800">
-                                    <summary class="cursor-pointer text-xs font-semibold text-violet-600 dark:text-violet-400">Editar datos</summary>
-                                    <div class="mt-3 space-y-3">
+                                    <summary class="cursor-pointer rounded-lg px-2 py-1 text-xs font-semibold text-violet-600 transition hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-900/20">Editar datos</summary>
+                                    <div class="mt-3 space-y-3 rounded-lg bg-zinc-50 p-2 dark:bg-zinc-800/50">
                                         <form method="POST" action="{{ route('admin.media.albums.files.update', $item) }}" class="space-y-2">
                                             @csrf @method('PUT')
                                             <input name="display_name" value="{{ $item->display_name }}" placeholder="Nombre de referencia" class="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs dark:border-zinc-700 dark:bg-zinc-800">
@@ -368,21 +419,24 @@
                                     @endphp
                                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/70">
                                         <td class="px-4 py-3">
-                                            <label class="flex size-8 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                                            <label class="grid size-8 cursor-pointer place-items-center rounded-full bg-zinc-50 dark:bg-zinc-800" title="Seleccionar">
+                                                <input type="checkbox" class="peer sr-only" value="{{ $item->id }}" @change="toggle({{ $item->id }}, $event.target.checked)" :checked="selected.includes({{ $item->id }})">
+                                                <span class="grid size-6 place-items-center rounded-full border border-zinc-300 bg-white text-transparent transition peer-checked:border-[#1db954] peer-checked:bg-[#1db954] peer-checked:text-black dark:border-zinc-600 dark:bg-zinc-900">
+                                                    <flux:icon.check class="size-4 stroke-[2.4]" />
+                                                </span>
                                             </label>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="flex items-center gap-3">
                                                 @if($item->isImage() || $item->isVideo())
-                                                    <button type="button" onclick="Livewire.dispatch('openAdminMediaViewer', {id: {{ $item->id }}, ids: @js($albumViewerIds)})" class="size-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                                    <button type="button" onclick="Livewire.dispatch('openAdminMediaViewer', {id: {{ $item->id }}, ids: @js($albumViewerIds)})" class="size-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="width: 3rem; height: 3rem;">
                                                 @else
-                                                    <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block size-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                                    <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block size-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="width: 3rem; height: 3rem;">
                                                 @endif
                                                     @if($item->isImage())
-                                                        <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover">
+                                                        <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
                                                     @elseif($item->isVideo())
-                                                        <video src="{{ $item->public_url }}" class="h-full w-full object-cover" preload="metadata"></video>
+                                                        <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                                                     @else
                                                         <span class="flex h-full w-full items-center justify-center text-zinc-400"><i class="fas {{ $icon }}"></i></span>
                                                     @endif
@@ -420,6 +474,7 @@
                                                     </a>
                                                 @endif
                                                 <a href="{{ route('admin.media.download', $item) }}" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Descargar"><i class="fas fa-download text-xs"></i></a>
+                                                <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Copiar URL"><i class="fas fa-copy text-xs"></i></button>
                                                 <button type="button" onclick="Livewire.dispatch('openMediaTags', {id: {{ $item->id }}})" class="flex size-8 items-center justify-center rounded-lg border border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20" title="Tags">
                                                     <i class="fas fa-tags text-xs"></i>
                                                 </button>
@@ -464,20 +519,36 @@
 
             <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                 @foreach($media as $item)
-                    <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-2 dark:border-zinc-700">
-                        <div class="min-w-0">
+                    <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white p-2 transition hover:border-zinc-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="width: 2.75rem; height: 2.75rem;">
+                                @if($item->isImage())
+                                    <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
+                                @elseif($item->isVideo())
+                                    <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
+                                @else
+                                    <span class="flex h-full w-full items-center justify-center text-zinc-400"><i class="fas fa-file-lines"></i></span>
+                                @endif
+                            </div>
+                            <div class="min-w-0">
                             <p class="truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $item->name }}</p>
                             <p class="truncate text-[11px] text-zinc-500">{{ $item->albums->isNotEmpty() ? $item->albums->pluck('name')->implode(', ') : 'Sin carpeta' }}</p>
+                            </div>
                         </div>
-                        @if($selectedAlbum && ! $item->albums->contains($selectedAlbum->id))
-                            <form method="POST" action="{{ route('admin.media.albums.attach', $selectedAlbum) }}">
-                                @csrf
-                                <input type="hidden" name="media_ids[]" value="{{ $item->id }}">
-                                <button class="size-8 rounded-lg border border-zinc-300 text-xs text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Agregar al álbum">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </form>
-                        @endif
+                        <div class="flex shrink-0 gap-1">
+                            <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="grid size-8 place-items-center rounded-lg border border-zinc-200 text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-800" title="Copiar URL">
+                                <i class="fas fa-copy text-xs"></i>
+                            </button>
+                            @if($selectedAlbum && ! $item->albums->contains($selectedAlbum->id))
+                                <form method="POST" action="{{ route('admin.media.albums.attach', $selectedAlbum) }}">
+                                    @csrf
+                                    <input type="hidden" name="media_ids[]" value="{{ $item->id }}">
+                                    <button class="grid size-8 place-items-center rounded-lg border border-violet-200 text-xs text-violet-600 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20" title="Agregar al álbum">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -492,6 +563,11 @@
 <livewire:admin.media-album-modal />
 <livewire:admin.media-tags-modal />
 <livewire:admin.media-viewer />
+
+<div id="album-copy-toast" class="fixed bottom-6 right-6 z-50 hidden items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm text-white shadow-lg">
+    <i class="fas fa-check text-xs text-emerald-400"></i>
+    URL copiada al portapapeles
+</div>
 
 </div>
 
@@ -519,6 +595,18 @@ function mediaAlbumsDashboard() {
             this.$watch('viewMode', value => localStorage.setItem('adminMediaAlbumsViewMode', value));
         },
     };
+}
+
+function copyAlbumUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        const toast = document.getElementById('album-copy-toast');
+        toast.classList.remove('hidden');
+        toast.classList.add('flex');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('flex');
+        }, 2200);
+    });
 }
 
 document.addEventListener('submit', event => {

@@ -3,6 +3,13 @@
     class="flex flex-col gap-2 w-full"
 >
     <div class="flex flex-wrap items-center justify-end gap-2">
+        <button type="button"
+                onclick="Livewire.dispatch('openPageAiCreator')"
+                class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-violet-200 bg-white text-violet-700 text-xs font-semibold transition hover:bg-violet-50 dark:border-violet-900/50 dark:bg-zinc-900 dark:text-violet-200 dark:hover:bg-violet-950/30">
+            <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
+            Crear con AI
+        </button>
+
         <a href="{{ route('admin.pages.create') }}"
            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium transition">
             <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">

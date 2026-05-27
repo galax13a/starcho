@@ -115,6 +115,12 @@
 .page-body hr {
     border: none; border-top: 1px solid var(--c-border); margin: 2.5rem 0;
 }
+.page-body .starcho-html-render {
+    margin: 1.5rem 0;
+}
+.page-body .starcho-html-render :where(h1,h2,h3,h4,h5,p,ul,ol,li) {
+    all: revert;
+}
 
 /* ── Section separator used between major blocks ── */
 .page-section-glow {
@@ -176,7 +182,28 @@
 
     if (!data || !data.blocks) return;
 
+    function decodeEscapedMarkup(value) {
+        var text = String(value || '');
+        if (!/&(lt|gt|amp|quot|#039);/i.test(text)) return text;
+
+        var textarea = document.createElement('textarea');
+        textarea.innerHTML = text;
+        return textarea.value;
+    }
+
+    function ensureTailwindRuntime() {
+        if (document.getElementById('starcho-tailwind-runtime')) return;
+
+        var script = document.createElement('script');
+        script.id = 'starcho-tailwind-runtime';
+        script.src = 'https://cdn.tailwindcss.com';
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+
     var html = '';
+    var hasStarchoHtml = false;
+
     data.blocks.forEach(function(block) {
         switch(block.type) {
             case 'header':
@@ -209,12 +236,18 @@
             case 'delimiter':
                 html += '<hr>';
                 break;
+            case 'starchoHtml':
+                hasStarchoHtml = true;
+                if (block.data.css) html += '<style data-starcho-html-css>' + decodeEscapedMarkup(block.data.css) + '</style>';
+                html += '<div class="starcho-html-render">' + decodeEscapedMarkup(block.data.html || '') + '</div>';
+                break;
             default:
                 if (block.data && block.data.text) html += '<p>' + block.data.text + '</p>';
         }
     });
 
     document.getElementById('page-content').innerHTML = html;
+    if (hasStarchoHtml) ensureTailwindRuntime();
 })();
 </script>
 @endpush

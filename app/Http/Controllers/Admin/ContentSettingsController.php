@@ -107,7 +107,7 @@ class ContentSettingsController extends Controller
 
         ContentSetting::singleton()->update($validated);
 
-        return back()->with('success', __('admin_ui.content.settings_saved'));
+        return back()->with('success', __('admin_ui.content.notify.settings_saved'));
     }
 
     public function generateSitemap(): RedirectResponse

@@ -6,6 +6,40 @@
             : null;
     @endphp
 
+    <style>
+        [data-admin-site] input[type="checkbox"].peer + div {
+            transition: background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        [data-admin-site] input[type="checkbox"].peer + div > div {
+            transform: translateX(0);
+            transition: transform 180ms cubic-bezier(.2, .8, .2, 1), box-shadow 180ms ease;
+            will-change: transform;
+        }
+
+        [data-admin-site] input[type="checkbox"].peer:checked + div {
+            background-color: #7c3aed;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+        }
+
+        [data-admin-site] input[type="checkbox"].peer:checked + .peer-checked\:bg-emerald-500 {
+            background-color: #10b981;
+        }
+
+        [data-admin-site] input[type="checkbox"].peer:checked + div > div {
+            transform: translateX(1.25rem);
+        }
+
+        [data-admin-site] input[type="checkbox"].peer:checked + div:has(> .h-3) > div {
+            transform: translateX(1rem);
+        }
+
+        [data-admin-site] input[type="checkbox"].peer:focus-visible + div {
+            outline: 2px solid rgba(124, 58, 237, .55);
+            outline-offset: 2px;
+        }
+    </style>
+
     <div class="mb-6">
         <flux:heading size="xl" level="1" class="mb-0.5">{{ __('admin_ui.site.heading') }}</flux:heading>
         <flux:text class="text-zinc-500">{{ __('admin_ui.site.description') }}</flux:text>
@@ -23,7 +57,7 @@
         </div>
     @endif
 
-    <div class="space-y-6" x-data="{ tab: '{{ request('tab', 'global') }}' }">
+    <div data-admin-site class="space-y-6" x-data="{ tab: '{{ request('tab', 'global') }}' }">
         {{-- ── Tab bar ── --}}
         <div class="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1 shadow-sm overflow-x-auto">
             @foreach ([
@@ -34,6 +68,7 @@
                 'pages'    => __('admin_ui.site.tabs.pages'),
                 'location' => __('admin_ui.site.tabs.location'),
                 'storage'  => 'Storage',
+                'ai'       => 'AI',
             ] as $tabKey => $tabLabel)
             <button type="button" @click="tab = '{{ $tabKey }}'"
                 class="rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap"
@@ -499,6 +534,39 @@
                 <flux:text class="mt-1 text-sm text-zinc-500">{{ __('admin_ui.site.pages_editor_help') }}</flux:text>
             </div>
 
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                <div>
+                    <flux:heading size="lg">Home del sitio</flux:heading>
+                    <flux:text class="mt-1 text-sm text-zinc-500">Elige si `/` se sirve desde Folio o desde una página dinámica del CMS.</flux:text>
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-2">
+                    <label class="cursor-pointer rounded-xl border border-zinc-200 p-4 transition has-[:checked]:border-violet-400 has-[:checked]:bg-violet-50 dark:border-zinc-700 dark:has-[:checked]:bg-violet-950/20">
+                        <input type="radio" name="home_source" value="folio" class="sr-only" @checked(old('home_source', $settings->home_source ?? 'folio') === 'folio')>
+                        <span class="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">Folio estático</span>
+                        <span class="mt-1 block text-xs text-zinc-500">Usa `resources/views/pages/index.blade.php` para la home.</span>
+                    </label>
+                    <label class="cursor-pointer rounded-xl border border-zinc-200 p-4 transition has-[:checked]:border-violet-400 has-[:checked]:bg-violet-50 dark:border-zinc-700 dark:has-[:checked]:bg-violet-950/20">
+                        <input type="radio" name="home_source" value="dynamic" class="sr-only" @checked(old('home_source', $settings->home_source ?? 'folio') === 'dynamic')>
+                        <span class="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">Página dinámica</span>
+                        <span class="mt-1 block text-xs text-zinc-500">Renderiza una página creada en `admin/pages` como `/`.</span>
+                    </label>
+                </div>
+
+                <flux:field>
+                    <flux:label>Página dinámica anclada</flux:label>
+                    <select name="home_page_id" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
+                        <option value="">Selecciona una página</option>
+                        @foreach($cmsPages as $cmsPage)
+                            <option value="{{ $cmsPage->id }}" @selected((int) old('home_page_id', $settings->home_page_id) === $cmsPage->id)>
+                                {{ $cmsPage->getTranslation('title', $settings->default_site_locale ?? 'es', false) ?: $cmsPage->title }} · {{ $cmsPage->status }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <flux:error name="home_page_id" />
+                </flux:field>
+            </div>
+
             @php($seoRowsByPath = collect($pageSeoRows)->groupBy('path'))
             @php($seoIndex = 0)
 
@@ -513,10 +581,18 @@
                                 <div><a href="{{ $page['preview_url'] }}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">{{ __('admin_ui.site.form.page_preview') }}</a></div>
                             </div>
                         </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                        <button type="button"
+                           onclick="Livewire.dispatch('openSitePageSeoAi', { path: @js($page['path']), filePath: @js($page['file_path']) })"
+                           class="inline-flex items-center rounded-lg border border-violet-300 dark:border-violet-700 px-4 py-2 text-sm font-medium text-violet-700 dark:text-violet-300">
+                            <i class="fas fa-wand-magic-sparkles mr-2 text-xs"></i>AI SEO
+                        </button>
                         <a href="{{ route('admin.site.pages.edit', ['path' => $page['path']]) }}"
+                           target="_blank"
                            class="inline-flex items-center rounded-lg border border-blue-300 dark:border-blue-700 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300">
                             {{ __('admin_ui.site.visual_editor.open') }}
                         </a>
+                        </div>
                     </div>
 
                     <div class="space-y-2">
@@ -642,6 +718,129 @@
         </div>
 
     </form>
+
+    {{-- ════ AI ════ --}}
+    <div x-show="tab === 'ai'" x-cloak class="space-y-6">
+        <form method="POST" action="{{ route('admin.site.ai.update') }}" class="space-y-6">
+            @csrf
+            @method('PUT')
+
+            <div class="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-4">
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-5">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <flux:heading size="lg">Laravel AI</flux:heading>
+                            <flux:text class="text-sm text-zinc-500 mt-0.5">
+                                Configura OpenAI, DeepSeek o Claude para generar contenido desde el editor de páginas.
+                            </flux:text>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold {{ $aiSetting->enabled && $aiSetting->hasAnyProviderKey() ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400' }}">
+                            <i class="fas {{ $aiSetting->enabled && $aiSetting->hasAnyProviderKey() ? 'fa-circle-check' : 'fa-circle' }} text-[10px]"></i>
+                            {{ $aiSetting->enabled && $aiSetting->hasAnyProviderKey() ? 'Activo' : 'Sin activar' }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>Proveedor</flux:label>
+                            <select name="provider" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                                @foreach(\App\Models\AiSetting::PROVIDERS as $providerKey => $providerLabel)
+                                    <option value="{{ $providerKey }}" @selected(old('provider', $aiSetting->provider) === $providerKey)>
+                                        {{ $providerLabel }}{{ $aiSetting->hasProviderKey($providerKey) ? ' · key activa' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <flux:error name="provider" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Modelo predeterminado</flux:label>
+                            <input list="ai-model-options" name="default_model" value="{{ old('default_model', $aiSetting->default_model) }}"
+                                   class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                            <datalist id="ai-model-options">
+                                @foreach($aiSetting->modelOptions() as $modelName)
+                                    <option value="{{ $modelName }}"></option>
+                                @endforeach
+                            </datalist>
+                            <flux:error name="default_model" />
+                        </flux:field>
+                    </div>
+
+                    <flux:field>
+                        <flux:label>OpenAI API Key</flux:label>
+                        <flux:input name="openai_api_key" type="password" autocomplete="new-password" placeholder="{{ $aiSetting->maskedOpenAiKey() ?: 'sk-...' }}" />
+                        <flux:description>
+                            La llave se guarda encriptada. Deja el campo vacío si solo quieres cambiar el modelo o activar/desactivar AI.
+                        </flux:description>
+                        <flux:error name="openai_api_key" />
+                    </flux:field>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>DeepSeek API Key</flux:label>
+                            <flux:input name="deepseek_api_key" type="password" autocomplete="new-password" placeholder="{{ $aiSetting->maskedKey('deepseek') ?: 'sk-...' }}" />
+                            <flux:description>Al guardar una llave, DeepSeek aparece en el popup de páginas con sus modelos.</flux:description>
+                            <flux:error name="deepseek_api_key" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Claude / Anthropic API Key</flux:label>
+                            <flux:input name="anthropic_api_key" type="password" autocomplete="new-password" placeholder="{{ $aiSetting->maskedKey('anthropic') ?: 'sk-ant-...' }}" />
+                            <flux:description>Al guardar una llave, Claude aparece como proveedor disponible.</flux:description>
+                            <flux:error name="anthropic_api_key" />
+                        </flux:field>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        @foreach(\App\Models\AiSetting::PROVIDERS as $providerKey => $providerLabel)
+                            <div class="rounded-xl border {{ $aiSetting->hasProviderKey($providerKey) ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-700/50 dark:bg-emerald-900/20' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/40' }} px-3 py-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ $providerLabel }}</span>
+                                    <i class="fas {{ $aiSetting->hasProviderKey($providerKey) ? 'fa-circle-check text-emerald-600 dark:text-emerald-300' : 'fa-circle text-zinc-300 dark:text-zinc-600' }} text-xs"></i>
+                                </div>
+                                <p class="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $aiSetting->hasProviderKey($providerKey) ? 'Disponible en páginas' : 'Sin llave guardada' }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <label class="inline-flex items-center gap-2.5 cursor-pointer">
+                        <input type="hidden" name="enabled" value="0">
+                        <input type="checkbox" class="sr-only peer" name="enabled" value="1"
+                            @checked(old('enabled', $aiSetting->enabled))>
+                        <div class="relative w-10 h-5 rounded-full bg-zinc-300 dark:bg-zinc-600 peer-checked:bg-violet-600 transition-colors">
+                            <div class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></div>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300">Habilitar herramientas AI en el gestor de contenido</span>
+                    </label>
+
+                    <div class="flex items-center justify-end pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                        <button type="submit" class="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors shadow-sm">
+                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            Guardar AI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+                    <div class="grid size-11 place-items-center rounded-xl bg-violet-600 text-white">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Uso en páginas</p>
+                        <p class="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                            En <code>admin/pages/{id}/edit</code> aparecerá el botón AI dentro del bloque de contenido. El popup toma el idioma activo, genera una propuesta y permite aplicarla al editor antes de publicar.
+                        </p>
+                    </div>
+                    <a href="{{ route('admin.pages.edit', 2) }}" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                        <i class="fas fa-file-lines text-xs"></i>
+                        Abrir página #2
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
 
     {{-- ════ STORAGE ════ --}}
     <div x-show="tab === 'storage'" x-cloak
@@ -1104,5 +1303,7 @@
         </div>
 
     </div>
+
+    <livewire:admin.site-page-seo-ai />
 
 </x-layouts::admin>

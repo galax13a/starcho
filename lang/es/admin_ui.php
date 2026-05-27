@@ -818,4 +818,11 @@ return [
             'city' => 'Ciudad',
         ],
     ],
+
+    'content' => [
+        'notify' => [
+            'settings_saved' => 'Configuración de contenido guardada correctamente.',
+            'sitemap_generated' => 'Sitemap generado con :count URLs.',
+        ],
+    ],
 ];

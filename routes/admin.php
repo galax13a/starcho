@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\ContentSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GeoLocationsController;
@@ -65,6 +66,7 @@ Route::prefix('admin')
         // ── Site module (SEO / favicon / metadata) ─────────────────────────────
         Route::get('site', [SiteController::class, 'index'])->name('site.index');
         Route::put('site', [SiteController::class, 'update'])->name('site.update');
+        Route::put('site/ai', [AiSettingsController::class, 'update'])->name('site.ai.update');
         Route::get('site/page-editor', [SiteController::class, 'editPage'])->name('site.pages.edit');
         Route::put('site/page-editor', [SiteController::class, 'updatePage'])->name('site.pages.update');
 
