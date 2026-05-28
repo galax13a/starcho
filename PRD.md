@@ -1,8 +1,10 @@
 # PRD: Starcho
 
+Última actualización: 2026-05-28
+
 ## 1. Resumen
 
-Starcho es un starter kit modular para construir aplicaciones web tipo SaaS sobre Laravel. El producto entrega una base lista para producción con autenticación, panel administrativo, área privada de usuario, gestión de módulos, permisos, blog multilenguaje, almacenamiento multimedia, suscripciones, geolocalización y herramientas operativas.
+Starcho es un starter kit modular para construir aplicaciones web tipo SaaS sobre Laravel. El producto entrega una base lista para producción con autenticación, panel administrativo, área privada de usuario, gestión de módulos, permisos, blog multilenguaje, almacenamiento multimedia, suscripciones, geolocalización, asistencia de IA para contenido y herramientas operativas.
 
 El objetivo principal es reducir el tiempo necesario para iniciar nuevos proyectos Laravel con una arquitectura extensible, mantenible y preparada para crecer mediante módulos instalables.
 
@@ -19,6 +21,7 @@ Starcho resuelve este problema ofreciendo una plataforma inicial modular que per
 - Ofrecer un panel administrativo completo para usuarios, roles, permisos, contenido, almacenamiento, caché y configuración del sitio.
 - Incluir un área privada de usuario con dashboard y módulos iniciales como tareas, contactos y notas.
 - Soportar internacionalización desde el inicio en español, inglés y portugués de Brasil.
+- Integrar capacidades de IA para acelerar la creación, edición, análisis y mejora de contenido.
 - Facilitar despliegue y desarrollo local con comandos de instalación y build documentados.
 - Mantener una arquitectura extensible con convenciones claras para crear nuevos módulos.
 
@@ -76,7 +79,9 @@ El área `/admin` debe permitir:
 - Gestionar configuración del sitio.
 - Gestionar blog, páginas, categorías y etiquetas.
 - Administrar galería multimedia y archivos.
+- Administrar álbumes multimedia, comentarios, valoraciones, favoritos y variantes de imagen.
 - Configurar almacenamiento y planes.
+- Configurar proveedores y modelos de IA.
 - Consultar geolocalizaciones de usuarios.
 - Gestionar baneos de usuarios.
 
@@ -125,6 +130,8 @@ El sistema de contenido debe permitir:
 - Generar slugs traducibles.
 - Configurar campos SEO y sitemap.
 - Publicar blog público por idioma.
+- Registrar vistas de posts.
+- Consultar insights de posts, incluyendo métricas, generaciones de IA, comentarios y memorias.
 - Generar sitemap XML.
 - Administrar enlaces rotos.
 
@@ -149,10 +156,46 @@ El sistema debe permitir:
 - Calcular uso, límite, porcentaje y espacio restante.
 - Subir y gestionar archivos multimedia.
 - Registrar metadatos de archivos.
+- Organizar media en álbumes.
+- Adjuntar o separar archivos de álbumes.
+- Ejecutar acciones masivas sobre media.
+- Generar variantes de imagen para archivos individuales o en lote.
+- Descargar archivos desde el panel.
+- Registrar comentarios, valoraciones y favoritos sobre media cuando aplique.
+- Configurar URL local, carpeta y parámetros de procesamiento de media.
 - Crear suscripciones activas al crear usuarios.
 - Mantener estado y periodo de suscripciones.
 
-### 7.9 Importación y Exportación
+### 7.9 Inteligencia Artificial para Contenido
+
+El producto debe permitir:
+
+- Configurar proveedores de IA desde el panel administrativo.
+- Soportar OpenAI, DeepSeek, Anthropic y OpenRouter.
+- Guardar claves de API de forma cifrada.
+- Definir modelo por defecto y modelos activos por proveedor.
+- Generar, reescribir o mejorar contenido de posts y páginas desde el admin.
+- Registrar cada generación de IA con prompt, system prompt, payloads, respuesta, tokens y duración.
+- Registrar métricas de calidad mediante rating y notas.
+- Crear memorias de IA asociadas a posts para reutilizar contexto editorial.
+- Consultar estadísticas por proveedor y modelo.
+- Mostrar historial reciente de generaciones.
+
+### 7.10 Gestor Unificado del Sitio
+
+El admin debe contar con una experiencia centralizada para gestionar:
+
+- Configuración general del sitio.
+- SEO, metadatos, favicon e imagen Open Graph.
+- Idiomas disponibles.
+- Redes sociales.
+- Configuración de IA.
+- Configuración de storage.
+- Planes de almacenamiento.
+- SEO de páginas Folio y páginas CMS.
+- Métricas relacionadas con contenido e IA.
+
+### 7.11 Importación y Exportación
 
 El producto debe soportar exportación e importación de datos para entidades administrativas y de usuario donde aplique:
 
@@ -165,7 +208,7 @@ El producto debe soportar exportación e importación de datos para entidades ad
 - Menú.
 - Módulos.
 
-### 7.10 Geolocalización
+### 7.12 Geolocalización
 
 El sistema debe:
 
@@ -180,6 +223,7 @@ El sistema debe:
 - El menú lateral y estados de módulos deben usar caché.
 - Las tablas administrativas deben ser reactivas y paginadas.
 - El build frontend debe optimizarse mediante Vite.
+- Las consultas de insights, generaciones y media deben usar agregaciones y cargas relacionadas controladas.
 
 ### Seguridad
 
@@ -187,6 +231,8 @@ El sistema debe:
 - Las rutas de usuario deben exigir autenticación, verificación y ausencia de ban activo.
 - Los modelos con datos de usuario deben aplicar ownership.
 - Las acciones destructivas deben usar confirmación UI.
+- Las claves de proveedores de IA deben almacenarse cifradas.
+- Las operaciones de media deben validar permisos, tamaños, rutas y ownership cuando aplique.
 
 ### Mantenibilidad
 
@@ -224,6 +270,7 @@ El sistema debe:
 - Importación/exportación: Maatwebsite Excel y OpenSpout.
 - Notificaciones JS: Notiflix.
 - Gráficas: ApexCharts.
+- IA configurable: OpenAI, DeepSeek, Anthropic y OpenRouter.
 
 ## 10. Experiencia de Instalación
 
@@ -264,9 +311,14 @@ Credenciales iniciales de desarrollo:
 - `Post`.
 - `PostCategory`.
 - `PostTag`.
+- `PostAiGeneration`.
+- `PostAiMemory`.
+- `PostComment`.
 - `Media`.
+- `MediaAlbum`.
 - `StoragePlan`.
 - `StorageSetting`.
+- `AiSetting`.
 - `Subscription`.
 - `SiteSetting`.
 - `SiteLanguage`.
@@ -280,6 +332,12 @@ Credenciales iniciales de desarrollo:
 
 - `/admin`: panel administrativo.
 - `/app`: área privada de usuario.
+- `/admin/site`: gestor de sitio, SEO, IA y storage.
+- `/admin/site/ai`: actualización de configuración de IA.
+- `/admin/media`: galería multimedia.
+- `/admin/media/albums`: álbumes multimedia.
+- `/admin/posts`: gestión de blog y contenido.
+- `/admin/pages`: gestión de páginas CMS.
 - `/language/{locale}`: cambio de idioma.
 - `/{locale}/blog`: blog público por idioma.
 - `/{locale}/blog/{slug}`: detalle de post.
@@ -293,6 +351,8 @@ Credenciales iniciales de desarrollo:
 - 100% de módulos core accesibles desde menú generado o administrable.
 - Operaciones CRUD principales disponibles desde UI sin intervención manual en base de datos.
 - Cobertura de traducciones para español, inglés y portugués de Brasil en las pantallas core.
+- Generaciones de IA registradas con trazabilidad de proveedor, modelo, tokens, duración y rating.
+- Media organizada en álbumes y con variantes generables desde el panel.
 - Build de producción y pruebas base ejecutándose sin errores antes de release.
 
 ## 14. Criterios de Aceptación MVP
@@ -308,6 +368,10 @@ Credenciales iniciales de desarrollo:
 - El blog público sirve contenido multilenguaje.
 - El sitemap está disponible.
 - El sistema permite subir y gestionar media.
+- El sistema permite organizar media en álbumes y ejecutar acciones masivas.
+- El administrador puede configurar proveedores y modelos de IA.
+- El administrador puede generar contenido asistido por IA y revisar historial de generaciones.
+- El administrador puede consultar insights, comentarios y memorias de posts.
 - El cambio de idioma funciona para los locales soportados.
 
 ## 15. Riesgos y Consideraciones
@@ -318,6 +382,8 @@ Credenciales iniciales de desarrollo:
 - La geolocalización depende de servicios o datos externos y puede no estar siempre disponible.
 - El almacenamiento debe validar límites y permisos con cuidado para evitar abuso.
 - El soporte multilenguaje exige disciplina en traducciones para evitar textos hardcodeados.
+- Las integraciones de IA dependen de proveedores externos, costos variables, cuotas y disponibilidad.
+- La generación de variantes de media puede consumir CPU, memoria y almacenamiento de forma significativa.
 
 ## 16. Roadmap Sugerido
 
@@ -342,6 +408,7 @@ Credenciales iniciales de desarrollo:
 - Agregar límites por plan más allá del almacenamiento.
 - Mejorar dashboard administrativo con métricas de uso.
 - Agregar auditoría de acciones administrativas.
+- Consolidar métricas de IA por costo, proveedor, modelo y calidad.
 
 ### Fase 4: Contenido y Crecimiento
 
@@ -349,6 +416,8 @@ Credenciales iniciales de desarrollo:
 - Agregar programación de publicaciones.
 - Mejorar SEO técnico y reportes de sitemap.
 - Fortalecer gestión de enlaces rotos.
+- Convertir insights de posts en recomendaciones editoriales accionables.
+- Mejorar workflows de media con procesamiento asíncrono de variantes.
 
 ## 17. Preguntas Abiertas
 
@@ -358,4 +427,6 @@ Credenciales iniciales de desarrollo:
 - ¿Las suscripciones se integrarán con pasarelas de pago?
 - ¿Qué nivel de auditoría legal o trazabilidad se necesita para acciones administrativas?
 - ¿Se espera soporte multi-tenant en futuras versiones?
-
+- ¿Se medirá el costo real de IA por proveedor/modelo/usuario?
+- ¿Las memorias de IA serán globales, por post, por idioma o por workspace?
+- ¿Las variantes de media se generarán sincrónicamente o mediante jobs en cola?
