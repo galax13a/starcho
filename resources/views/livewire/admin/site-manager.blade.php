@@ -1,8 +1,14 @@
     @php
         $siteStorageSetting = \App\Models\StorageSetting::singleton();
-        $siteAssetUrl = fn (?string $path): ?string => filled($path)
-            ? ($siteStorageSetting->isLocal() ? $siteStorageSetting->localPublicUrl($path) : \Illuminate\Support\Facades\Storage::disk('public')->url($path))
-            : null;
+        $siteAssetUrl = function (?string $path) use ($siteStorageSetting): ?string {
+            if (! filled($path)) {
+                return null;
+            }
+
+            $media = \App\Models\Media::query()->where('path', $path)->latest()->first();
+
+            return $media?->public_url ?: $siteStorageSetting->localPublicUrl($path);
+        };
     @endphp
 
 <div>

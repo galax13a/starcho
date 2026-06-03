@@ -75,6 +75,11 @@ window.adminLayout = function () {
             });
         },
 
+        toggleCollapsed() {
+            this.collapsed = !this.collapsed;
+            try { localStorage.setItem('sa_collapsed', String(this.collapsed)); } catch (e) {}
+        },
+
         /** Muestra un toast. Delega en window.Starcho.notify. */
         notify(type, message) {
             window.Starcho.notify(type, message);

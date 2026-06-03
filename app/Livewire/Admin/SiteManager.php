@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\StorageSettingsController;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiSetting;
+use App\Models\Media;
 use App\Models\Post;
 use App\Models\PostAiGeneration;
 use App\Models\SiteLanguage;
@@ -16,6 +17,7 @@ use App\Models\SiteSocialNetwork;
 use App\Models\StoragePlan;
 use App\Models\StorageSetting;
 use App\Models\StarchoModule;
+use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -59,12 +61,10 @@ class SiteManager extends Component
 
         $settings = SiteSetting::singleton();
 
-        if ($settings->favicon_path) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($settings->favicon_path);
-        }
+        $this->deleteSiteAsset($settings->favicon_path);
 
-        $path = $this->favicon->store('site', 'public');
-        $settings->update(['favicon_path' => $path]);
+        $media = app(StorageService::class)->uploadSiteAsset($this->favicon, 'site_favicon');
+        $settings->update(['favicon_path' => $media->path]);
 
         $this->favicon = null;
         $this->notifySuccess('Favicon actualizado.');
@@ -77,15 +77,30 @@ class SiteManager extends Component
 
         $settings = SiteSetting::singleton();
 
-        if ($settings->og_image_path) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($settings->og_image_path);
-        }
+        $this->deleteSiteAsset($settings->og_image_path);
 
-        $path = $this->ogImage->store('site', 'public');
-        $settings->update(['og_image_path' => $path]);
+        $media = app(StorageService::class)->uploadSiteAsset($this->ogImage, 'site_og_image');
+        $settings->update(['og_image_path' => $media->path]);
 
         $this->ogImage = null;
         $this->notifySuccess('Imagen Open Graph actualizada.');
+    }
+
+    private function deleteSiteAsset(?string $path): void
+    {
+        if (! filled($path)) {
+            return;
+        }
+
+        $media = Media::query()->where('path', $path)->latest()->first();
+
+        if ($media) {
+            app(StorageService::class)->delete($media);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     public function saveAi(array $pairs): void

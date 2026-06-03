@@ -310,7 +310,14 @@ class PostController extends Controller
         }
 
         if ($request->hasFile('featured_image')) {
-            $data['featured_image'] = $request->file('featured_image')->store('uploads/posts/featured', 'public');
+            $media = $this->storageService->upload(
+                $request->file('featured_image'),
+                auth()->user(),
+                null,
+                'featured_image'
+            );
+
+            $data['featured_image'] = $media->path;
         } elseif ($request->filled('featured_image_media_id')) {
             // Selected from the existing media gallery instead of uploading.
             $media = \App\Models\Media::find($request->integer('featured_image_media_id'));
@@ -321,7 +328,14 @@ class PostController extends Controller
         }
 
         if ($request->hasFile('og_image')) {
-            $data['og_image'] = $request->file('og_image')->store('uploads/posts/og', 'public');
+            $media = $this->storageService->upload(
+                $request->file('og_image'),
+                auth()->user(),
+                null,
+                'og_image'
+            );
+
+            $data['og_image'] = $media->path;
         }
 
         return $data;

@@ -5,6 +5,7 @@
     $seoDesc     = $page->getTranslation('seo_description', $pageLocale, false) ?: ($page->getTranslation('excerpt', $pageLocale, false) ?: '');
     $pageExcerpt = $page->getTranslation('excerpt', $pageLocale, false) ?: '';
     $contentRaw  = $page->getTranslation('content', $pageLocale, false) ?: '';
+    $galleryImages = $page->gallery;
 @endphp
 
 <x-layouts::site :title="$seoTitle . ' — ' . config('app.name')" :description="$seoDesc" :langUrls="$langUrls">
@@ -130,6 +131,58 @@
     all: revert;
 }
 
+.page-gallery {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--c-border);
+}
+.page-gallery-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.page-gallery-title {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--c-text);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.page-gallery-title i { color: var(--c-dim); }
+.page-gallery-count {
+    border-radius: 999px;
+    border: 1px solid var(--c-border);
+    padding: .25rem .65rem;
+    color: var(--c-muted);
+    font-size: .72rem;
+    font-weight: 700;
+}
+.page-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .75rem;
+}
+.page-gallery-item {
+    display: block;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    aspect-ratio: 1;
+}
+.page-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .2s ease;
+}
+.page-gallery-item:hover img { transform: scale(1.04); }
+
 /* ── Section separator used between major blocks ── */
 .page-section-glow {
     display: inline-block; width: 48px; height: 3px;
@@ -186,6 +239,25 @@
 
     <div class="page-content-wrap">
         <div class="page-body" id="page-content"></div>
+
+        @if($galleryImages->isNotEmpty())
+            <section class="page-gallery" aria-label="Galería">
+                <div class="page-gallery-head">
+                    <div class="page-gallery-title">
+                        <i class="fas fa-images"></i>
+                        <span>Galería</span>
+                    </div>
+                    <span class="page-gallery-count">{{ $galleryImages->count() }} {{ $galleryImages->count() === 1 ? 'imagen' : 'imagenes' }}</span>
+                </div>
+                <div class="page-gallery-grid">
+                    @foreach($galleryImages as $image)
+                        <a href="{{ $image->public_url }}" class="page-gallery-item" target="_blank" rel="noopener">
+                            <img src="{{ $image->preview_url }}" alt="{{ $image->alt ?: $image->name }}" loading="lazy">
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         @if ($page->allow_comments)
             @livewire('post-comments', ['post' => $page], 'page-comments-'.$page->id)

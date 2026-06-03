@@ -6,6 +6,11 @@
     $seoDesc     = $post->getTranslation('seo_description', $postLocale, false) ?: $postExcerpt;
     $contentRaw  = $post->getTranslation('content', $postLocale, false) ?: '';
     $activeLangs = \App\Models\SiteLanguage::active();
+    $galleryImages = $post->gallery;
+    $featuredMedia = $post->featured_image
+        ? \App\Models\Media::query()->where('path', $post->featured_image)->latest()->first()
+        : null;
+    $featuredImageUrl = $featuredMedia?->public_url ?: ($post->featured_image ? asset('storage/' . $post->featured_image) : null);
 @endphp
 
 <x-layouts::site :title="$seoTitle . ' — ' . config('app.name')" :description="$seoDesc" :langUrls="$langUrls">
@@ -300,6 +305,58 @@
     all: revert;
 }
 
+.post-gallery {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--c-border);
+}
+.post-gallery-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.post-gallery-title {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--c-text);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.post-gallery-title i { color: var(--c-dim); }
+.post-gallery-count {
+    border-radius: 999px;
+    border: 1px solid var(--c-border);
+    padding: .25rem .65rem;
+    color: var(--c-muted);
+    font-size: .72rem;
+    font-weight: 700;
+}
+.post-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .75rem;
+}
+.post-gallery-item {
+    display: block;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    aspect-ratio: 1;
+}
+.post-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .2s ease;
+}
+.post-gallery-item:hover img { transform: scale(1.04); }
+
 /* ── Post footer ── */
 .post-footer {
     max-width: 860px;
@@ -562,9 +619,9 @@
 
 </div>
 
-@if ($post->featured_image)
+@if ($featuredImageUrl)
     <div class="post-featured-img-wrap">
-        <img src="{{ asset('storage/' . $post->featured_image) }}"
+        <img src="{{ $featuredImageUrl }}"
              alt="{{ $post->featured_image_alt ?: $postTitle }}"
              class="post-featured-img">
     </div>
@@ -572,6 +629,25 @@
 
 <div class="post-content-wrap">
     <div class="post-body" id="post-body"></div>
+
+    @if($galleryImages->isNotEmpty())
+        <section class="post-gallery" aria-label="Galería">
+            <div class="post-gallery-head">
+                <div class="post-gallery-title">
+                    <i class="fas fa-images"></i>
+                    <span>Galería</span>
+                </div>
+                <span class="post-gallery-count">{{ $galleryImages->count() }} {{ $galleryImages->count() === 1 ? 'imagen' : 'imagenes' }}</span>
+            </div>
+            <div class="post-gallery-grid">
+                @foreach($galleryImages as $image)
+                    <a href="{{ $image->public_url }}" class="post-gallery-item" target="_blank" rel="noopener">
+                        <img src="{{ $image->preview_url }}" alt="{{ $image->alt ?: $image->name }}" loading="lazy">
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
 </div>
 
 <div class="post-footer">
@@ -634,7 +710,11 @@
         @php $rpUrl = $rp->publicUrl($sidebar['locale']); $rpTitle = $rp->getTranslation('title', $sidebar['locale'], false) ?: $rp->title; @endphp
         <a href="{{ $rpUrl }}" class="sidebar-post" style="{{ $rp->id === $post->id ? 'opacity:.45;pointer-events:none' : '' }}">
             @if($rp->featured_image)
-                <img src="{{ asset('storage/' . $rp->featured_image) }}" alt="{{ $rpTitle }}" class="sidebar-post-thumb">
+                @php
+                    $rpFeaturedMedia = \App\Models\Media::query()->where('path', $rp->featured_image)->latest()->first();
+                    $rpFeaturedUrl = $rpFeaturedMedia?->public_url ?: asset('storage/' . $rp->featured_image);
+                @endphp
+                <img src="{{ $rpFeaturedUrl }}" alt="{{ $rpTitle }}" class="sidebar-post-thumb">
             @else
                 <div class="sidebar-post-thumb-ph"><i class="fas fa-file-alt"></i></div>
             @endif

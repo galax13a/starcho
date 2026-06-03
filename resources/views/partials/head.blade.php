@@ -7,9 +7,16 @@
     $currentPath = $currentPath === '//' ? '/' : $currentPath;
     $currentLocale = app()->getLocale();
     $pageMeta = \App\Models\SitePageSetting::forPathAndLocale($currentPath, $currentLocale);
-    $faviconUrl = $siteSettings?->favicon_path
-        ? \Illuminate\Support\Facades\Storage::url($siteSettings->favicon_path)
-        : '/favicon.ico';
+    $siteAssetUrl = function (?string $path): ?string {
+        if (! filled($path)) {
+            return null;
+        }
+
+        $media = \App\Models\Media::query()->where('path', $path)->latest()->first();
+
+        return $media?->public_url ?: \App\Models\StorageSetting::singleton()->localPublicUrl($path);
+    };
+    $faviconUrl = $siteAssetUrl($siteSettings?->favicon_path) ?: '/favicon.ico';
     $effectiveTitle = $pageMeta?->title;
     if (!filled($effectiveTitle)) {
         $effectiveTitle = filled($title ?? null)
@@ -23,9 +30,7 @@
     $effectiveRobotsIndex = $pageMeta ? (bool) $pageMeta->robots_index : ($siteSettings?->robots_index ?? true);
     $effectiveRobotsFollow = $pageMeta ? (bool) $pageMeta->robots_follow : ($siteSettings?->robots_follow ?? true);
     $canonicalUrl = $siteSettings?->canonical_url ?: url()->current();
-    $metaOgImage = $siteSettings?->og_image_path
-        ? \Illuminate\Support\Facades\Storage::url($siteSettings->og_image_path)
-        : null;
+    $metaOgImage = $siteAssetUrl($siteSettings?->og_image_path);
 @endphp
 
 <title>{{ $effectiveTitle }}</title>

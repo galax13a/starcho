@@ -310,7 +310,20 @@
     </div>
 
     {{-- ═══ MAIN 2-COLUMN GRID ═══ --}}
-    <div x-data="{ sidebar: true }"
+    <div x-data="{
+            sidebar: true,
+            storageKey: 'starcho_editor_sidebar_{{ $type }}',
+            init() {
+                try {
+                    const stored = localStorage.getItem(this.storageKey);
+                    this.sidebar = stored === null ? true : stored === 'true';
+                } catch (e) {}
+            },
+            toggleSidebar() {
+                this.sidebar = !this.sidebar;
+                try { localStorage.setItem(this.storageKey, String(this.sidebar)); } catch (e) {}
+            }
+         }"
          class="grid grid-cols-1 gap-5 items-start"
          :class="sidebar ? 'lg:grid-cols-[1fr_360px]' : 'lg:grid-cols-1'">
 
@@ -318,8 +331,8 @@
         <div class="space-y-4 min-w-0">
 
             {{-- Collapse / expand the right panel --}}
-            <div class="flex justify-end">
-                <button type="button" @click="sidebar = !sidebar"
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="toggleSidebar()"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700
                            text-xs text-zinc-600 dark:text-zinc-300 hover:border-violet-300 dark:hover:border-violet-600 transition">
                     <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
@@ -327,6 +340,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
                     </svg>
                     <span x-text="sidebar ? 'Ocultar panel' : 'Mostrar panel'"></span>
+                </button>
+                <button type="button" onclick="editorClearContent()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600
+                           transition hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-950/35">
+                    <i class="fas fa-eraser text-[11px]"></i>
+                    <span>Limpiar editor</span>
                 </button>
             </div>
 
@@ -358,7 +377,8 @@
                                 <i class="fas fa-lightbulb text-[11px]"></i>
                                 Inspiración
                             </button>
-                            <button type="button" onclick="editorOpenAiAssistant('memory_regenerate')" class="sc-btn sc-btn-kick starcho-memory-ai-btn !h-8 !px-3 !py-1.5 !text-xs">
+                            <button type="button" onclick="editorOpenAiAssistant('memory_regenerate')"
+                                    class="inline-flex h-8 items-center gap-1.5 rounded-full bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-violet-500/25 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:shadow-violet-500/35">
                                 <i class="fas fa-brain text-[11px]"></i>
                                 <span>Regenerar con memory</span>
                             </button>
@@ -408,7 +428,7 @@
             </div>
 
             {{-- Gallery (only on edit) --}}
-            @if($isEditing && $type === 'post')
+            @if($isEditing)
             @php $galleryItems = $post->gallery->all(); @endphp
             <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700/60
                         bg-white dark:bg-zinc-900/60 p-5 shadow-sm"
@@ -1401,6 +1421,45 @@
         await startEditor(contentPerLocale[locale] || {});
         updateSerpUrl(gv('v-slug'));
         updatePublicLink();
+    };
+
+    window.editorClearContent = function() {
+        const clear = async () => {
+            const empty = { time: Date.now(), blocks: [], version: '2.30.0' };
+
+            contentPerLocale[currentLocale] = empty;
+
+            if (editor) {
+                try {
+                    await editor.isReady;
+                    await editor.clear();
+                } catch (e) {
+                    await startEditor(empty);
+                }
+            } else {
+                await startEditor(empty);
+            }
+
+            const hidden = document.getElementById('f-content-' + currentLocale);
+            if (hidden) hidden.value = JSON.stringify(empty);
+
+            window.Starcho?.notify?.('warning', 'Contenido del editor limpiado.');
+        };
+
+        if (window.Starcho?.confirm) {
+            window.Starcho.confirm({
+                title: 'Limpiar editor',
+                message: 'Se eliminarán todos los bloques del editor para el idioma activo. Esta acción no se guarda hasta que actualices el formulario.',
+                okText: 'Sí, limpiar',
+                cancelText: 'Cancelar',
+                onConfirm: clear,
+            });
+            return;
+        }
+
+        if (confirm('¿Eliminar todo el contenido del editor para este idioma?')) {
+            clear();
+        }
     };
 
     // ── Title / Slug ─────────────────────────────────────────────────────────

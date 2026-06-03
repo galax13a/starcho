@@ -214,6 +214,65 @@ class StorageService
     }
 
     /**
+     * Store a site-level asset (favicon, Open Graph image) on the active driver.
+     * Unlike normal media uploads, this preserves the original file bytes and
+     * extension so .ico favicons never get mislabeled as WebP.
+     */
+    public function uploadSiteAsset(UploadedFile $file, string $context): Media
+    {
+        $mimeType = $file->getMimeType() ?? 'application/octet-stream';
+        $isConvertibleOgImage = $context === 'site_og_image'
+            && str_starts_with($mimeType, 'image/')
+            && $mimeType !== 'image/svg+xml'
+            && function_exists('imagecreatefromstring');
+        $extension = $isConvertibleOgImage
+            ? 'webp'
+            : strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin');
+        $root = $this->settings->uploadFolder();
+        $folder = trim($root . '/site', '/');
+        $filename = Str::uuid() . '.' . $extension;
+        $path = $folder . '/' . $filename;
+        $disk = $this->disk();
+        $diskName = $this->settings->diskName();
+        $storedUrl = null;
+
+        if ($isConvertibleOgImage) {
+            [$content, $width, $height] = $this->convertToWebp($file);
+            $mimeType = 'image/webp';
+        } else {
+            $content = file_get_contents($file->getRealPath());
+            [$width, $height] = str_starts_with($mimeType, 'image/')
+                ? (@getimagesize($file->getRealPath()) ?: [null, null])
+                : [null, null];
+        }
+
+        $disk->put($path, $content, 'public');
+
+        if (! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
+            $storedUrl = $disk->url($path);
+        }
+
+        return Media::create([
+            'user_id' => auth()->id(),
+            'driver' => $this->settings->default_driver,
+            'disk' => $diskName,
+            'path' => $path,
+            'webp_path' => $isConvertibleOgImage ? $path : null,
+            'url' => $storedUrl,
+            'variants' => null,
+            'variants_size' => 0,
+            'original_name' => $file->getClientOriginalName(),
+            'display_name' => $file->getClientOriginalName(),
+            'mime_type' => $mimeType,
+            'size' => $disk->size($path),
+            'width' => is_numeric($width) ? (int) $width : null,
+            'height' => is_numeric($height) ? (int) $height : null,
+            'context' => $context,
+            'alt' => $context === 'site_favicon' ? 'Site favicon' : 'Open Graph image',
+        ]);
+    }
+
+    /**
      * Delete a media record and its file(s) from disk.
      */
     public function delete(Media $media): void

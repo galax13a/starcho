@@ -7,10 +7,12 @@ use App\Models\AiSetting;
 use App\Models\Post;
 use App\Models\SitePageSetting;
 use App\Models\SiteLanguage;
+use App\Models\Media;
 use App\Models\SiteSetting;
 use App\Models\StarchoModule;
 use App\Models\SiteSocialNetwork;
 use App\Models\StoragePlan;
+use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
@@ -21,6 +23,8 @@ use Illuminate\View\View;
 
 class SiteController extends Controller
 {
+    public function __construct(private StorageService $storageService) {}
+
     public function index(): View|RedirectResponse
     {
         if (!StarchoModule::isActive('site')) {
@@ -185,19 +189,17 @@ class SiteController extends Controller
         ];
 
         if ($request->hasFile('favicon')) {
-            if ($settings->favicon_path) {
-                Storage::disk('public')->delete($settings->favicon_path);
-            }
-
-            $payload['favicon_path'] = $request->file('favicon')->store('site', 'public');
+            $this->deleteSiteAsset($settings->favicon_path);
+            $payload['favicon_path'] = $this->storageService
+                ->uploadSiteAsset($request->file('favicon'), 'site_favicon')
+                ->path;
         }
 
         if ($request->hasFile('og_image')) {
-            if ($settings->og_image_path) {
-                Storage::disk('public')->delete($settings->og_image_path);
-            }
-
-            $payload['og_image_path'] = $request->file('og_image')->store('site', 'public');
+            $this->deleteSiteAsset($settings->og_image_path);
+            $payload['og_image_path'] = $this->storageService
+                ->uploadSiteAsset($request->file('og_image'), 'site_og_image')
+                ->path;
         }
 
         $settings->update($payload);
@@ -207,6 +209,23 @@ class SiteController extends Controller
         $this->saveSiteLanguages($request->input('site_languages', []), $data['default_site_locale']);
 
         return back()->with('success', __('admin_ui.site.notify.saved'));
+    }
+
+    private function deleteSiteAsset(?string $path): void
+    {
+        if (! filled($path)) {
+            return;
+        }
+
+        $media = Media::query()->where('path', $path)->latest()->first();
+
+        if ($media) {
+            $this->storageService->delete($media);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     private function saveSocialNetworks(array $rows): void

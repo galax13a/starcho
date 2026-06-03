@@ -17,6 +17,7 @@
                 css: this.decodeEscapedMarkup(data?.css || ''),
             };
             this.nodes = {};
+            this.previewVisible = true;
         }
 
         decodeEscapedMarkup(value) {
@@ -43,7 +44,7 @@
                 '<p class="text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">HTML + CSS</p>',
                 '<p class="text-[11px] text-zinc-400 dark:text-zinc-500">Bloque renderizable con clases Tailwind y CSS propio.</p>',
                 '</div>',
-                '<button type="button" class="starcho-html-editor-refresh inline-flex h-8 items-center rounded-lg bg-zinc-950 px-3 text-xs font-semibold text-white transition hover:bg-black dark:bg-white dark:text-zinc-950">Preview</button>',
+                '<button type="button" class="starcho-html-editor-refresh inline-flex h-8 items-center rounded-lg bg-zinc-950 px-3 text-xs font-semibold text-white transition hover:bg-black dark:bg-white dark:text-zinc-950">Ocultar preview</button>',
             ].join('');
 
             const grid = document.createElement('div');
@@ -62,10 +63,15 @@
             this.nodes.html = html.textarea;
             this.nodes.css = css.textarea;
             this.nodes.preview = preview;
+            this.nodes.previewButton = wrapper.querySelector('.starcho-html-editor-refresh');
 
-            wrapper.querySelector('.starcho-html-editor-refresh')?.addEventListener('click', () => this.refreshPreview());
-            this.nodes.html.addEventListener('input', () => this.refreshPreview());
-            this.nodes.css.addEventListener('input', () => this.refreshPreview());
+            this.nodes.previewButton?.addEventListener('click', () => this.togglePreview());
+            this.nodes.html.addEventListener('input', () => {
+                if (this.previewVisible) this.refreshPreview();
+            });
+            this.nodes.css.addEventListener('input', () => {
+                if (this.previewVisible) this.refreshPreview();
+            });
 
             this.refreshPreview();
 
@@ -99,6 +105,24 @@
             const css = this.nodes.css?.value || '';
             const html = this.decodeEscapedMarkup(this.nodes.html?.value || '');
             this.nodes.preview.innerHTML = '<style>' + css + '</style><div class="starcho-html-editor-render">' + html + '</div>';
+        }
+
+        togglePreview() {
+            this.previewVisible = !this.previewVisible;
+
+            if (!this.nodes.preview) {
+                return;
+            }
+
+            this.nodes.preview.classList.toggle('hidden', !this.previewVisible);
+
+            if (this.nodes.previewButton) {
+                this.nodes.previewButton.textContent = this.previewVisible ? 'Ocultar preview' : 'Mostrar preview';
+            }
+
+            if (this.previewVisible) {
+                this.refreshPreview();
+            }
         }
 
         save() {

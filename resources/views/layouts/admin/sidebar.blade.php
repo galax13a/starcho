@@ -73,7 +73,7 @@
                 </span>
             </a>
             <button class="sa-collapse-btn"
-                    @click="collapsed = !collapsed"
+                    @click="toggleCollapsed()"
                     :title="collapsed ? 'Expandir menú' : 'Colapsar menú'">
                 <i class="fas" :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
             </button>
