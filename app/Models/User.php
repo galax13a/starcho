@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
@@ -32,6 +33,15 @@ class User extends Authenticatable
 
         static::creating(function (self $user): void {
             $user->subscription_level ??= 'free';
+
+            // New users default to the free storage and AI plans.
+            if ($user->storage_plan_id === null) {
+                $user->storage_plan_id = self::defaultPlanId(StoragePlan::class);
+            }
+
+            if ($user->ai_plan_id === null) {
+                $user->ai_plan_id = self::defaultPlanId(AiPlan::class);
+            }
         });
 
         static::created(function (self $user): void {
@@ -45,6 +55,28 @@ class User extends Authenticatable
                 'starts_at' => $user->created_at ?? now(),
             ]);
         });
+    }
+
+    /**
+     * Returns the id of the free plan for the given plan model, or null.
+     * Guarded so user creation never breaks if plans/tables aren't ready
+     * (e.g. during early migrations or tests).
+     *
+     * @param  class-string<StoragePlan|AiPlan>  $planClass
+     */
+    private static function defaultPlanId(string $planClass): ?int
+    {
+        try {
+            $table = (new $planClass)->getTable();
+
+            if (! Schema::hasTable($table)) {
+                return null;
+            }
+
+            return $planClass::free()?->id;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

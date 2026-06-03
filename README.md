@@ -24,7 +24,9 @@ La regla principal del proyecto es simple: cada nueva funcionalidad debe apoyars
 | Roles/permisos | Spatie Laravel Permission |
 | Traducciones de modelos | Spatie Laravel Translatable |
 | Storage | Local, Amazon S3, DigitalOcean Spaces, Cloudflare R2 |
-| AI | Laravel AI con OpenAI, DeepSeek, Anthropic y OpenRouter |
+| AI texto | Laravel AI con OpenAI, DeepSeek, Anthropic y OpenRouter |
+| AI media | OpenAI Images, fal.ai y Replicate para imagen/video |
+| AI billing | Planes, cuotas, costos y markup con `AiPlan`, `AiAssetGeneration` y `config/ai_pricing.php` |
 | Graficas | ApexCharts via `x-starcho-chart` |
 | JS | `resources/js/starcho.js` + bundles por area |
 
@@ -86,6 +88,11 @@ Todas las rutas admin viven bajo `/admin` y usan `auth`, `verified`, `role:root|
 | `/admin/site` `PUT` | `admin.site.update` | Guardar configuracion del sitio |
 | `/admin/site/ai` `PUT` | `admin.site.ai.update` | Guardar AI providers/modelos |
 | `/admin/site/page-editor` | `admin.site.pages.edit` | Editor de paginas Folio |
+| `/admin/ai` | `admin.ai.index` | AI Manager: texto, imagen, video, modelos, planes, costos y assets |
+| `/admin/ai/featured-image` | `admin.ai.featured-image` | Generar imagen destacada con AI |
+| `/admin/comments` | `admin.comments.index` | Comentarios editoriales de posts |
+| `/admin/posts/comments` | `admin.posts.comments` | Comentarios editoriales desde el modulo posts |
+| `/admin/storage` | `admin.storage.index` | Pantalla dedicada de storage |
 | `/admin/storage` `PUT` | `admin.storage.update` | Guardar storage |
 | `/admin/storage/link` | `admin.storage.link` | Crear/verificar `storage:link` |
 | `/admin/storage/test` | `admin.storage.test` | Subida de prueba |
@@ -93,6 +100,7 @@ Todas las rutas admin viven bajo `/admin` y usan `auth`, `verified`, `role:root|
 | `/admin/storage/plans` | `admin.storage.plans.store` | Crear plan de storage |
 | `/admin/storage/plans/{plan}` | `admin.storage.plans.update` | Actualizar plan |
 | `/admin/media` | `admin.media.index` | Galeria multimedia |
+| `/admin/media/picker` | `admin.media.picker` | Selector de media para formularios/editor |
 | `/admin/media/upload` | `admin.media.upload` | Subir archivos |
 | `/admin/media/variants/bulk` | `admin.media.variants.bulk` | Generar variantes en lote |
 | `/admin/media/{media}/variants` | `admin.media.variants.generate` | Generar variantes de un archivo |
@@ -274,15 +282,26 @@ Rutas admin de media:
 La configuracion AI vive en:
 
 - `app/Models/AiSetting.php`
+- `app/Models/AiPlan.php`
+- `app/Models/AiAssetGeneration.php`
 - `app/Services/PageAiContentService.php`
+- `app/Services/Ai/AiImageService.php`
+- `app/Services/Ai/AiVideoService.php`
+- `app/Services/Ai/AiReplicateService.php`
+- `app/Services/Ai/AiQuotaService.php`
+- `app/Services/Ai/AiPricing.php`
+- `app/Jobs/GenerateAiImageJob.php`
 - `app/Http/Controllers/Admin/AiSettingsController.php`
+- `app/Livewire/Admin/AiManager.php`
 - `app/Livewire/Admin/PageAiAssistant.php`
 - `app/Livewire/Admin/PageAiCreator.php`
 - `app/Livewire/Admin/PostAiCreator.php`
 - `app/Livewire/Admin/SitePageSeoAi.php`
 - `app/Livewire/Admin/PostInsights.php`
+- `config/starcho_ai.php`
+- `config/ai_pricing.php`
 
-Providers soportados:
+### Texto
 
 | Provider | Campo de API key | Modelos base |
 | --- | --- | --- |
@@ -291,14 +310,73 @@ Providers soportados:
 | `anthropic` | `anthropic_api_key` | `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` |
 | `openrouter` | `openrouter_api_key` | `openai/gpt-4o-mini`, `anthropic/claude-sonnet-4.6`, `google/gemini-2.0-flash-001`, `deepseek/deepseek-chat`, otros |
 
-Seguridad:
+El catalogo de modelos de texto es editable desde base de datos mediante `AiSetting::model_settings`. El panel ofrece sugerencias y enlaces de documentacion por provider (`AiSetting::MODEL_DOCS`).
+
+### Imagen y video
+
+| Tipo | Provider | Campo de API key | Servicio | Modelos base |
+| --- | --- | --- | --- | --- |
+| Imagen | `openai` | `openai_api_key` | `AiImageService` | `gpt-image-1`, `dall-e-3` |
+| Imagen | `fal` | `fal_api_key` | `AiVideoService::generateImage()` | Flux, Recraft, Stable Diffusion |
+| Imagen | `replicate` | `replicate_api_key` | `AiReplicateService::generateImage()` | Flux, SDXL, Ideogram |
+| Video | `fal` | `fal_api_key` | `AiVideoService::submit()` | Kling, Veo, MiniMax, Luma |
+| Video | `replicate` | `replicate_api_key` | `AiReplicateService::submitVideo()` | Kling, Wan, Hunyuan, Luma |
+
+Imagen soporta presets `tiktok`, `800x600`, `480x360` y `custom`. Para OpenAI, Starcho adapta la orientacion a los tamanos aceptados por el provider.
+
+Video es asincrono: se crea un `AiAssetGeneration` en `processing`, el panel hace polling con `AiManager::pollAssets()`, descarga el resultado cuando termina y lo guarda en la galeria como `Media`.
+
+### Runtime y jobs
+
+`config/starcho_ai.php` controla:
+
+- `request_timeout`: segundos maximos de espera para AI sync.
+- `async_threshold`: umbral para mandar trabajo a background.
+- `time_limit_buffer`: margen para `set_time_limit()`.
+
+`GenerateAiImageJob` permite generar imagenes en background. El job llama al servicio correcto segun provider y el panel notifica cuando el asset queda listo.
+
+### Seguridad y secretos
 
 - Las API keys se guardan con cast `encrypted`.
 - `AiSetting::singleton()` mantiene una sola configuracion.
 - AI debe estar habilitado y tener key del provider activo.
-- Los modelos se pueden activar/desactivar desde `model_settings`.
+- Los modelos de texto, imagen y video se pueden activar/desactivar desde `model_settings`, `image_model_settings` y `video_model_settings`.
+- Los usuarios nuevos reciben automaticamente el plan AI gratuito activo si existe.
 
-Acciones AI actuales:
+### Planes, cuotas y costos
+
+`AiPlan` define:
+
+- `text_token_quota`
+- `image_quota`
+- `video_quota`
+- `monthly_budget_cents`
+- `monthly_price`
+- `is_free`
+- `is_active`
+
+`User` mantiene contadores por periodo:
+
+- `ai_text_tokens_used`
+- `ai_images_used`
+- `ai_videos_used`
+- `ai_spend_cents`
+- `ai_usage_period_start`
+- `ai_plan_id`
+
+Metodos clave:
+
+```php
+$user->aiRemaining('image');
+$user->aiExceeded('video', 1, $estimatedCostCents);
+$user->recordAiUsage('text', $tokens, $costCents);
+$user->resetAiPeriodIfNeeded();
+```
+
+`config/ai_pricing.php` contiene costos reales aproximados por modelo y `markup`. `AiPricing` calcula costo interno y precio al usuario; `AiQuotaService` valida cuota/presupuesto antes de consumir.
+
+### Acciones AI actuales
 
 - Crear pagina CMS completa.
 - Crear post de blog completo.
@@ -312,21 +390,29 @@ Acciones AI actuales:
 - Editar paginas Folio.
 - Generar SEO de paginas Folio.
 - Regenerar desde memoria editorial.
+- Generar imagenes y guardarlas como media `ai_image`.
+- Generar videos y guardarlos como media `ai_video`.
+- Generar imagen destacada de post/pagina desde `/admin/ai/featured-image`.
+- Gestionar planes AI y cuotas desde `/admin/ai`.
+- Ver costos, tokens perdidos, top users por gasto y assets recientes.
 
-Trazabilidad AI:
+### Trazabilidad AI
 
 - `PostAiGeneration` guarda provider, model, action, locale, prompts, payload, response, tokens, duracion y rating.
 - `PostAiMemory` guarda aprendizajes editoriales activos, manuales o derivados de generaciones.
 - `PostInsights` muestra stats, historial AI, tokens, ratings, comentarios y memorias.
 - `PostComment` agrega comentarios internos con respuestas hasta 3 niveles visuales.
+- `AiAssetGeneration` guarda imagenes/videos: type, provider, model, status, external_id, media_id, prompt, params, error, cost, price y duration.
 
 Rutas relacionadas:
 
-- `/admin/site` para configurar providers/modelos y ver estadisticas.
-- `/admin/site/ai` para guardar AI.
+- `/admin/ai` para configurar AI, modelos, planes, costos y generar assets.
+- `/admin/site` para site manager, SEO, storage y resumen AI.
+- `/admin/site/ai` para guardar AI desde Site Manager.
 - `/admin/posts` y `/admin/posts/create` para creacion AI de posts.
 - `/admin/pages` y `/admin/pages/create` para creacion AI de paginas.
 - `/admin/site/page-editor` para editar paginas Folio y SEO con AI.
+- `/admin/media` para ver assets generados.
 
 ---
 
@@ -344,6 +430,7 @@ Incluye:
 - Home source y pagina CMS home.
 - Configuracion AI.
 - Estadisticas AI.
+- Acceso coordinado con AI Manager para modelos, planes y consumo.
 - Configuracion Storage.
 - Planes de Storage.
 
@@ -458,11 +545,13 @@ Eres un builder senior de Starcho. Construyes con Laravel 13, Livewire 4, Flux U
 3. Reutilizar componentes `x-starcho-*` antes de escribir markup nuevo.
 4. Si hay tabla, usar PowerGrid.
 5. Si hay archivos, usar `StorageService`.
-6. Si hay AI, usar `AiSetting` y `PageAiContentService`.
-7. Si hay contenido traducible, usar Spatie Translatable y lang files.
-8. Si hay `user_id`, aplicar ownership real en modelo o query.
-9. Si hay CRUD Livewire, usar `DispatchesStarchoNotify`.
-10. Si algo se repite dos veces, convertirlo en componente Starcho.
+6. Si hay AI de texto, usar `AiSetting`, `PageAiContentService` y registrar trazabilidad.
+7. Si hay AI de imagen/video, usar `AiImageService`, `AiVideoService` o `AiReplicateService`; nunca llamar providers directo desde Blade/Livewire.
+8. Si hay consumo AI, validar `AiQuotaService` y registrar costo/uso en `AiAssetGeneration` o `PostAiGeneration`.
+9. Si hay contenido traducible, usar Spatie Translatable y lang files.
+10. Si hay `user_id`, aplicar ownership real en modelo o query.
+11. Si hay CRUD Livewire, usar `DispatchesStarchoNotify`.
+12. Si algo se repite dos veces, convertirlo en componente Starcho.
 
 ### Estructura recomendada para un modulo app
 
@@ -501,7 +590,9 @@ lang/pt_BR/admin_ui.php
 - Componentes Starcho reutilizados.
 - Textos traducibles.
 - Storage via `StorageService` si aplica.
-- AI via `PageAiContentService` si aplica.
+- AI texto via `PageAiContentService` si aplica.
+- AI imagen/video via servicios `App\Services\Ai\*` si aplica.
+- Cuotas y costos AI validados si aplica.
 - Ownership si aplica.
 - Notificaciones con `DispatchesStarchoNotify`.
 - Cache/menu invalidado si toca modulos o menu.

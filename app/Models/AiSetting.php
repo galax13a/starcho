@@ -29,6 +29,35 @@ class AiSetting extends Model
         ],
     ];
 
+    /** Where to browse/copy model IDs for each provider. */
+    public const MODEL_DOCS = [
+        'openai'     => 'https://platform.openai.com/docs/models',
+        'deepseek'   => 'https://api-docs.deepseek.com/quick_start/pricing',
+        'anthropic'  => 'https://docs.anthropic.com/en/docs/about-claude/models',
+        'openrouter' => 'https://openrouter.ai/models',
+        'fal'        => 'https://fal.ai/models',
+        'replicate'  => 'https://replicate.com/explore',
+    ];
+
+    /** One-click suggested models per group/provider (to add & activate). */
+    public const SUGGESTED_MODELS = [
+        'text' => [
+            'openai'     => ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.4-pro', 'o4-mini'],
+            'deepseek'   => ['deepseek-chat', 'deepseek-reasoner'],
+            'anthropic'  => ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-1'],
+            'openrouter' => ['openai/gpt-4o-mini', 'anthropic/claude-sonnet-4.6', 'google/gemini-2.0-flash-001', 'meta-llama/llama-3.3-70b-instruct', 'deepseek/deepseek-chat'],
+        ],
+        'image' => [
+            'openai'    => ['gpt-image-1', 'dall-e-3'],
+            'fal'       => ['fal-ai/flux/schnell', 'fal-ai/flux/dev', 'fal-ai/flux-pro/v1.1', 'fal-ai/recraft-v3', 'fal-ai/ideogram/v2'],
+            'replicate' => ['black-forest-labs/flux-schnell', 'black-forest-labs/flux-dev', 'black-forest-labs/flux-1.1-pro', 'stability-ai/sdxl', 'ideogram-ai/ideogram-v2'],
+        ],
+        'video' => [
+            'fal'       => ['fal-ai/kling-video/v1.6/standard/text-to-video', 'fal-ai/veo2', 'fal-ai/minimax/video-01', 'fal-ai/luma-dream-machine', 'fal-ai/hunyuan-video'],
+            'replicate' => ['kwaivgi/kling-v1.6-standard', 'minimax/video-01', 'wan-video/wan-2.2-t2v-fast', 'tencent/hunyuan-video', 'luma/ray'],
+        ],
+    ];
+
     /** Providers that can generate images. */
     public const IMAGE_PROVIDERS = ['openai' => 'OpenAI', 'fal' => 'fal.ai', 'replicate' => 'Replicate'];
 

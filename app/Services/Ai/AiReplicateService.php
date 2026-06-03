@@ -42,7 +42,9 @@ class AiReplicateService
             $headers['Prefer'] = 'wait';
         }
 
-        return Http::withHeaders($headers)->acceptJson()->timeout($wait ? 90 : 30);
+        $waitTimeout = (int) config('starcho_ai.request_timeout', 120);
+
+        return Http::withHeaders($headers)->acceptJson()->timeout($wait ? $waitTimeout : 30);
     }
 
     // ── Image (synchronous) ──────────────────────────────────────────

@@ -9,6 +9,7 @@ use App\Models\AiSetting;
 use App\Models\PostAiGeneration;
 use App\Models\SiteLanguage;
 use App\Models\User;
+use App\Jobs\GenerateAiImageJob;
 use App\Services\Ai\AiImageService;
 use App\Services\Ai\AiReplicateService;
 use App\Services\Ai\AiVideoService;
@@ -47,7 +48,11 @@ class AiManager extends Component
     public string $imageSize = 'tiktok';
     public int $customWidth = 1024;
     public int $customHeight = 1024;
+    public bool $imageBackground = false;
     public string $videoPrompt = '';
+
+    /** Highest completed asset id already seen, to notify only on new completions. */
+    public int $assetWatermark = 0;
 
     // ── Plan modal ───────────────────────────────────────────────────
     public bool $showPlanModal = false;
@@ -73,6 +78,7 @@ class AiManager extends Component
         $this->imageModel = $s->image_model ?: 'gpt-image-1';
         $this->videoProvider = $s->video_provider ?: 'fal';
         $this->videoModel = $s->video_model ?: 'fal-ai/kling-video/v1/standard/text-to-video';
+        $this->assetWatermark = (int) AiAssetGeneration::where('status', AiAssetGeneration::STATUS_COMPLETED)->max('id');
         $this->loadModelRows($s);
     }
 
@@ -106,6 +112,21 @@ class AiManager extends Component
         $prop = $this->groupProp($group);
         unset($this->{$prop}[$provider][$index]);
         $this->{$prop}[$provider] = array_values($this->{$prop}[$provider]);
+    }
+
+    /** Adds a suggested model (active) if it isn't already in the provider's list. */
+    public function suggestModel(string $group, string $provider, string $id): void
+    {
+        $prop = $this->groupProp($group);
+        $rows = $this->{$prop}[$provider] ?? [];
+
+        foreach ($rows as $row) {
+            if (($row['id'] ?? '') === $id) {
+                return; // already present
+            }
+        }
+
+        $this->{$prop}[$provider][] = ['id' => $id, 'active' => true];
     }
 
     public function saveModels(): void
@@ -191,15 +212,31 @@ class AiManager extends Component
 
         [$w, $h] = $this->resolveImageSize();
 
+        $params = match ($this->imageProvider) {
+            'replicate' => ['width' => $w, 'height' => $h],
+            'fal'       => ['image_size' => ['width' => $w, 'height' => $h]],
+            default     => ['size' => $this->openAiSize($w, $h)],
+        };
+
+        // Background mode: push to a queued job and let the panel poll for the result.
+        if ($this->imageBackground) {
+            GenerateAiImageJob::dispatch(auth()->id(), $this->imageProvider, $this->imageModel, $this->imagePrompt, $params);
+            $this->imagePrompt = '';
+            $this->notifyInfo('Imagen en cola. Te avisamos aquí cuando esté lista.');
+
+            return;
+        }
+
         try {
             if ($this->imageProvider === 'replicate') {
-                app(AiReplicateService::class)->generateImage($this->imagePrompt, $this->imageModel, auth()->user(), ['width' => $w, 'height' => $h]);
+                app(AiReplicateService::class)->generateImage($this->imagePrompt, $this->imageModel, auth()->user(), $params);
             } elseif ($this->imageProvider === 'fal') {
-                app(AiVideoService::class)->generateImage($this->imagePrompt, $this->imageModel, auth()->user(), ['image_size' => ['width' => $w, 'height' => $h]]);
+                app(AiVideoService::class)->generateImage($this->imagePrompt, $this->imageModel, auth()->user(), $params);
             } else {
-                app(AiImageService::class)->generate($this->imagePrompt, $this->imageModel, auth()->user(), $this->openAiSize($w, $h));
+                app(AiImageService::class)->generate($this->imagePrompt, $this->imageModel, auth()->user(), $params['size']);
             }
             $this->imagePrompt = '';
+            $this->assetWatermark = (int) AiAssetGeneration::where('status', AiAssetGeneration::STATUS_COMPLETED)->max('id');
             $this->notifySuccess('Imagen generada y guardada en la galería.');
         } catch (\Throwable $e) {
             $this->notifyFailure($e->getMessage());
@@ -250,7 +287,11 @@ class AiManager extends Component
         return '1024x1024';
     }
 
-    public function refreshVideos(): void
+    /**
+     * Polled from the Images/Video tabs: advances any pending video predictions
+     * and notifies once when image/video jobs finish.
+     */
+    public function pollAssets(): void
     {
         AiAssetGeneration::where('type', AiAssetGeneration::TYPE_VIDEO)
             ->where('status', AiAssetGeneration::STATUS_PROCESSING)
@@ -261,6 +302,26 @@ class AiManager extends Component
                     : app(AiVideoService::class);
                 $service->refresh($g);
             });
+
+        $newlyDone = AiAssetGeneration::where('status', AiAssetGeneration::STATUS_COMPLETED)
+            ->where('id', '>', $this->assetWatermark)
+            ->get();
+
+        if ($newlyDone->isNotEmpty()) {
+            $images = $newlyDone->where('type', AiAssetGeneration::TYPE_IMAGE)->count();
+            $videos = $newlyDone->where('type', AiAssetGeneration::TYPE_VIDEO)->count();
+            $parts = [];
+            if ($images) {
+                $parts[] = $images . ' imagen' . ($images > 1 ? 'es' : '');
+            }
+            if ($videos) {
+                $parts[] = $videos . ' video' . ($videos > 1 ? 's' : '');
+            }
+            if ($parts) {
+                $this->notifySuccess('Listo: ' . implode(' y ', $parts) . ' en tu galería.');
+            }
+            $this->assetWatermark = (int) $newlyDone->max('id');
+        }
     }
 
     // ── Plan CRUD ────────────────────────────────────────────────────
@@ -413,6 +474,18 @@ class AiManager extends Component
             ->get();
         $spenderUsers = User::whereIn('id', $topSpenders->pluck('user_id'))->get(['id', 'name'])->keyBy('id');
 
+        // Lost tokens: failed text generations that consumed budget without a usable response.
+        $lostText = AiAssetGeneration::query()
+            ->where('type', AiAssetGeneration::TYPE_TEXT)
+            ->where('status', AiAssetGeneration::STATUS_FAILED)
+            ->selectRaw('COUNT(*) as runs, COALESCE(SUM(cost_cents),0) as cost')
+            ->first();
+        $lostTokens = (int) AiAssetGeneration::query()
+            ->where('type', AiAssetGeneration::TYPE_TEXT)
+            ->where('status', AiAssetGeneration::STATUS_FAILED)
+            ->get(['params'])
+            ->sum(fn ($r) => (int) data_get($r->params, 'estimated_tokens', 0));
+
         $recentImages = AiAssetGeneration::with('media')
             ->where('type', AiAssetGeneration::TYPE_IMAGE)
             ->latest()->limit(12)->get();
@@ -457,7 +530,13 @@ class AiManager extends Component
             'videoModels'    => AiSetting::singleton()->videoModelOptions($this->videoProvider),
             'textModels'     => AiSetting::singleton()->modelOptions($this->provider),
             'markup'         => (float) config('ai_pricing.markup', 1.8),
+            'aiTimeout'      => (int) config('starcho_ai.request_timeout', 120),
+            'asyncThreshold' => (int) config('starcho_ai.async_threshold', 60),
+            'lostTextRuns'   => (int) ($lostText->runs ?? 0),
+            'lostTextCost'   => (int) ($lostText->cost ?? 0),
+            'lostTokens'     => $lostTokens,
             'hasProcessingVideo' => AiAssetGeneration::where('type', 'video')->where('status', 'processing')->exists(),
+            'hasProcessingImage' => AiAssetGeneration::where('type', 'image')->where('status', 'processing')->exists(),
         ];
     }
 

@@ -4,13 +4,17 @@ namespace App\Livewire\Admin;
 
 use App\Exceptions\AiQuotaExceededException;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
+use App\Models\AiAssetGeneration;
 use App\Models\AiSetting;
 use App\Models\Post;
 use App\Models\PostAiMemory;
 use App\Models\SiteLanguage;
 use App\Models\User;
+use App\Services\Ai\AiImageService;
 use App\Services\Ai\AiPricing;
 use App\Services\Ai\AiQuotaService;
+use App\Services\Ai\AiReplicateService;
+use App\Services\Ai\AiVideoService;
 use App\Services\PageAiContentService;
 use Illuminate\Support\Str;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
@@ -45,6 +49,14 @@ class PostAiCreator extends Component
     public int $authorId = 0;
     public bool $allowComments = true;
     public ?string $errorMessage = null;
+
+    // ── AI featured image ─────────────────────────────────────────────
+    public bool $genImage = false;
+    public string $imageMode = 'article';   // article | prompt
+    public string $imagePrompt = '';
+    public string $imageSizePreset = '800x600'; // 800x600 | 480x360 | custom
+    public int $imgCustomW = 800;
+    public int $imgCustomH = 600;
 
     public function mount(): void
     {
@@ -103,6 +115,11 @@ class PostAiCreator extends Component
             'status' => ['nullable', 'in:draft,published,scheduled,private,password_protected'],
             'authorId' => ['required', 'integer', 'exists:users,id'],
             'allowComments' => ['boolean'],
+            'imageMode' => ['nullable', 'in:article,prompt'],
+            'imageSizePreset' => ['nullable', 'in:800x600,480x360,custom'],
+            'imagePrompt' => ['nullable', 'string', 'max:3000'],
+            'imgCustomW' => ['nullable', 'integer', 'min:64', 'max:2048'],
+            'imgCustomH' => ['nullable', 'integer', 'min:64', 'max:2048'],
         ]);
 
         $this->errorMessage = null;
@@ -116,6 +133,9 @@ class PostAiCreator extends Component
 
             return null;
         }
+
+        // Allow long generations to finish (configurable, default 120s).
+        @set_time_limit((int) config('starcho_ai.request_timeout', 120) + (int) config('starcho_ai.time_limit_buffer', 15));
 
         try {
             $blueprint = $service->generatePostBlueprint(
@@ -154,6 +174,7 @@ class PostAiCreator extends Component
             $quota->record(auth()->user(), 'text', $tokens, $cost);
         } catch (Throwable $exception) {
             report($exception);
+            $this->recordFailedGeneration($exception, 'create_post');
             $providerName = AiSetting::PROVIDERS[$this->provider] ?? 'AI';
             $this->errorMessage = match (true) {
                 $exception instanceof RateLimitedException => "{$providerName} limitó la solicitud por rate limit.",
@@ -165,9 +186,64 @@ class PostAiCreator extends Component
             return null;
         }
 
+        if ($this->genImage) {
+            $this->attachAiImage($post);
+        }
+
         $this->notifySuccess('Post creado con AI. Revisa y ajusta antes de publicar.');
 
         return $this->redirectRoute('admin.posts.edit', ['post' => $post->id], navigate: false);
+    }
+
+    /** Generates a featured image (per the configured provider/model) and attaches it. */
+    private function attachAiImage(Post $post): void
+    {
+        try {
+            @set_time_limit((int) config('starcho_ai.request_timeout', 120) + 15);
+
+            $settings = AiSetting::singleton();
+            $provider = $settings->image_provider ?: 'openai';
+            $model = $settings->image_model;
+
+            $prompt = $this->imageMode === 'article'
+                ? $this->articleImagePrompt($post)
+                : trim($this->imagePrompt);
+
+            if ($prompt === '') {
+                return;
+            }
+
+            [$w, $h] = match ($this->imageSizePreset) {
+                '480x360' => [480, 360],
+                'custom'  => [max(64, min(2048, $this->imgCustomW)), max(64, min(2048, $this->imgCustomH))],
+                default   => [800, 600],
+            };
+
+            $params = match ($provider) {
+                'replicate' => ['width' => $w, 'height' => $h],
+                'fal'       => ['image_size' => ['width' => $w, 'height' => $h]],
+                default     => ['size' => $h > $w ? '1024x1536' : ($w > $h ? '1536x1024' : '1024x1024')],
+            };
+
+            $generation = match ($provider) {
+                'replicate' => app(AiReplicateService::class)->generateImage($prompt, $model, auth()->user(), $params),
+                'fal'       => app(AiVideoService::class)->generateImage($prompt, $model, auth()->user(), $params),
+                default     => app(AiImageService::class)->generate($prompt, $model, auth()->user(), $params['size']),
+            };
+
+            if ($generation->media && $generation->media->path) {
+                $post->update(['featured_image' => $generation->media->path]);
+            }
+        } catch (\Throwable $e) {
+            $this->notifyWarning('El post se creó, pero la imagen IA falló: ' . $e->getMessage());
+        }
+    }
+
+    private function articleImagePrompt(Post $post): string
+    {
+        $title = collect($post->getTranslations('title'))->filter()->first() ?: 'Artículo';
+
+        return "Imagen destacada editorial para un artículo titulado: «{$title}». Estilo fotográfico profesional, alta calidad, sin texto ni marcas de agua, composición limpia.";
     }
 
     public function render()
@@ -253,6 +329,28 @@ class PostAiCreator extends Component
 
         if (! in_array($this->model, $models, true)) {
             $this->model = $models[0] ?? $settings->default_model;
+        }
+    }
+
+    /** Logs a failed text generation so lost tokens/cost show up in /admin/ai stats. */
+    private function recordFailedGeneration(\Throwable $exception, string $context): void
+    {
+        try {
+            $cost = app(AiPricing::class)->textCostCents($this->model, $this->maxTokens);
+
+            AiAssetGeneration::create([
+                'user_id'    => auth()->id(),
+                'type'       => AiAssetGeneration::TYPE_TEXT,
+                'provider'   => $this->provider,
+                'model'      => $this->model,
+                'status'     => AiAssetGeneration::STATUS_FAILED,
+                'prompt'     => mb_substr($this->description, 0, 2000),
+                'error'      => mb_substr($exception->getMessage(), 0, 1000),
+                'params'     => ['estimated_tokens' => $this->maxTokens, 'context' => $context],
+                'cost_cents' => $cost,
+            ]);
+        } catch (\Throwable $e) {
+            // never let logging break the UX
         }
     }
 

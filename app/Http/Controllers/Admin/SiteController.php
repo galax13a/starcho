@@ -93,7 +93,7 @@ class SiteController extends Controller
             'avatar_style' => ['required', 'in:initials,image,service'],
             'profile_avatar_upload_enabled' => ['nullable', 'boolean'],
             'avatar_service_url' => ['nullable', 'url', 'max:500'],
-            'favicon' => ['nullable', 'file', 'mimes:ico', 'max:1024'],
+            'favicon' => ['nullable', 'file', 'mimes:ico,png', 'max:1024'],
             'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'social_facebook' => ['nullable', 'url', 'max:255'],
             'social_x' => ['nullable', 'url', 'max:255'],

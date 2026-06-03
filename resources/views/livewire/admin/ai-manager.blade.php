@@ -9,7 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
 @endassets
 
-<div class="space-y-6" x-data="{ tab: '{{ request('tab', 'overview') }}' }">
+<div class="space-y-6" x-data="{ tab: '{{ request('tab', 'overview') }}' }"
+     @if($hasProcessingVideo || $hasProcessingImage) wire:poll.8s="pollAssets" @else wire:poll.30s="pollAssets" @endif>
 
     {{-- ════ Header ════ --}}
     <div class="flex items-center justify-between gap-4 flex-wrap">
@@ -73,6 +74,25 @@
             </div>
         </div>
 
+        {{-- Wait time + lost tokens --}}
+        <div class="grid sm:grid-cols-3 gap-4">
+            <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <div class="text-xs text-zinc-500"><i class="fas fa-hourglass-half mr-1"></i> Tiempo de espera</div>
+                <div class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $aiTimeout }}s</div>
+                <div class="text-xs text-zinc-400">PHP espera hasta {{ $aiTimeout }}s; sobre {{ $asyncThreshold }}s pasa a job</div>
+            </div>
+            <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <div class="text-xs text-zinc-500"><i class="fas fa-triangle-exclamation mr-1"></i> Generaciones fallidas</div>
+                <div class="text-2xl font-bold text-amber-600">{{ number_format($lostTextRuns) }}</div>
+                <div class="text-xs text-zinc-400">de texto sin respuesta</div>
+            </div>
+            <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <div class="text-xs text-zinc-500"><i class="fas fa-coins mr-1"></i> Tokens perdidos</div>
+                <div class="text-2xl font-bold text-rose-600">{{ number_format($lostTokens) }}</div>
+                <div class="text-xs text-zinc-400">≈ {{ $money($lostTextCost) }} en costo</div>
+            </div>
+        </div>
+
         <div class="grid lg:grid-cols-2 gap-4">
             <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
                 <h3 class="text-sm font-semibold mb-3 text-zinc-700 dark:text-zinc-200">Tokens por proveedor</h3>
@@ -123,31 +143,34 @@
                 </flux:field>
             </div>
 
+            @php
+                $keyFields = [
+                    ['model' => 'openaiKey',     'label' => 'OpenAI API key',     'ph' => 'sk-...',     'configured' => $settings->hasProviderKey('openai')],
+                    ['model' => 'falKey',        'label' => 'fal.ai API key',     'ph' => 'fal-...',    'configured' => $settings->hasFalKey()],
+                    ['model' => 'replicateKey',  'label' => 'Replicate API token','ph' => 'r8_...',     'configured' => $settings->hasReplicateKey()],
+                    ['model' => 'anthropicKey',  'label' => 'Anthropic API key',  'ph' => 'sk-ant-...', 'configured' => $settings->hasProviderKey('anthropic')],
+                    ['model' => 'openrouterKey', 'label' => 'OpenRouter API key', 'ph' => 'sk-or-...',  'configured' => $settings->hasProviderKey('openrouter')],
+                    ['model' => 'deepseekKey',   'label' => 'DeepSeek API key',   'ph' => 'sk-...',     'configured' => $settings->hasProviderKey('deepseek')],
+                ];
+            @endphp
             <div class="grid sm:grid-cols-2 gap-4">
-                <flux:field>
-                    <flux:label>OpenAI API key {!! $settings->hasProviderKey('openai') ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="openaiKey" placeholder="sk-..." />
-                </flux:field>
-                <flux:field>
-                    <flux:label>fal.ai API key {!! $settings->hasFalKey() ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="falKey" placeholder="fal-..." />
-                </flux:field>
-                <flux:field>
-                    <flux:label>Replicate API token {!! $settings->hasReplicateKey() ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="replicateKey" placeholder="r8_..." />
-                </flux:field>
-                <flux:field>
-                    <flux:label>Anthropic API key {!! $settings->hasProviderKey('anthropic') ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="anthropicKey" />
-                </flux:field>
-                <flux:field>
-                    <flux:label>OpenRouter API key {!! $settings->hasProviderKey('openrouter') ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="openrouterKey" />
-                </flux:field>
-                <flux:field>
-                    <flux:label>DeepSeek API key {!! $settings->hasProviderKey('deepseek') ? '<span class="text-emerald-500 text-xs">· configurada</span>' : '' !!}</flux:label>
-                    <flux:input type="password" wire:model="deepseekKey" />
-                </flux:field>
+                @foreach ($keyFields as $f)
+                    <div wire:key="key-{{ $f['model'] }}">
+                        <label class="text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-1 block">
+                            {{ $f['label'] }}
+                            @if($f['configured'])<span class="text-emerald-500 text-xs">· configurada</span>@endif
+                        </label>
+                        {{-- Shows dots when configured; clears on focus so you can type a new key. --}}
+                        <input type="password" autocomplete="new-password"
+                            x-data="{ mask: @js($f['configured'] ? '••••••••••••••' : '') }"
+                            x-init="$el.value = mask"
+                            @focus="if ($el.value === mask) { $el.value = ''; }"
+                            @blur="if ($el.value === '') { $el.value = mask; $wire.set('{{ $f['model'] }}', '', false); }"
+                            @input="$wire.set('{{ $f['model'] }}', $el.value, false)"
+                            placeholder="{{ $f['ph'] }}"
+                            class="w-full h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-3 focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition">
+                    </div>
+                @endforeach
             </div>
 
             <div class="grid sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
@@ -208,7 +231,15 @@
                     @foreach ($group['providers'] as $provider => $providerLabel)
                         <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4" wire:key="grp-{{ $group['key'] }}-{{ $provider }}">
                             <div class="flex items-center justify-between mb-3">
-                                <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $providerLabel }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $providerLabel }}</span>
+                                    @if($docUrl = (\App\Models\AiSetting::MODEL_DOCS[$provider] ?? null))
+                                        <a href="{{ $docUrl }}" target="_blank" rel="noopener"
+                                           class="text-[11px] text-violet-500 hover:underline whitespace-nowrap">
+                                            <i class="fas fa-arrow-up-right-from-square mr-0.5"></i> Ver / copiar modelos
+                                        </a>
+                                    @endif
+                                </div>
                                 <button type="button" wire:click="addModel('{{ $group['key'] }}', '{{ $provider }}')"
                                     class="text-xs text-violet-600 hover:underline"><i class="fas fa-plus mr-0.5"></i> Agregar</button>
                             </div>
@@ -228,6 +259,21 @@
                                     <p class="text-xs text-zinc-400">Sin modelos. Pulsa «Agregar».</p>
                                 @endforelse
                             </div>
+
+                            @php $suggested = \App\Models\AiSetting::SUGGESTED_MODELS[$group['key']][$provider] ?? []; @endphp
+                            @if($suggested)
+                                <div class="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <p class="text-[10px] uppercase tracking-wide text-zinc-400 mb-1.5">Sugeridos — clic para agregar y activar</p>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($suggested as $s)
+                                            <button type="button" wire:click="suggestModel('{{ $group['key'] }}', '{{ $provider }}', '{{ $s }}')"
+                                                class="text-[11px] px-2 py-1 rounded-full border border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition">
+                                                + {{ $s }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -252,6 +298,9 @@
             }; @endphp
             <flux:textarea wire:model="imagePrompt" rows="3" placeholder="Describe la imagen que quieres generar..." />
             <div class="flex items-center gap-3 flex-wrap">
+                <flux:select wire:model="imageModel" class="max-w-[240px]">
+                    @foreach ($imageModels as $m)<option value="{{ $m }}">{{ $m }}</option>@endforeach
+                </flux:select>
                 <flux:select wire:model.live="imageSize" class="max-w-[220px]">
                     <option value="tiktok">Vertical TikTok (1080×1920)</option>
                     <option value="800x600">Horizontal 800 × 600</option>
@@ -278,6 +327,10 @@
             @if($settings->image_provider === 'openai')
                 <p class="text-[11px] text-zinc-400">OpenAI ajusta al tamaño soportado más cercano (1024², 1024×1536, 1536×1024). fal.ai y Replicate respetan la resolución exacta.</p>
             @endif
+            <label class="flex items-center gap-2 text-xs text-zinc-500">
+                <input type="checkbox" wire:model="imageBackground" class="rounded text-violet-600">
+                Generar en segundo plano (job) — útil si tarda más de {{ $asyncThreshold }}s; te aviso aquí al terminar.
+            </label>
         </form>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -302,8 +355,7 @@
     </div>
 
     {{-- ════════════════════ VIDEO ════════════════════ --}}
-    <div x-show="tab === 'video'" x-cloak class="space-y-5"
-         @if($hasProcessingVideo) wire:poll.10s="refreshVideos" @endif>
+    <div x-show="tab === 'video'" x-cloak class="space-y-5">
         <form wire:submit="generateVideo" class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-5 bg-white dark:bg-zinc-900 space-y-4">
             <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
                 Generar video — {{ \App\Models\AiSetting::VIDEO_PROVIDERS[$settings->video_provider] ?? 'fal.ai' }} · {{ $settings->video_model }}
@@ -311,6 +363,9 @@
             @php $vidReady = $settings->video_provider === 'replicate' ? $settings->hasReplicateKey() : $settings->hasFalKey(); @endphp
             <flux:textarea wire:model="videoPrompt" rows="3" placeholder="Describe el video que quieres generar..." />
             <div class="flex items-center gap-3 flex-wrap">
+                <flux:select wire:model="videoModel" class="max-w-[300px]">
+                    @foreach ($videoModels as $m)<option value="{{ $m }}">{{ $m }}</option>@endforeach
+                </flux:select>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="generateVideo">
                     <span wire:loading.remove wire:target="generateVideo"><i class="fas fa-clapperboard mr-1"></i> Generar</span>
                     <span wire:loading wire:target="generateVideo">Enviando...</span>

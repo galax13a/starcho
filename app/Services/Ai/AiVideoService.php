@@ -47,6 +47,9 @@ class AiVideoService
 
         $this->quota->ensureCanGenerate($user, 'image', 1, $this->quota->pricing()->imageCostCents($model, 1));
 
+        $timeout = (int) config('starcho_ai.request_timeout', 120);
+        @set_time_limit($timeout + (int) config('starcho_ai.time_limit_buffer', 15));
+
         $generation = AiAssetGeneration::create([
             'user_id'  => $user?->id,
             'type'     => AiAssetGeneration::TYPE_IMAGE,
@@ -61,7 +64,7 @@ class AiVideoService
 
         try {
             $response = Http::withHeaders(['Authorization' => 'Key ' . $apiKey])
-                ->timeout(120)
+                ->timeout($timeout)
                 ->acceptJson()
                 ->post('https://fal.run/' . $model, array_merge(['prompt' => $prompt], $params));
 

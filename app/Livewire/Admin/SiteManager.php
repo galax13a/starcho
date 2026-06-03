@@ -52,6 +52,42 @@ class SiteManager extends Component
         $this->notifySuccess(__('admin_ui.site.notify.saved'));
     }
 
+    /** Save the favicon immediately when selected (instant feedback + preview). */
+    public function updatedFavicon(): void
+    {
+        $this->validate(['favicon' => ['file', 'mimes:ico,png', 'max:1024']]);
+
+        $settings = SiteSetting::singleton();
+
+        if ($settings->favicon_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($settings->favicon_path);
+        }
+
+        $path = $this->favicon->store('site', 'public');
+        $settings->update(['favicon_path' => $path]);
+
+        $this->favicon = null;
+        $this->notifySuccess('Favicon actualizado.');
+    }
+
+    /** Save the Open Graph image immediately when selected. */
+    public function updatedOgImage(): void
+    {
+        $this->validate(['ogImage' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096']]);
+
+        $settings = SiteSetting::singleton();
+
+        if ($settings->og_image_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($settings->og_image_path);
+        }
+
+        $path = $this->ogImage->store('site', 'public');
+        $settings->update(['og_image_path' => $path]);
+
+        $this->ogImage = null;
+        $this->notifySuccess('Imagen Open Graph actualizada.');
+    }
+
     public function saveAi(array $pairs): void
     {
         app(AiSettingsController::class)->update($this->makeRequest('PUT', $this->inputFromPairs($pairs)));

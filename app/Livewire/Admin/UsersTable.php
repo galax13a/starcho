@@ -5,8 +5,11 @@ namespace App\Livewire\Admin;
 use App\Exports\AdminUsersExport;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Livewire\Concerns\HasStarchoCrudActions;
+use App\Models\AiPlan;
+use App\Models\StoragePlan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Maatwebsite\Excel\Facades\Excel;
@@ -22,6 +25,19 @@ final class UsersTable extends PowerGridComponent
     use HasStarchoCrudActions;
 
     public string $tableName = 'users-table';
+
+    private ?Collection $storagePlansCache = null;
+    private ?Collection $aiPlansCache = null;
+
+    private function storagePlans(): Collection
+    {
+        return $this->storagePlansCache ??= StoragePlan::orderBy('sort_order')->get();
+    }
+
+    private function aiPlans(): Collection
+    {
+        return $this->aiPlansCache ??= AiPlan::orderBy('sort_order')->get();
+    }
 
     public function setUp(): array
     {
@@ -52,35 +68,89 @@ final class UsersTable extends PowerGridComponent
             ->add('email')
             ->add('roles_list', fn (User $user) => $user->roles->pluck('name')->join(', ') ?: __('admin_ui.users.no_role'))
             ->add('email_verified_label', fn (User $user) => $user->email_verified_at ? __('admin_ui.users.verified') : __('admin_ui.users.unverified'))
-            ->add('storage_plan_label', fn (User $user) => $this->storagePlanBadge($user))
-            ->add('ai_plan_label', fn (User $user) => $this->aiPlanBadge($user))
+            ->add('storage_plan_label', fn (User $user) => $this->storagePlanSelect($user))
+            ->add('ai_plan_label', fn (User $user) => $this->aiPlanSelect($user))
             ->add('storage_usage_label', fn (User $user) => $this->storageUsageBar($user))
             ->add('created_at_formatted', fn (User $user) => Carbon::parse($user->created_at)->format('d/m/Y'));
     }
 
-    private function aiPlanBadge(User $user): string
+    private function selectClasses(): string
     {
-        if (! $user->ai_plan_id || ! $user->aiPlan) {
-            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">Sin IA</span>';
-        }
-
-        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300">'
-            . '<i class="fas fa-robot" style="font-size:.65rem"></i> '
-            . e($user->aiPlan->name)
-            . '</span>';
+        return 'h-8 min-w-[150px] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 '
+            . 'text-xs text-zinc-700 dark:text-zinc-300 px-2 pr-7 focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition';
     }
 
-    private function storagePlanBadge(User $user): string
+    private function aiPlanSelect(User $user): string
     {
-        if (! $user->storage_plan_id || ! $user->storagePlan) {
-            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">'
-                . e(__('admin_ui.users.no_plan')) . '</span>';
+        $current = (int) ($user->ai_plan_id ?? 0);
+        $options = '<option value="">Sin plan IA</option>';
+
+        foreach ($this->aiPlans() as $plan) {
+            $selected = $current === (int) $plan->id ? ' selected' : '';
+            $price = $plan->is_free ? 'Gratis' : '$' . number_format($plan->monthly_price, 2);
+            $options .= '<option value="' . $plan->id . '"' . $selected . '>' . e($plan->name) . ' · ' . e($price) . '</option>';
         }
 
-        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">'
-            . '<i class="fas fa-hard-drive" style="font-size:.65rem"></i> '
-            . e($user->storagePlan->name) . ' · ' . e($user->storagePlan->limitLabel())
-            . '</span>';
+        return '<select wire:change="changeAiPlan(' . $user->id . ', $event.target.value)" class="' . $this->selectClasses() . '">'
+            . $options . '</select>';
+    }
+
+    private function storagePlanSelect(User $user): string
+    {
+        $current = (int) ($user->storage_plan_id ?? 0);
+        $options = '<option value="">' . e(__('admin_ui.users.no_plan')) . '</option>';
+
+        foreach ($this->storagePlans() as $plan) {
+            $selected = $current === (int) $plan->id ? ' selected' : '';
+            $options .= '<option value="' . $plan->id . '"' . $selected . '>' . e($plan->name) . ' · ' . e($plan->limitLabel()) . '</option>';
+        }
+
+        return '<select wire:change="changeStoragePlan(' . $user->id . ', $event.target.value)" class="' . $this->selectClasses() . '">'
+            . $options . '</select>';
+    }
+
+    public function changeStoragePlan(int $userId, string $planId): void
+    {
+        $user = User::find($userId);
+
+        if (! $user) {
+            $this->notifyFailure('Usuario no encontrado.');
+            return;
+        }
+
+        $newPlanId = $planId !== '' ? (int) $planId : null;
+
+        if ($newPlanId !== null && ! StoragePlan::whereKey($newPlanId)->exists()) {
+            $this->notifyFailure('Plan de almacenamiento no válido.');
+            return;
+        }
+
+        $user->update(['storage_plan_id' => $newPlanId]);
+        $name = $newPlanId ? optional(StoragePlan::find($newPlanId))->name : 'Sin plan';
+        $this->notifySuccess("Plan de almacenamiento de «{$user->name}» actualizado a «{$name}».");
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+    }
+
+    public function changeAiPlan(int $userId, string $planId): void
+    {
+        $user = User::find($userId);
+
+        if (! $user) {
+            $this->notifyFailure('Usuario no encontrado.');
+            return;
+        }
+
+        $newPlanId = $planId !== '' ? (int) $planId : null;
+
+        if ($newPlanId !== null && ! AiPlan::whereKey($newPlanId)->exists()) {
+            $this->notifyFailure('Plan de IA no válido.');
+            return;
+        }
+
+        $user->update(['ai_plan_id' => $newPlanId]);
+        $name = $newPlanId ? optional(AiPlan::find($newPlanId))->name : 'Sin plan IA';
+        $this->notifySuccess("Plan de IA de «{$user->name}» actualizado a «{$name}».");
+        $this->dispatch('pg:eventRefresh-' . $this->tableName);
     }
 
     private function storageUsageBar(User $user): string

@@ -39,6 +39,9 @@ class AiImageService
 
         $this->quota->ensureCanGenerate($user, 'image', 1, $this->quota->pricing()->imageCostCents($model, 1));
 
+        $timeout = (int) config('starcho_ai.request_timeout', 120);
+        @set_time_limit($timeout + (int) config('starcho_ai.time_limit_buffer', 15));
+
         $generation = AiAssetGeneration::create([
             'user_id'  => $user?->id,
             'type'     => AiAssetGeneration::TYPE_IMAGE,
@@ -52,16 +55,22 @@ class AiImageService
         $startedAt = microtime(true);
 
         try {
+            $payload = [
+                'model'  => $model,
+                'prompt' => $prompt,
+                'n'      => 1,
+                'size'   => $size,
+            ];
+
+            // Only DALL·E accepts response_format; gpt-image-1 rejects it (returns b64 by default).
+            if (str_starts_with($model, 'dall-e')) {
+                $payload['response_format'] = 'b64_json';
+            }
+
             $response = Http::withToken($apiKey)
-                ->timeout(120)
+                ->timeout($timeout)
                 ->acceptJson()
-                ->post('https://api.openai.com/v1/images/generations', [
-                    'model'           => $model,
-                    'prompt'          => $prompt,
-                    'n'               => 1,
-                    'size'            => $size,
-                    'response_format' => $model === 'dall-e-3' ? 'b64_json' : null,
-                ]);
+                ->post('https://api.openai.com/v1/images/generations', $payload);
 
             if ($response->failed()) {
                 throw new RuntimeException($response->json('error.message') ?? 'Error de OpenAI al generar la imagen.');

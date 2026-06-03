@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiAssetGeneration extends Model
 {
+    public const TYPE_TEXT  = 'text';
     public const TYPE_IMAGE = 'image';
     public const TYPE_VIDEO = 'video';
 

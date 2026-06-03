@@ -199,7 +199,54 @@
             </div>
 
             <pre x-show="show" x-cloak x-ref="finalPrompt" class="mt-4 max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-zinc-950 p-4 text-xs leading-5 text-zinc-100">{{ $this->finalPrompt }}</pre>
-        </div>
+            </div>
+
+            {{-- Featured image with AI --}}
+            <div class="rounded-2xl border border-fuchsia-200 bg-fuchsia-50/50 p-4 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/20">
+                <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-fuchsia-900 dark:text-fuchsia-100">
+                    <input type="checkbox" wire:model.live="genImage" class="size-4 rounded border-fuchsia-300 text-fuchsia-600 focus:ring-fuchsia-500">
+                    <i class="fas fa-image"></i> Generar imagen destacada con IA
+                </label>
+
+                @if($genImage)
+                    <p class="mt-2 text-xs text-fuchsia-700/80 dark:text-fuchsia-200/70">
+                        Proveedor: <strong>{{ \App\Models\AiSetting::IMAGE_PROVIDERS[$settings->image_provider] ?? 'OpenAI' }}</strong> ·
+                        Modelo: <strong>{{ $settings->image_model }}</strong>
+                    </p>
+
+                    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <flux:field>
+                            <flux:label>Fuente</flux:label>
+                            <select wire:model.live="imageMode" class="w-full rounded-lg border border-fuchsia-200 bg-white px-3 py-2 text-sm dark:border-fuchsia-900/60 dark:bg-zinc-950 dark:text-white">
+                                <option value="article">A partir de la página</option>
+                                <option value="prompt">Desde un prompt</option>
+                            </select>
+                        </flux:field>
+                        <flux:field>
+                            <flux:label>Tamaño</flux:label>
+                            <select wire:model.live="imageSizePreset" class="w-full rounded-lg border border-fuchsia-200 bg-white px-3 py-2 text-sm dark:border-fuchsia-900/60 dark:bg-zinc-950 dark:text-white">
+                                <option value="800x600">800 × 600</option>
+                                <option value="480x360">480 × 360</option>
+                                <option value="custom">Personalizada…</option>
+                            </select>
+                        </flux:field>
+                    </div>
+
+                    @if($imageSizePreset === 'custom')
+                        <div class="mt-2 flex items-center gap-2">
+                            <input type="number" wire:model="imgCustomW" min="64" max="2048" class="w-24 rounded-lg border border-fuchsia-200 bg-white px-2 py-1.5 text-sm dark:border-fuchsia-900/60 dark:bg-zinc-950 dark:text-white" placeholder="Ancho">
+                            <span class="text-zinc-400">×</span>
+                            <input type="number" wire:model="imgCustomH" min="64" max="2048" class="w-24 rounded-lg border border-fuchsia-200 bg-white px-2 py-1.5 text-sm dark:border-fuchsia-900/60 dark:bg-zinc-950 dark:text-white" placeholder="Alto">
+                        </div>
+                    @endif
+
+                    @if($imageMode === 'prompt')
+                        <textarea wire:model="imagePrompt" rows="2" class="mt-2 w-full resize-y rounded-xl border border-fuchsia-200 bg-white px-3 py-2 text-sm dark:border-fuchsia-900/60 dark:bg-zinc-950 dark:text-white" placeholder="Describe la imagen destacada..."></textarea>
+                    @else
+                        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Se generará a partir del título de la página.</p>
+                    @endif
+                @endif
+            </div>
 
         <x-slot:actions>
             @if($errorMessage)
@@ -240,7 +287,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span wire:loading.remove wire:target="create">Crear página</span>
-                <span wire:loading wire:target="create" x-text="`Creando... ${elapsedLabel()}`">Creando...</span>
+                <span wire:loading wire:target="create" x-text="`Creando... ${elapsedLabel()} / máx {{ config('starcho_ai.request_timeout', 120) }}s`">Creando...</span>
             </button>
         </x-slot:actions>
     </x-starcho-popup-standar>

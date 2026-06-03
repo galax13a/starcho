@@ -98,26 +98,66 @@
                     </flux:field>
                 </div>
 
-                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
-                    <flux:heading size="lg">{{ __('admin_ui.site.sections.assets') }}</flux:heading>
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-5">
+                    <div>
+                        <flux:heading size="lg">{{ __('admin_ui.site.sections.assets') }}</flux:heading>
+                        <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Favicon del navegador e imagen para compartir en redes (Open Graph).</p>
+                    </div>
 
+                    {{-- Favicon --}}
                     <flux:field>
                         <flux:label>{{ __('admin_ui.site.form.favicon') }}</flux:label>
-                        <input type="file" name="favicon" wire:model="favicon" class="block w-full text-sm" accept=".ico">
-                        @if($settings->favicon_path)
-                            <img src="{{ $siteAssetUrl($settings->favicon_path) }}" alt="favicon" class="mt-2 h-8 w-8 rounded bg-zinc-50 dark:bg-zinc-800 p-1">
-                        @endif
+                        <div class="flex items-center gap-4">
+                            <div class="shrink-0">
+                                @if($settings->favicon_path)
+                                    <img src="{{ $siteAssetUrl($settings->favicon_path) }}" alt="favicon"
+                                         class="h-12 w-12 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 object-contain p-1.5">
+                                @else
+                                    {{-- CSS default placeholder when there's no favicon --}}
+                                    <div class="h-12 w-12 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 grid place-items-center bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15 text-violet-500">
+                                        <i class="fas fa-globe text-lg"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <label class="flex-1 cursor-pointer">
+                                <span class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300 transition hover:border-violet-300 hover:text-violet-700 dark:hover:border-violet-700">
+                                    <i class="fas fa-upload text-xs"></i> Cambiar favicon
+                                </span>
+                                <input type="file" name="favicon" wire:model="favicon" class="hidden" accept=".ico,.png">
+                                <span class="mt-1 block text-[11px] text-zinc-400">.ico o .png · recomendado 32×32 o 48×48 · máx 1&nbsp;MB</span>
+                            </label>
+                        </div>
                         <flux:error name="favicon" />
                     </flux:field>
 
+                    {{-- Open Graph image --}}
                     <flux:field>
                         <flux:label>{{ __('admin_ui.site.form.og_image') }}</flux:label>
-                        <input type="file" name="og_image" wire:model="ogImage" class="block w-full text-sm" accept="image/png,image/jpeg,image/webp">
-                        @if($settings->og_image_path)
-                            <img src="{{ $siteAssetUrl($settings->og_image_path) }}" alt="og image" class="mt-2 rounded-lg border border-zinc-200 dark:border-zinc-700 max-h-36">
-                        @endif
+                        <div class="flex items-start gap-4">
+                            <div class="shrink-0">
+                                @if($settings->og_image_path)
+                                    <img src="{{ $siteAssetUrl($settings->og_image_path) }}" alt="og image"
+                                         class="h-20 w-36 rounded-lg border border-zinc-200 dark:border-zinc-700 object-cover">
+                                @else
+                                    <div class="h-20 w-36 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 grid place-items-center bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15 text-violet-400">
+                                        <i class="fas fa-image text-xl"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <label class="flex-1 cursor-pointer">
+                                <span class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300 transition hover:border-violet-300 hover:text-violet-700 dark:hover:border-violet-700">
+                                    <i class="fas fa-upload text-xs"></i> Cambiar imagen OG
+                                </span>
+                                <input type="file" name="og_image" wire:model="ogImage" class="hidden" accept="image/png,image/jpeg,image/webp">
+                                <span class="mt-1 block text-[11px] text-zinc-400">1200×630 px recomendado · PNG/JPG/WebP · máx 4&nbsp;MB</span>
+                            </label>
+                        </div>
                         <flux:error name="og_image" />
                     </flux:field>
+
+                    <p wire:loading wire:target="favicon,ogImage" class="text-xs text-violet-500">
+                        <i class="fas fa-spinner fa-spin mr-1"></i> Subiendo…
+                    </p>
                 </div>
             </div>
 

@@ -8,12 +8,14 @@
         <div class="flex flex-wrap items-center justify-end gap-2">
             <button type="button"
                     onclick="Livewire.dispatch('openPageAiCreator')"
-                    class="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-violet-900/50 dark:bg-zinc-900 dark:text-violet-200 dark:hover:bg-violet-950/30">
-                <i class="fas fa-wand-magic-sparkles text-xs"></i>
-                Crear página con AI
+                    class="group inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition
+                           bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 hover:-translate-y-0.5
+                           focus:outline-none focus:ring-2 focus:ring-violet-400/40">
+                <i class="fas fa-wand-magic-sparkles text-xs transition-transform group-hover:rotate-12"></i>
+                Crear con IA
             </button>
             <a href="{{ route('admin.pages.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition shadow-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-violet-700">
                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
