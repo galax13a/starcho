@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiPlan;
 use App\Models\StoragePlan;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -60,8 +61,9 @@ class UserController extends Controller
         $roles         = Role::orderBy('name')->get();
         $userRoles     = $user->roles->pluck('id')->toArray();
         $storagePlans  = StoragePlan::orderBy('sort_order')->get();
+        $aiPlans       = AiPlan::orderBy('sort_order')->get();
 
-        return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'storagePlans'));
+        return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'storagePlans', 'aiPlans'));
     }
 
     public function update(Request $request, User $user)
@@ -95,5 +97,16 @@ class UserController extends Controller
         $user->update(['storage_plan_id' => $request->storage_plan_id]);
 
         return back()->with('success', "Plan de almacenamiento actualizado para '{$user->name}'.");
+    }
+
+    public function updateAiPlan(Request $request, User $user)
+    {
+        $request->validate([
+            'ai_plan_id' => 'nullable|exists:ai_plans,id',
+        ]);
+
+        $user->update(['ai_plan_id' => $request->ai_plan_id ?: null]);
+
+        return back()->with('success', "Plan de IA actualizado para '{$user->name}'.");
     }
 }

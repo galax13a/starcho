@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\EncryptedOrPlain;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -22,11 +23,27 @@ class StorageSetting extends Model
         // Local
         'local_folder',
         'local_url',
+        'image_variants_enabled',
+        'image_variant_sizes',
+        'image_preview_variant_size',
+        'avatar_size',
     ];
 
     protected $casts = [
         's3_use_path_style' => 'boolean',
+        'image_variants_enabled' => 'boolean',
+        'image_variant_sizes' => 'array',
+        // Cloud credentials encrypted at rest (graceful: tolerates legacy plaintext).
+        's3_key'    => EncryptedOrPlain::class,
+        's3_secret' => EncryptedOrPlain::class,
+        'do_key'    => EncryptedOrPlain::class,
+        'do_secret' => EncryptedOrPlain::class,
+        'r2_key'    => EncryptedOrPlain::class,
+        'r2_secret' => EncryptedOrPlain::class,
     ];
+
+    /** Column names holding encrypted credentials (used by the migration). */
+    public const ENCRYPTED_SECRETS = ['s3_key', 's3_secret', 'do_key', 'do_secret', 'r2_key', 'r2_secret'];
 
     public static function singleton(): static
     {
@@ -85,5 +102,41 @@ class StorageSetting extends Model
     public function localPublicUrl(string $path): string
     {
         return $this->localBaseUrl() . '/storage/' . ltrim($path, '/');
+    }
+
+    public function imageVariantsEnabled(): bool
+    {
+        return (bool) $this->image_variants_enabled;
+    }
+
+    public function imageVariantSizes(): array
+    {
+        $sizes = collect($this->image_variant_sizes ?: [])
+            ->map(fn ($size) => (int) $size)
+            ->filter(fn (int $size) => $size >= 64 && $size <= 3840)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        return collect(array_merge([240], $sizes))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    public function imagePreviewVariantSize(): int
+    {
+        $size = (int) ($this->image_preview_variant_size ?: 240);
+
+        return in_array($size, $this->imageVariantSizes(), true)
+            ? $size
+            : 240;
+    }
+
+    public function avatarSize(): int
+    {
+        return min(512, max(64, (int) ($this->avatar_size ?: 190)));
     }
 }

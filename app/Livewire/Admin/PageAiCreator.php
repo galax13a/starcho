@@ -2,11 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exceptions\AiQuotaExceededException;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiSetting;
 use App\Models\Post;
+use App\Models\PostAiMemory;
 use App\Models\SiteLanguage;
 use App\Models\User;
+use App\Services\Ai\AiPricing;
+use App\Services\Ai\AiQuotaService;
 use App\Services\PageAiContentService;
 use Illuminate\Support\Str;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
@@ -21,9 +25,22 @@ class PageAiCreator extends Component
 {
     use DispatchesStarchoNotify;
 
+    private const ARTICLE_PROFILES = [
+        'small' => ['label' => 'Página pequeña', 'words' => 650, 'reading' => 3, 'tokens' => 1200],
+        'medium' => ['label' => 'Página mediana', 'words' => 1100, 'reading' => 6, 'tokens' => 2200],
+        'large' => ['label' => 'Página grande', 'words' => 1800, 'reading' => 9, 'tokens' => 3600],
+        'xlarge' => ['label' => 'Página extra grande', 'words' => 2800, 'reading' => 14, 'tokens' => 5600],
+    ];
+
+    private const DEFAULT_EDITORIAL_PROMPT = 'Actúa como redactor profesional senior, estratega SEO y editor técnico. Crea contenido publicable, claro, persuasivo y bien investigado. Si el formato elegido es HTML + Tailwind, entrega una pieza visual premium, responsive, semántica y moderna con secciones, cards, llamados a la acción y clases Tailwind limpias; no uses scripts, iframes ni assets externos. Si el formato elegido es Editor.js, estructura el contenido en secciones editables con títulos, párrafos y listas útiles.';
+
     public string $description = '';
     public string $provider = 'openai';
     public string $model = '';
+    public string $contentFormat = 'editorjs';
+    public string $editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
+    public string $articleSize = 'medium';
+    public int $maxTokens = 2200;
     public string $status = Post::STATUS_DRAFT;
     public string $navPosition = Post::NAV_NONE;
     public int $authorId = 0;
@@ -68,6 +85,10 @@ class PageAiCreator extends Component
     public function open(): void
     {
         $this->description = '';
+        $this->contentFormat = 'editorjs';
+        $this->editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
+        $this->articleSize = 'medium';
+        $this->maxTokens = self::ARTICLE_PROFILES['medium']['tokens'];
         $this->status = Post::STATUS_DRAFT;
         $this->navPosition = Post::NAV_NONE;
         $this->parentId = 0;
@@ -89,9 +110,13 @@ class PageAiCreator extends Component
     {
         $this->validate([
             'description' => ['required', 'string', 'min:12', 'max:5000'],
-            'provider' => ['required', 'in:openai,deepseek,anthropic'],
+            'provider' => ['required', 'in:openai,deepseek,anthropic,openrouter'],
             'model' => ['required', 'string', 'max:120'],
-            'status' => ['required', 'in:draft,published,scheduled,private,password_protected'],
+            'contentFormat' => ['required', 'in:editorjs,html'],
+            'editorialPrompt' => ['nullable', 'string', 'max:3000'],
+            'articleSize' => ['required', 'in:small,medium,large,xlarge'],
+            'maxTokens' => ['required', 'integer', 'min:800', 'max:8000'],
+            'status' => ['nullable', 'in:draft,published,scheduled,private,password_protected'],
             'navPosition' => ['required', 'in:none,header,footer,both'],
             'authorId' => ['required', 'integer', 'exists:users,id'],
             'parentId' => ['nullable', 'integer', 'min:0'],
@@ -101,15 +126,52 @@ class PageAiCreator extends Component
 
         $this->errorMessage = null;
 
+        $quota = app(AiQuotaService::class);
+
+        try {
+            $quota->ensureCanGenerate(auth()->user(), 'text', $this->maxTokens);
+        } catch (AiQuotaExceededException $exception) {
+            $this->errorMessage = $exception->getMessage();
+
+            return null;
+        }
+
         try {
             $blueprint = $service->generatePageBlueprint(
-                $this->description,
+                $this->generationPrompt(),
                 $this->languages,
                 $this->model,
                 $this->provider,
+                $this->contentFormat,
+                $this->maxTokens,
             );
 
             $post = Post::create($this->postDataFromBlueprint($blueprint));
+            $generation = $post->aiGenerations()->create($service->lastGenerationRecord([
+                'user_id' => auth()->id(),
+                'action' => 'create_page',
+            ]));
+            $post->aiMemories()->create([
+                'post_ai_generation_id' => $generation->id,
+                'user_id' => auth()->id(),
+                'title' => 'Borrador inicial AI - ' . now()->format('d/m/Y H:i'),
+                'source' => 'create_page',
+                'status' => PostAiMemory::STATUS_DRAFT,
+                'active' => true,
+                'prompt_text' => $this->generationPrompt(),
+                'body' => $generation->response_text ?: collect($post->getTranslations('content'))->join("\n\n"),
+                'meta' => [
+                    'provider' => $this->provider,
+                    'model' => $this->model,
+                    'content_format' => $this->contentFormat,
+                    'article_size' => $this->articleSize,
+                    'max_tokens' => $this->maxTokens,
+                ],
+            ]);
+
+            $tokens = (int) ($generation->total_tokens ?: $this->maxTokens);
+            $cost = app(AiPricing::class)->textCostCents($this->model, $tokens);
+            $quota->record(auth()->user(), 'text', $tokens, $cost);
         } catch (Throwable $exception) {
             report($exception);
             $providerName = AiSetting::PROVIDERS[$this->provider] ?? 'AI';
@@ -136,7 +198,21 @@ class PageAiCreator extends Component
             'settings' => $settings,
             'providers' => $settings->configuredProviders(),
             'models' => $settings->modelOptions($this->provider),
+            'articleProfiles' => self::ARTICLE_PROFILES,
         ]);
+    }
+
+    public function updatedArticleSize(string $value): void
+    {
+        if (isset(self::ARTICLE_PROFILES[$value])) {
+            $this->maxTokens = self::ARTICLE_PROFILES[$value]['tokens'];
+        }
+    }
+
+    #[Computed]
+    public function finalPrompt(): string
+    {
+        return $this->generationPrompt();
     }
 
     private function postDataFromBlueprint(array $blueprint): array
@@ -150,8 +226,8 @@ class PageAiCreator extends Component
             'slug' => $this->slugsFor($titles, $primaryTitle),
             'excerpt' => $this->pluckLocaleField($blueprint, 'excerpt') ?: null,
             'content' => $this->pluckLocaleField($blueprint, 'content') ?: null,
-            'status' => $this->status,
-            'published_at' => $this->status === Post::STATUS_PUBLISHED ? now() : null,
+            'status' => Post::STATUS_DRAFT,
+            'published_at' => null,
             'author_id' => $this->authorId,
             'parent_id' => $this->parentId > 0 ? $this->parentId : null,
             'menu_order' => $this->menuOrder,
@@ -202,5 +278,23 @@ class PageAiCreator extends Component
         if (! in_array($this->model, $models, true)) {
             $this->model = $models[0] ?? $settings->default_model;
         }
+    }
+
+    private function generationPrompt(): string
+    {
+        $profile = self::ARTICLE_PROFILES[$this->articleSize] ?? self::ARTICLE_PROFILES['medium'];
+        $format = $this->contentFormat === 'html' ? 'HTML + Tailwind renderizable en starchoHtml' : 'Editor.js estructurado';
+
+        return trim(<<<PROMPT
+Objetivo de la página:
+{$this->description}
+
+Instrucción editorial adicional:
+{$this->editorialPrompt}
+
+Formato solicitado: {$format}.
+Extensión objetivo: {$profile['label']}, aproximadamente {$profile['words']} palabras y {$profile['reading']} minutos de lectura.
+Presupuesto de salida aproximado: {$this->maxTokens} tokens.
+PROMPT);
     }
 }

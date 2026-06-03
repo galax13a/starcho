@@ -231,6 +231,7 @@ class PostController extends Controller
             'content'            => 'nullable|array',
             'content.*'          => 'nullable|string',
             'featured_image'     => 'nullable|image|max:8192',
+            'featured_image_media_id' => 'nullable|integer|exists:media,id',
             'featured_image_alt' => 'nullable|array',
             'featured_image_alt.*' => 'nullable|string|max:255',
             'parent_id'          => 'nullable|exists:posts,id',
@@ -310,6 +311,13 @@ class PostController extends Controller
 
         if ($request->hasFile('featured_image')) {
             $data['featured_image'] = $request->file('featured_image')->store('uploads/posts/featured', 'public');
+        } elseif ($request->filled('featured_image_media_id')) {
+            // Selected from the existing media gallery instead of uploading.
+            $media = \App\Models\Media::find($request->integer('featured_image_media_id'));
+
+            if ($media && $media->isImage() && $media->path) {
+                $data['featured_image'] = $media->path;
+            }
         }
 
         if ($request->hasFile('og_image')) {

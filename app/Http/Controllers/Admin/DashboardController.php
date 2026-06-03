@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
+use App\Models\Media;
 use App\Models\Note;
 use App\Models\Post;
 use App\Models\StarchoModule;
+use App\Models\StorageSetting;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\View\View;
@@ -56,6 +58,26 @@ class DashboardController extends Controller
             StarchoModule::where('installed', true)->where('active', false)->count(),
         ];
 
+        $mediaOriginalBytes = (int) Media::sum('size');
+        $mediaVariantBytes = (int) Media::sum('variants_size');
+        $storageSetting = StorageSetting::singleton();
+        $mediaSummary = [
+            'total' => Media::count(),
+            'images' => Media::where('mime_type', 'like', 'image/%')->count(),
+            'videos' => Media::where('mime_type', 'like', 'video/%')->count(),
+            'documents' => Media::where('mime_type', 'not like', 'image/%')
+                ->where('mime_type', 'not like', 'video/%')
+                ->count(),
+            'original_bytes' => $mediaOriginalBytes,
+            'variant_bytes' => $mediaVariantBytes,
+            'total_bytes' => $mediaOriginalBytes + $mediaVariantBytes,
+            'original_label' => $this->bytesLabel($mediaOriginalBytes),
+            'variant_label' => $this->bytesLabel($mediaVariantBytes),
+            'total_label' => $this->bytesLabel($mediaOriginalBytes + $mediaVariantBytes),
+            'variants_enabled' => $storageSetting->imageVariantsEnabled(),
+            'variant_sizes' => $storageSetting->imageVariantSizes(),
+        ];
+
         return view('admin.dashboard.index', [
             'stats' => $stats,
             'tasksByStatus' => $tasksByStatus,
@@ -66,6 +88,21 @@ class DashboardController extends Controller
                 ['name' => __('admin_ui.dashboard.charts.notes'), 'data' => $notesPerMonth],
             ],
             'modulesSeries' => $modulesSeries,
+            'mediaSummary' => $mediaSummary,
         ]);
+    }
+
+    private function bytesLabel(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = max(0, $bytes);
+        $index = 0;
+
+        while ($value >= 1024 && $index < count($units) - 1) {
+            $value /= 1024;
+            $index++;
+        }
+
+        return ($index === 0 ? number_format($value, 0) : number_format($value, 2)) . ' ' . $units[$index];
     }
 }

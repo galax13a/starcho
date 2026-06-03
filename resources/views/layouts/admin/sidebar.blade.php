@@ -36,6 +36,11 @@
     } catch (\Throwable) {
         $adminBrandName = 'Starcho';
     }
+
+    $adminUser = auth()->user();
+    $adminAvatarUrl = null;
+
+    $adminAvatarUrl = $adminUser?->avatar_url;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -160,12 +165,16 @@
             {{-- User popup menu --}}
             <div class="sa-user-menu" x-show="userMenuOpen" x-transition.origin.bottom x-cloak>
                 <div class="sa-um-header">
-                    <div class="sa-avatar" style="width:38px;height:38px;font-size:14px;background:linear-gradient(135deg,#fe2c55,#c02040)">
-                        {{ auth()->user()->initials() }}
+                    <div class="sa-avatar" style="width:38px;height:38px;font-size:14px;background:linear-gradient(135deg,#fe2c55,#c02040);overflow:hidden">
+                        @if($adminAvatarUrl)
+                            <img src="{{ $adminAvatarUrl }}" alt="{{ $adminUser->name }}" style="width:100%;height:100%;object-fit:cover">
+                        @else
+                            {{ $adminUser->initials() }}
+                        @endif
                     </div>
                     <div class="sa-um-info">
-                        <div class="sa-um-name">{{ auth()->user()->name }}</div>
-                        <div class="sa-um-email">{{ auth()->user()->email }}</div>
+                        <div class="sa-um-name">{{ $adminUser->name }}</div>
+                        <div class="sa-um-email">{{ $adminUser->email }}</div>
                     </div>
                 </div>
                 <a href="{{ route('profile.edit') }}" wire:navigate class="sa-um-item" @click="userMenuOpen = false">
@@ -185,11 +194,15 @@
 
             {{-- User trigger --}}
             <div class="sa-sb-user" @click="userMenuOpen = !userMenuOpen">
-                <div class="sa-avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#fe2c55,#c02040)">
-                    {{ auth()->user()->initials() }}
+                <div class="sa-avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#fe2c55,#c02040);overflow:hidden">
+                    @if($adminAvatarUrl)
+                        <img src="{{ $adminAvatarUrl }}" alt="{{ $adminUser->name }}" style="width:100%;height:100%;object-fit:cover">
+                    @else
+                        {{ $adminUser->initials() }}
+                    @endif
                 </div>
                 <div class="sa-sb-user-info">
-                    <div class="sa-sb-user-name">{{ auth()->user()->name }}</div>
+                    <div class="sa-sb-user-name">{{ $adminUser->name }}</div>
                     <div class="sa-sb-user-role">
                         @foreach(auth()->user()->roles->take(1) as $role)
                             {{ $role->name }}

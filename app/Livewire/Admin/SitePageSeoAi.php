@@ -51,7 +51,7 @@ class SitePageSeoAi extends Component
         $this->validate([
             'path' => ['required', 'string', 'max:255'],
             'filePath' => ['required', 'string'],
-            'provider' => ['required', 'in:openai,deepseek,anthropic'],
+            'provider' => ['required', 'in:openai,deepseek,anthropic,openrouter'],
             'model' => ['required', 'string', 'max:120'],
         ]);
 

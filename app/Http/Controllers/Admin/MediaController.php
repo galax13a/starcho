@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
@@ -50,9 +51,14 @@ class MediaController extends Controller
         $media = $query->paginate(24)->withQueryString();
 
         // ── Storage stats by type ─────────────────────────────────────
+        $originalBytes = (int) Media::sum('size');
+        $variantBytes = (int) Media::sum('variants_size');
+
         $totals = [
             'count'     => Media::count(),
-            'size'      => Media::sum('size'),
+            'size'      => $originalBytes + $variantBytes,
+            'original_size' => $originalBytes,
+            'variants_size' => $variantBytes,
             'images'    => Media::where('mime_type', 'like', 'image/%')->count(),
             'videos'    => Media::where('mime_type', 'like', 'video/%')->count(),
             'documents' => Media::where('mime_type', 'not like', 'image/%')
@@ -65,6 +71,7 @@ class MediaController extends Controller
         $storagePlan = $user->storagePlan ?? StoragePlan::free();
         $usedBytes   = $user->storage_used_bytes ?? 0;
         $limitBytes  = $storagePlan?->storage_limit_bytes ?? 0;
+        $remainingBytes = $limitBytes > 0 ? max(0, $limitBytes - $usedBytes) : null;
         $pct         = ($limitBytes > 0) ? min(100, round($usedBytes / $limitBytes * 100)) : 0;
 
         // Next paid plan (cheapest plan more expensive than current)
@@ -75,19 +82,48 @@ class MediaController extends Controller
             ->first();
 
         $storageSetting = StorageSetting::singleton();
+        $previewUrls = $media->getCollection()
+            ->mapWithKeys(fn (Media $item) => [$item->id => $item->isImage() ? $item->variantUrls() : ['original' => $item->public_url]])
+            ->all();
+        $imageVariantsEnabled = $storageSetting->imageVariantsEnabled();
+        $variantSizes = $storageSetting->imageVariantSizes();
+        $previewVariantSize = $storageSetting->imagePreviewVariantSize();
         $tags = MediaTag::orderBy('name')->get();
         $albums = MediaAlbum::orderBy('name')->get();
 
         return view('admin.media.index', compact(
             'media', 'totals',
-            'storagePlan', 'usedBytes', 'limitBytes', 'pct', 'upgradePlan',
-            'storageSetting', 'tags', 'albums'
+            'storagePlan', 'usedBytes', 'limitBytes', 'remainingBytes', 'pct', 'upgradePlan',
+            'storageSetting', 'tags', 'albums', 'previewUrls', 'variantSizes', 'previewVariantSize', 'imageVariantsEnabled'
         ));
+    }
+
+    /** Lightweight JSON list of gallery images for the featured-image picker. */
+    public function picker(Request $request): JsonResponse
+    {
+        $images = Media::query()
+            ->where('mime_type', 'like', 'image/%')
+            ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
+                $w->where('original_name', 'like', '%' . $request->q . '%')
+                  ->orWhere('display_name', 'like', '%' . $request->q . '%');
+            }))
+            ->latest()
+            ->limit(80)
+            ->get()
+            ->map(fn (Media $m) => [
+                'id'   => $m->id,
+                'path' => $m->path,
+                'url'  => $m->preview_url ?? $m->public_url,
+                'full' => $m->public_url,
+                'name' => $m->display_name ?: $m->original_name,
+            ]);
+
+        return response()->json(['images' => $images]);
     }
 
     public function upload(Request $request): JsonResponse
     {
-        $request->validate(['file' => 'required|file|max:20480']);
+        $request->validate(['file' => array_merge(['required'], Media::uploadFileRules())]);
 
         try {
             $media = $this->storage->upload(
@@ -102,6 +138,8 @@ class MediaController extends Controller
                 'media'   => [
                     'id'            => $media->id,
                     'url'           => $media->public_url,
+                    'preview_url'   => $media->preview_url,
+                    'variants'      => $media->variants,
                     'original_name' => $media->original_name,
                     'name'          => $media->name,
                     'size_label'    => $media->sizeLabel(),
@@ -124,11 +162,19 @@ class MediaController extends Controller
         return back()->with('success', 'Archivo eliminado correctamente.');
     }
 
-    public function download(Media $media): StreamedResponse
+    public function download(Request $request, Media $media): StreamedResponse|BinaryFileResponse
     {
-        $name = $media->name ?: $media->original_name;
+        $variant = $request->query('variant');
+        $path = $variant ? $media->variantPath((string) $variant) : $media->path;
 
-        return $this->storage->diskFor($media)->download($media->path, $name);
+        abort_unless($path, 404);
+
+        $suffix = $variant ? '-' . $variant . 'px' : '';
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: pathinfo($media->path, PATHINFO_EXTENSION);
+        $baseName = pathinfo($media->name ?: $media->original_name, PATHINFO_FILENAME) ?: 'media-' . $media->id;
+        $name = Str::slug($baseName) . $suffix . ($extension ? '.' . $extension : '');
+
+        return $this->storage->diskFor($media)->download($path, $name);
     }
 
     public function rate(Request $request, Media $media): RedirectResponse
@@ -172,6 +218,60 @@ class MediaController extends Controller
         $media->favorites()->create(['user_id' => auth()->id()]);
 
         return back()->with('success', 'Archivo agregado a favoritos.');
+    }
+
+    public function generateVariants(Media $media): RedirectResponse
+    {
+        abort_unless($media->isImage(), 422, 'Solo se pueden generar variantes para imágenes.');
+
+        if (! StorageSetting::singleton()->imageVariantsEnabled()) {
+            return back()->with('warning', 'Activa Multi-size images en Storage antes de generar copias.');
+        }
+
+        try {
+            $this->storage->generateImageVariants($media, true);
+        } catch (\RuntimeException $exception) {
+            return back()->with('warning', $exception->getMessage());
+        }
+
+        return back()->with('success', 'Variantes de imagen generadas.');
+    }
+
+    public function bulkGenerateVariants(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'media_ids' => ['required', 'array'],
+            'media_ids.*' => ['integer', 'exists:media,id'],
+        ]);
+
+        $generated = 0;
+        $settings = StorageSetting::singleton();
+
+        if (! $settings->imageVariantsEnabled()) {
+            return back()->with('warning', 'Activa Multi-size images en Storage antes de generar copias.');
+        }
+
+        $failed = [];
+
+        Media::whereIn('id', $data['media_ids'])
+            ->where('mime_type', 'like', 'image/%')
+            ->get()
+            ->each(function (Media $media) use (&$generated, &$failed): void {
+                try {
+                    $this->storage->generateImageVariants($media, true);
+                    $generated++;
+                } catch (\RuntimeException $exception) {
+                    $failed[] = $media->name . ': ' . $exception->getMessage();
+                }
+            });
+
+        $response = back()->with('success', "{$generated} imagen(es) optimizada(s).");
+
+        if ($failed !== []) {
+            $response->with('warning', implode(' ', array_slice($failed, 0, 3)));
+        }
+
+        return $response;
     }
 
     public function bulkDelete(Request $request): RedirectResponse

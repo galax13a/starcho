@@ -26,6 +26,7 @@ Route::prefix('admin')
 
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::view('comments', 'admin.posts.comments')->name('comments.index');
 
         // ── Roles: rutas custom ANTES del resource para evitar conflicto con {role} ──
         Route::get('roles/import',       [RoleController::class, 'importForm'])->name('roles.import');
@@ -50,6 +51,7 @@ Route::prefix('admin')
         Route::put('users/{user}',             [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}',          [UserController::class, 'destroy'])->name('users.destroy');
         Route::patch('users/{user}/plan',      [UserController::class, 'updatePlan'])->name('users.plan');
+        Route::patch('users/{user}/ai-plan',   [UserController::class, 'updateAiPlan'])->name('users.ai-plan');
 
         // ── Tasks (Index + Export + Import) ───────────────────────────────────────
         Route::get('tasks',             [TaskController::class, 'index'])->name('tasks.index');
@@ -69,6 +71,10 @@ Route::prefix('admin')
         Route::put('site/ai', [AiSettingsController::class, 'update'])->name('site.ai.update');
         Route::get('site/page-editor', [SiteController::class, 'editPage'])->name('site.pages.edit');
         Route::put('site/page-editor', [SiteController::class, 'updatePage'])->name('site.pages.update');
+
+        // ── AI panel ───────────────────────────────────────────────────────────
+        Route::view('ai', 'admin.ai.index')->name('ai.index');
+        Route::post('ai/featured-image', [\App\Http\Controllers\Admin\AiImageController::class, 'featured'])->name('ai.featured-image');
 
         // ── Modules ──────────────────────────────────────────────────────────────
         Route::get('modules',                    [ModuleController::class, 'index'])->name('modules.index');
@@ -102,6 +108,7 @@ Route::prefix('admin')
         Route::post('users-ban/{user}/unban', [UserBanController::class, 'unban'])->name('users-ban.unban');
 
         // ── Storage settings ──────────────────────────────────────────────────────
+        Route::view('storage', 'admin.storage.index')->name('storage.index');
         Route::put('storage',                          [StorageSettingsController::class, 'update'])->name('storage.update');
         Route::post('storage/link',                    [StorageSettingsController::class, 'link'])->name('storage.link');
         Route::post('storage/test',                    [StorageSettingsController::class, 'test'])->name('storage.test');
@@ -112,6 +119,7 @@ Route::prefix('admin')
 
         // ── Multimedia gallery ────────────────────────────────────────────────────
         Route::get('media',              [MediaController::class, 'index'])->name('media.index');
+        Route::get('media/picker',       [MediaController::class, 'picker'])->name('media.picker');
         Route::post('media/upload',      [MediaController::class, 'upload'])->name('media.upload');
         Route::post('media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('media.bulk-delete');
         Route::post('media/bulk-attach', [MediaController::class, 'bulkAttach'])->name('media.bulk-attach');
@@ -133,6 +141,8 @@ Route::prefix('admin')
         Route::post('media/{media}/rating', [MediaController::class, 'rate'])->name('media.rating');
         Route::post('media/{media}/comments', [MediaController::class, 'comment'])->name('media.comments');
         Route::post('media/{media}/favorite', [MediaController::class, 'favorite'])->name('media.favorite');
+        Route::post('media/variants/bulk', [MediaController::class, 'bulkGenerateVariants'])->name('media.variants.bulk');
+        Route::post('media/{media}/variants', [MediaController::class, 'generateVariants'])->name('media.variants.generate');
         Route::get('media/{media}/download', [MediaController::class, 'download'])->name('media.download');
         Route::put('media/{media}',      [MediaController::class, 'update'])->name('media.update');
         Route::delete('media/{media}',   [MediaController::class, 'destroy'])->name('media.destroy');
@@ -142,6 +152,7 @@ Route::prefix('admin')
         Route::post('posts/generate-slug',                 [PostController::class, 'generateSlug'])->name('posts.generate-slug');
         Route::post('posts/{post}/gallery',                [PostController::class, 'uploadGalleryImage'])->name('posts.gallery.upload');
         Route::delete('posts/{post}/gallery/{media}',      [PostController::class, 'destroyGalleryImage'])->name('posts.gallery.destroy');
+        Route::view('posts/comments',                      'admin.posts.comments')->name('posts.comments');
         Route::get('posts',                                [PostController::class, 'index'])->name('posts.index');
         Route::get('posts/create',                         [PostController::class, 'create'])->name('posts.create');
         Route::post('posts',                               [PostController::class, 'store'])->name('posts.store');

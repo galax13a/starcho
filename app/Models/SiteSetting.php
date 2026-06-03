@@ -49,6 +49,9 @@ class SiteSetting extends Model
         'dark_mode_enabled',
         'hide_language_switcher',
         'default_site_locale',
+        'avatar_style',
+        'profile_avatar_upload_enabled',
+        'avatar_service_url',
         'favicon_path',
         'og_image_path',
         'social_facebook',
@@ -71,6 +74,7 @@ class SiteSetting extends Model
         'public_registration_enabled' => 'boolean',
         'dark_mode_enabled' => 'boolean',
         'hide_language_switcher' => 'boolean',
+        'profile_avatar_upload_enabled' => 'boolean',
     ];
 
     public static function defaults(): array
@@ -113,6 +117,9 @@ class SiteSetting extends Model
             'dark_mode_enabled' => false,
             'hide_language_switcher' => false,
             'default_site_locale' => 'es',
+            'avatar_style' => 'image',
+            'profile_avatar_upload_enabled' => true,
+            'avatar_service_url' => null,
             'favicon_path' => null,
             'og_image_path' => null,
             'social_facebook' => null,
@@ -176,6 +183,23 @@ class SiteSetting extends Model
             $locale = $settings?->default_site_locale;
 
             return filled($locale) ? (string) $locale : 'es';
+        }
+
+        public static function avatarStyle(): string
+        {
+            $style = static::cached()?->avatar_style;
+
+            return in_array($style, ['initials', 'image', 'service'], true) ? $style : 'image';
+        }
+
+        public static function profileAvatarUploadEnabled(): bool
+        {
+            return static::cached()?->profile_avatar_upload_enabled ?? true;
+        }
+
+        public static function avatarServiceUrl(): ?string
+        {
+            return static::cached()?->avatar_service_url;
         }
 
     public static function singleton(): self

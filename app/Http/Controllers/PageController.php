@@ -28,6 +28,8 @@ class PageController extends Controller
             return view('pages.index');
         }
 
+        $page->increment('views_count');
+
         $locale = app()->getLocale();
         $fallbackLocale = null;
         $usingFallback = false;
@@ -43,14 +45,7 @@ class PageController extends Controller
     public function show(string $locale, string $slug): View
     {
         $page = Post::where('type', Post::TYPE_PAGE)
-            ->where(function ($q) use ($slug, $locale) {
-                $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(slug, '$.$locale')) = ?", [$slug]);
-                foreach (SiteLanguage::activeCodes() as $code) {
-                    if ($code !== $locale) {
-                        $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(slug, '$.$code')) = ?", [$slug]);
-                    }
-                }
-            })
+            ->whereSlug($slug)
             ->where('status', Post::STATUS_PUBLISHED)
             ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
             ->first();
@@ -58,6 +53,8 @@ class PageController extends Controller
         if (!$page) {
             abort(404);
         }
+
+        $page->increment('views_count');
 
         $activeCodes    = SiteLanguage::activeCodes();
         $fallbackLocale = null;

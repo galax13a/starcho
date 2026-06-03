@@ -103,6 +103,21 @@
 /* ── SEO counters ── */
 .seo-warn{color:#f97316}
 .seo-danger{color:#ef4444;font-weight:600}
+.starcho-memory-ai-btn.sc-btn.sc-btn-kick{
+    background:#7c3aed!important;
+    color:#fff!important;
+    border:1px solid #8b5cf6!important;
+    box-shadow:0 8px 18px rgba(124,58,237,.24)!important;
+}
+.starcho-memory-ai-btn.sc-btn.sc-btn-kick:hover{
+    background:#6d28d9!important;
+    color:#fff!important;
+    box-shadow:0 10px 24px rgba(124,58,237,.32)!important;
+}
+.starcho-memory-ai-btn.sc-btn.sc-btn-kick i,
+.starcho-memory-ai-btn.sc-btn.sc-btn-kick span{
+    color:#fff!important;
+}
 /* ── Image drop ── */
 #image-drop-zone.drag-over{border-color:#7c3aed!important;background:#ede9fe}
 .dark #image-drop-zone.drag-over{background:#2e1065}
@@ -206,6 +221,13 @@
                         <i class="fas fa-link text-xs"></i>
                         <span class="sr-only">{{ $isPage ? 'Ver página actual' : 'Ver post actual' }}</span>
                     </a>
+                    <button type="button"
+                        onclick="Livewire.dispatch('openPostInsights', { id: {{ $post->id }} })"
+                        title="Stats, AI y comentarios"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-emerald-700/60 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-200">
+                        <i class="fas fa-chart-simple text-xs"></i>
+                        <span class="sr-only">Stats, AI y comentarios</span>
+                    </button>
                 @endif
                 <button type="button" id="btn-draft" onclick="editorSave('draft')"
                     class="hidden sm:inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-zinc-200 dark:border-zinc-700
@@ -288,10 +310,25 @@
     </div>
 
     {{-- ═══ MAIN 2-COLUMN GRID ═══ --}}
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-start">
+    <div x-data="{ sidebar: true }"
+         class="grid grid-cols-1 gap-5 items-start"
+         :class="sidebar ? 'lg:grid-cols-[1fr_360px]' : 'lg:grid-cols-1'">
 
         {{-- ── LEFT: Content area ───────────────────────────────────────────── --}}
         <div class="space-y-4 min-w-0">
+
+            {{-- Collapse / expand the right panel --}}
+            <div class="flex justify-end">
+                <button type="button" @click="sidebar = !sidebar"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700
+                           text-xs text-zinc-600 dark:text-zinc-300 hover:border-violet-300 dark:hover:border-violet-600 transition">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                         :class="sidebar ? '' : 'rotate-180'">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                    </svg>
+                    <span x-text="sidebar ? 'Ocultar panel' : 'Mostrar panel'"></span>
+                </button>
+            </div>
 
             {{-- Editor.js card --}}
             <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700/60
@@ -310,11 +347,20 @@
                         @endif
                     </div>
                     <div class="flex items-center gap-2 text-xs text-zinc-400">
-                        @if($isPage && $isEditing)
+                        @if($isEditing)
                             <button type="button" onclick="editorOpenAiAssistant('content')"
                                     class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:bg-violet-700">
                                 <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
                                 AI
+                            </button>
+                            <button type="button" onclick="editorOpenAiAssistant('inspiration')"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-amber-500/20 transition hover:bg-amber-600">
+                                <i class="fas fa-lightbulb text-[11px]"></i>
+                                Inspiración
+                            </button>
+                            <button type="button" onclick="editorOpenAiAssistant('memory_regenerate')" class="sc-btn sc-btn-kick starcho-memory-ai-btn !h-8 !px-3 !py-1.5 !text-xs">
+                                <i class="fas fa-brain text-[11px]"></i>
+                                <span>Regenerar con memory</span>
                             </button>
                         @endif
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono">Tab</kbd>
@@ -342,7 +388,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="hidden text-[11px] text-zinc-400 sm:inline">Resumen corto para listados y SEO</span>
-                        @if($isPage && $isEditing)
+                        @if($isEditing)
                             <button type="button" onclick="editorOpenAiAssistant('excerpt')"
                                     class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-violet-900/50 dark:bg-zinc-900 dark:text-violet-200 dark:hover:bg-violet-950/30">
                                 <i class="fas fa-wand-magic-sparkles text-[10px]"></i>
@@ -462,7 +508,7 @@
         </div>{{-- /left --}}
 
         {{-- ── RIGHT: Tabbed sidebar ────────────────────────────────────────── --}}
-        <div class="lg:sticky lg:top-[57px]">
+        <div class="lg:sticky lg:top-[57px]" x-show="sidebar" x-cloak>
 
             {{-- Tab bar --}}
             <div class="flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/60
@@ -626,6 +672,21 @@
                     </div>
                     @endif
 
+                    {{-- Comments option (posts only) --}}
+                    @if(!$isPage)
+                    <div class="ep-divider"></div>
+                    <div class="ep-field">
+                        <label class="ep-label">Opciones del post</label>
+                        <label class="ep-check-row">
+                            <input type="checkbox" name="allow_comments" value="1"
+                                {{ old('allow_comments', $isEditing ? $post->allow_comments : false) ? 'checked' : '' }}
+                                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-violet-600
+                                       focus:ring-violet-500 focus:ring-offset-0 bg-white dark:bg-zinc-800"/>
+                            <span class="text-sm text-zinc-600 dark:text-zinc-400">Permitir comentarios</span>
+                        </label>
+                    </div>
+                    @endif
+
                     {{-- Parent page (pages only) --}}
                     @if($isPage && $pages->isNotEmpty())
                     <div class="ep-divider"></div>
@@ -737,17 +798,24 @@
                 {{-- ══ TAB: SEO ══ --}}
                 <div id="tab-panel-seo" class="ep-panel {{ $defaultTab === 'seo' ? 'ep-visible' : '' }} p-4 space-y-0">
 
-                    @if($isPage && $isEditing)
+                    @if($isEditing)
                         <div class="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50/70 px-3.5 py-3 dark:border-violet-900/50 dark:bg-violet-950/20">
                             <div class="min-w-0">
                                 <p class="text-xs font-semibold text-violet-800 dark:text-violet-200">SEO con AI</p>
                                 <p class="truncate text-[11px] text-violet-600/80 dark:text-violet-300/70">Analiza el contenido y rellena título, descripción, keywords y Open Graph.</p>
                             </div>
-                            <button type="button" onclick="editorOpenAiAssistant('seo')"
-                                    class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:-translate-y-0.5 hover:bg-violet-700">
-                                <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
-                                Generar
-                            </button>
+                            <div class="flex shrink-0 items-center gap-2">
+                                <button type="button" onclick="editorOpenAiAssistant('audit')"
+                                        class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-700">
+                                    <i class="fas fa-magnifying-glass-chart text-[11px]"></i>
+                                    Test
+                                </button>
+                                <button type="button" onclick="editorOpenAiAssistant('seo')"
+                                        class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:-translate-y-0.5 hover:bg-violet-700">
+                                    <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
+                                    Generar
+                                </button>
+                            </div>
                         </div>
                     @endif
 
@@ -902,7 +970,7 @@
                              alt="Vista previa" class="w-full object-cover max-h-52 rounded-xl"/>
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition rounded-xl
                                     flex items-center justify-center">
-                            <button type="button" onclick="editorClearImage()"
+                            <button type="button" onclick="editorClearImage(); var __m=document.getElementById('featured-image-media-id'); if(__m){__m.value='';}"
                                 class="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1.5
                                        px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-medium shadow">
                                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -938,6 +1006,166 @@
                         <input type="file" name="featured_image" id="featured-image-input"
                                accept="image/*" class="hidden" onchange="editorOnImageChange(event)">
                     </label>
+
+                    {{-- Choose from existing gallery --}}
+                    <input type="hidden" name="featured_image_media_id" id="featured-image-media-id" value="">
+                    <div class="mt-3" x-data="{
+                            open: false, loading: false, images: [], q: '',
+                            async load() {
+                                this.loading = true;
+                                try {
+                                    const url = new URL('{{ route('admin.media.picker') }}', window.location.origin);
+                                    if (this.q) url.searchParams.set('q', this.q);
+                                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                                    const data = await res.json();
+                                    this.images = data.images || [];
+                                } catch (e) { this.images = []; }
+                                this.loading = false;
+                            },
+                            pick(img) {
+                                document.getElementById('featured-image-media-id').value = img.id;
+                                const f = document.getElementById('featured-image-input'); if (f) f.value = '';
+                                const p = document.getElementById('image-preview');
+                                const w = document.getElementById('image-preview-wrap');
+                                const ph = document.getElementById('image-placeholder');
+                                if (p) p.src = img.full || img.url;
+                                if (w) w.classList.remove('hidden');
+                                if (ph) ph.classList.add('hidden');
+                                this.open = false;
+                            }
+                         }">
+                        <button type="button" @click="open = true; if(!images.length) load()"
+                            class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg
+                                   border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-600 dark:text-zinc-300
+                                   hover:border-violet-300 dark:hover:border-violet-600 transition">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 14.25h.008M2.25 6h19.5a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 2.25 6Z"/>
+                            </svg>
+                            Elegir de la galería
+                        </button>
+
+                        <template x-teleport="body">
+                            <div x-show="open" x-cloak @keydown.escape.window="open=false"
+                                 class="fixed inset-0 z-[60] bg-black/50 p-4 grid place-items-center">
+                                <div class="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col"
+                                     @click.outside="open=false">
+                                    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3">
+                                        <h3 class="text-sm font-semibold flex-1 text-zinc-800 dark:text-zinc-100">Galería de imágenes</h3>
+                                        <input x-model="q" @input.debounce.400ms="load()" placeholder="Buscar..."
+                                               class="ep-input text-sm max-w-[200px]">
+                                        <button type="button" @click="open=false" class="text-zinc-400 hover:text-zinc-600 text-lg leading-none">&times;</button>
+                                    </div>
+                                    <div class="p-4 overflow-y-auto">
+                                        <template x-if="loading"><p class="text-sm text-zinc-400 text-center py-10">Cargando...</p></template>
+                                        <template x-if="!loading && !images.length"><p class="text-sm text-zinc-400 text-center py-10">No hay imágenes en la galería.</p></template>
+                                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                            <template x-for="img in images" :key="img.id">
+                                                <button type="button" @click="pick(img)"
+                                                    class="group relative rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 aspect-square hover:ring-2 hover:ring-violet-400 transition">
+                                                    <img :src="img.url" :alt="img.name" class="w-full h-full object-cover" loading="lazy">
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Generate with AI --}}
+                    <div class="mt-3" x-data="{
+                            open: false, loading: false, error: '',
+                            mode: 'prompt', size: '800x600', cw: 800, ch: 600, prompt: '', url: '',
+                            dims() {
+                                if (this.size === '800x600') return [800, 600];
+                                if (this.size === '480x360') return [480, 360];
+                                return [parseInt(this.cw) || 1024, parseInt(this.ch) || 1024];
+                            },
+                            apply(media) {
+                                document.getElementById('featured-image-media-id').value = media.id;
+                                const f = document.getElementById('featured-image-input'); if (f) f.value = '';
+                                const p = document.getElementById('image-preview'); if (p) p.src = media.full || media.url;
+                                const w = document.getElementById('image-preview-wrap'); if (w) w.classList.remove('hidden');
+                                const ph = document.getElementById('image-placeholder'); if (ph) ph.classList.add('hidden');
+                            },
+                            async generate() {
+                                this.loading = true; this.error = '';
+                                const [w, h] = this.dims();
+                                const payload = { mode: this.mode, width: w, height: h, prompt: this.prompt, url: this.url };
+                                if (this.mode === 'article') {
+                                    payload.title = document.querySelector('input[name=&quot;title[{{ $primaryLocale }}]&quot;]')?.value || '';
+                                }
+                                try {
+                                    const res = await fetch('{{ route('admin.ai.featured-image') }}', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                        body: JSON.stringify(payload)
+                                    });
+                                    const data = await res.json();
+                                    if (!res.ok || !data.success) { this.error = data.message || 'No se pudo generar la imagen.'; this.loading = false; return; }
+                                    this.apply(data.media);
+                                    this.open = false;
+                                } catch (e) { this.error = 'Error de red.'; }
+                                this.loading = false;
+                            }
+                         }">
+                        <button type="button" @click="open = !open"
+                            class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg
+                                   border border-violet-200 dark:border-violet-800 text-sm text-violet-700 dark:text-violet-300
+                                   bg-violet-50/50 dark:bg-violet-900/10 hover:border-violet-300 transition">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"/>
+                            </svg>
+                            Generar imagen con IA
+                        </button>
+
+                        <div x-show="open" x-cloak class="mt-2 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 space-y-2.5">
+                            {{-- Source --}}
+                            <div>
+                                <label class="text-[11px] font-medium text-zinc-500 block mb-1">Fuente</label>
+                                <select x-model="mode" class="ep-input text-sm w-full">
+                                    <option value="prompt">Desde un prompt</option>
+                                    <option value="article">A partir del artículo</option>
+                                    <option value="url">Desde una URL</option>
+                                </select>
+                            </div>
+
+                            {{-- Prompt --}}
+                            <div x-show="mode === 'prompt'">
+                                <textarea x-model="prompt" rows="2" class="ep-input text-sm w-full" placeholder="Describe la imagen destacada..."></textarea>
+                            </div>
+                            {{-- URL --}}
+                            <div x-show="mode === 'url'">
+                                <input type="url" x-model="url" class="ep-input text-sm w-full" placeholder="https://ejemplo.com/imagen.jpg">
+                            </div>
+                            <p x-show="mode === 'article'" class="text-[11px] text-zinc-400">Se generará a partir del título del artículo.</p>
+
+                            {{-- Dimensions --}}
+                            <div class="flex items-center gap-2" x-show="mode !== 'url'">
+                                <select x-model="size" class="ep-input text-sm flex-1">
+                                    <option value="800x600">800 × 600</option>
+                                    <option value="480x360">480 × 360</option>
+                                    <option value="custom">Personalizada…</option>
+                                </select>
+                                <template x-if="size === 'custom'">
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" x-model="cw" min="64" max="2048" class="ep-input text-sm w-16" placeholder="W">
+                                        <span class="text-zinc-400">×</span>
+                                        <input type="number" x-model="ch" min="64" max="2048" class="ep-input text-sm w-16" placeholder="H">
+                                    </div>
+                                </template>
+                            </div>
+
+                            <p x-show="error" x-text="error" x-cloak class="text-[11px] text-rose-500"></p>
+
+                            <button type="button" @click="generate()" :disabled="loading"
+                                class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg
+                                       bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white text-sm font-medium transition">
+                                <span x-show="!loading">Generar y usar como destacada</span>
+                                <span x-show="loading" x-cloak>Generando…</span>
+                            </button>
+                        </div>
+                    </div>
 
                     {{-- Alt text --}}
                     <div class="mt-4">
@@ -1507,7 +1735,14 @@
             return;
         }
 
-        const incoming = textToEditorData(detail.content || '');
+        if (target === 'audit') {
+            return;
+        }
+
+        const parsedContent = parseAiJson(detail.content || '');
+        const incoming = Array.isArray(parsedContent.blocks)
+            ? parsedContent
+            : (Array.isArray(parsedContent.content?.blocks) ? parsedContent.content : textToEditorData(detail.content || ''));
         const current = contentPerLocale[currentLocale] || {};
         const mode = detail.mode || 'replace';
 
@@ -1526,8 +1761,9 @@
 })();
 </script>
 
-@if($isPage && $isEditing)
+    @if($isEditing)
     <livewire:admin.page-ai-assistant :post="$post" :locale="$primaryLocale" />
-@endif
+    <livewire:admin.post-insights />
+    @endif
 
 </x-layouts::admin>

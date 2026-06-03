@@ -20,6 +20,8 @@ final class PagesTable extends PowerGridComponent
     use HasStarchoCrudActions;
 
     public string $tableName = 'admin-pages-table';
+    public string $sortField = 'created_at';
+    public string $sortDirection = 'desc';
 
     #[Url]
     public string $filterStatus = '';
@@ -45,6 +47,7 @@ final class PagesTable extends PowerGridComponent
             ->where('type', 'page')
             ->with('author', 'parent')
             ->withoutTrashed()
+            ->latest('created_at')
             ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus));
     }
 

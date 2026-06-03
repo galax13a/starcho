@@ -28,7 +28,7 @@
 
             {{ $slot }}
 
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="flex flex-wrap justify-end gap-2 pt-1">
                 <flux:modal.close>
                     <button
                         type="button"

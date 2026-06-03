@@ -13,6 +13,7 @@ use App\Models\SiteSocialNetwork;
 use App\Models\StoragePlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -46,7 +47,7 @@ class SiteController extends Controller
         return view('admin.site.index', compact('settings', 'locales', 'folioPages', 'pageSeoRows', 'socialNetworks', 'siteLanguages', 'storagePlans', 'aiSetting', 'cmsPages'));
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|Redirector
     {
         if (!StarchoModule::isActive('site')) {
             return redirect()
@@ -89,6 +90,9 @@ class SiteController extends Controller
             'public_registration_enabled' => ['nullable', 'boolean'],
             'hide_language_switcher' => ['nullable', 'boolean'],
             'default_site_locale' => ['required', 'string', 'max:20'],
+            'avatar_style' => ['required', 'in:initials,image,service'],
+            'profile_avatar_upload_enabled' => ['nullable', 'boolean'],
+            'avatar_service_url' => ['nullable', 'url', 'max:500'],
             'favicon' => ['nullable', 'file', 'mimes:ico', 'max:1024'],
             'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'social_facebook' => ['nullable', 'url', 'max:255'],
@@ -142,7 +146,7 @@ class SiteController extends Controller
             'company_country' => $data['company_country'] ?? null,
             'company_city' => $data['company_city'] ?? null,
             'address' => $data['address'] ?? null,
-            'founding_year' => isset($data['founding_year']) ? (int) $data['founding_year'] : null,
+            'founding_year' => filled($data['founding_year'] ?? null) ? (int) $data['founding_year'] : null,
             'google_maps_url' => $data['google_maps_url'] ?? null,
             'support_whatsapp' => $data['support_whatsapp'] ?? null,
             'business_whatsapp' => $data['business_whatsapp'] ?? null,
@@ -165,6 +169,9 @@ class SiteController extends Controller
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
             'hide_language_switcher' => $request->boolean('hide_language_switcher'),
             'default_site_locale' => $data['default_site_locale'],
+            'avatar_style' => $data['avatar_style'],
+            'profile_avatar_upload_enabled' => $request->boolean('profile_avatar_upload_enabled'),
+            'avatar_service_url' => $data['avatar_service_url'] ?? null,
             'social_facebook' => $data['social_facebook'] ?? null,
             'social_x' => $data['social_x'] ?? null,
             'social_telegram' => $data['social_telegram'] ?? null,
@@ -312,12 +319,7 @@ class SiteController extends Controller
                 ->with('warning', __('admin_ui.site.notify.page_not_found'));
         }
 
-        $visualData = $this->extractVisualEditableContent($page['blade_content']);
-
-        if ($visualData['supported']) {
-            $updatedContent = $this->replaceVisualEditableContent($page['blade_content'], (string) ($data['visual_html'] ?? ''));
-            File::put($page['file_path'], $updatedContent);
-        }
+        File::put($page['file_path'], (string) ($data['visual_html'] ?? $page['blade_content']));
 
         $this->savePageSeoSettings($request->input('page_settings', []));
 

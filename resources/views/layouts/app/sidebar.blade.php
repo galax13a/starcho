@@ -57,6 +57,9 @@
     $userName    = $authUser?->name ?? '';
     $userEmail   = $authUser?->email ?? '';
     $isAdmin     = $authUser?->hasRole('admin') ?? false;
+    $userAvatarUrl = null;
+
+    $userAvatarUrl = $authUser?->avatar_url;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="starchoApp({!! json_encode($openMenuIds) !!})">
@@ -189,8 +192,12 @@
             <div class="user-menu" x-show="userMenuOpen" x-transition.origin.bottom x-cloak>
                 <div class="user-menu-header">
                     <div class="avatar"
-                         style="width:38px;height:38px;font-size:13px;background:linear-gradient(135deg,#fe2c55,#7c3aed)">
-                        {{ $userInitial }}
+                         style="width:38px;height:38px;font-size:13px;background:linear-gradient(135deg,#fe2c55,#7c3aed);overflow:hidden">
+                        @if($userAvatarUrl)
+                            <img src="{{ $userAvatarUrl }}" alt="{{ $userName }}" style="width:100%;height:100%;object-fit:cover;display:block">
+                        @else
+                            {{ $userInitial }}
+                        @endif
                     </div>
                     <div class="um-info">
                         <div class="um-name">{{ $userName }}</div>
@@ -218,8 +225,12 @@
             {{-- User trigger --}}
             <div class="sb-user" @click="userMenuOpen = !userMenuOpen">
                 <div class="avatar"
-                     style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#fe2c55,#7c3aed)">
-                    {{ $userInitial }}
+                     style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#fe2c55,#7c3aed);overflow:hidden">
+                    @if($userAvatarUrl)
+                        <img src="{{ $userAvatarUrl }}" alt="{{ $userName }}" style="width:100%;height:100%;object-fit:cover;display:block">
+                    @else
+                        {{ $userInitial }}
+                    @endif
                 </div>
                 <div class="sb-user-info">
                     <div class="sb-user-name">{{ $userName }}</div>

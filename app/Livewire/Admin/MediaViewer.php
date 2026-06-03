@@ -20,9 +20,10 @@ class MediaViewer extends Component
     public int $rating = 1;
     public string $comment = '';
     public bool $commentsOpen = false;
+    public string $variantSize = '240';
 
     #[On('openAdminMediaViewer')]
-    public function openViewer(int $id, array $ids = []): void
+    public function openViewer(int $id, array $ids = [], string $variant = '240'): void
     {
         $this->mediaIds = $this->validMediaIds($ids);
 
@@ -32,10 +33,16 @@ class MediaViewer extends Component
         }
 
         $this->mediaId = $id;
+        $this->variantSize = $this->normalizeVariant($variant);
         $this->open = true;
         $this->commentsOpen = false;
         $this->comment = '';
         $this->syncRating();
+    }
+
+    public function setVariantSize(string $size): void
+    {
+        $this->variantSize = $this->normalizeVariant($size);
     }
 
     public function closeViewer(): void
@@ -254,6 +261,14 @@ class MediaViewer extends Component
         $rating = $this->media?->ratings->firstWhere('user_id', auth()->id())?->rating;
         $this->rating = $rating ?: 1;
         $this->resetValidation();
+    }
+
+    private function normalizeVariant(string $variant): string
+    {
+        $settings = \App\Models\StorageSetting::singleton();
+        $allowed = array_merge(['original'], array_map('strval', $settings->imageVariantSizes()));
+
+        return in_array($variant, $allowed, true) ? $variant : (string) $settings->imagePreviewVariantSize();
     }
 
     private function validMediaIds(array $ids): array

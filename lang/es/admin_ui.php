@@ -161,8 +161,12 @@ return [
             'roles' => 'Roles',
             'verification' => 'Verificacion',
             'registered' => 'Registro',
+            'storage_plan' => 'Plan',
+            'storage_usage' => 'Almacenamiento',
             'actions' => 'Acciones',
         ],
+        'no_plan' => 'Sin plan',
+        'storage_unlimited' => 'Ilimitado',
         'notify' => [
             'created' => 'Usuario :name creado correctamente.',
             'updated' => 'Usuario :name actualizado correctamente.',

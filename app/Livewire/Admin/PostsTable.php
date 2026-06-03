@@ -20,6 +20,8 @@ final class PostsTable extends PowerGridComponent
     use HasStarchoCrudActions;
 
     public string $tableName = 'admin-posts-table';
+    public string $sortField = 'created_at';
+    public string $sortDirection = 'desc';
 
     #[Url]
     public string $filterStatus = '';
@@ -45,6 +47,7 @@ final class PostsTable extends PowerGridComponent
             ->where('type', 'post')
             ->with('author', 'categories')
             ->withoutTrashed()
+            ->latest('created_at')
             ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus));
     }
 

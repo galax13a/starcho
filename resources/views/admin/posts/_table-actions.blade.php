@@ -24,6 +24,14 @@
         </svg>
     </a>
 
+    {{-- Stats / AI / comentarios --}}
+    <button type="button"
+        onclick="Livewire.dispatch('openPostInsights', { id: {{ $post->id }} })"
+        class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-zinc-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+        title="Stats">
+        <i class="fas fa-chart-simple text-sm"></i>
+    </button>
+
     {{-- Eliminar --}}
     <button type="button"
         @click="window.Starcho.confirm({

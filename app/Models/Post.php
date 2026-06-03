@@ -70,6 +70,7 @@ class Post extends Model
         'featured_image', 'featured_image_alt',
         'status', 'password', 'published_at',
         'author_id', 'parent_id', 'menu_order', 'nav_position', 'allow_comments',
+        'views_count',
         'seo_title', 'seo_description', 'seo_keywords',
         'og_title', 'og_description', 'og_image',
         'canonical_url', 'no_index', 'no_follow',
@@ -79,6 +80,7 @@ class Post extends Model
     protected $casts = [
         'published_at'   => 'datetime',
         'allow_comments' => 'boolean',
+        'views_count' => 'integer',
         'no_index'       => 'boolean',
         'no_follow'      => 'boolean',
     ];
@@ -116,6 +118,29 @@ class Post extends Model
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable');
+    }
+
+    public function aiGenerations(): HasMany
+    {
+        return $this->hasMany(PostAiGeneration::class)->latest();
+    }
+
+    public function aiMemories(): HasMany
+    {
+        return $this->hasMany(PostAiMemory::class)->latest();
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(PostComment::class)->latest();
+    }
+
+    public function rootComments(): HasMany
+    {
+        return $this->hasMany(PostComment::class)
+            ->whereNull('parent_id')
+            ->with(['user', 'nestedReplies.user'])
+            ->latest();
     }
 
     public function gallery(): MorphMany
@@ -165,5 +190,19 @@ class Post extends Model
         return static::whereRaw("JSON_SEARCH(slug, 'one', ?) IS NOT NULL", [$slug])
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists();
+    }
+
+    /**
+     * Match a post by its translated slug across any locale.
+     *
+     * Uses a fully parameter-bound JSON_SEARCH so no locale code is ever
+     * interpolated into the SQL string. The `%`/`_` LIKE wildcards are escaped
+     * because JSON_SEARCH treats the needle as a LIKE pattern.
+     */
+    public function scopeWhereSlug($query, string $slug)
+    {
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $slug);
+
+        return $query->whereRaw("JSON_SEARCH(slug, 'one', ?, '\\\\') IS NOT NULL", [$escaped]);
     }
 }

@@ -143,7 +143,7 @@ class MediaAlbumController extends Controller
     {
         $request->validate([
             'files' => ['required', 'array'],
-            'files.*' => ['file', 'max:20480'],
+            'files.*' => Media::uploadFileRules(),
         ]);
 
         foreach ($request->file('files', []) as $file) {

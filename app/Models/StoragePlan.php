@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Translatable\HasTranslations;
 
 class StoragePlan extends Model
 {
+    use HasTranslations;
+
+    public array $translatable = ['name', 'description'];
+
     protected $fillable = [
-        'name', 'slug', 'storage_limit_bytes',
+        'name', 'description', 'slug', 'storage_limit_bytes',
         'monthly_price', 'is_free', 'is_active', 'sort_order',
     ];
 

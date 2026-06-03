@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Concerns\DispatchesStarchoNotify;
+use App\Models\StoragePlan;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
@@ -28,6 +29,7 @@ new class extends Component {
     public string $userPassword             = '';
     public string $userPasswordConfirmation = '';
     public array  $userRoles                = [];
+    public ?int   $userStoragePlan          = null;
 
     // ── Computed ──────────────────────────────────────────────────────────
     #[Computed]
@@ -35,6 +37,15 @@ new class extends Component {
 
     #[Computed]
     public function allRoles() { return Role::orderBy('name')->get(); }
+
+    #[Computed]
+    public function storagePlans() { return StoragePlan::orderBy('sort_order')->get(); }
+
+    #[Computed]
+    public function editingUser()
+    {
+        return $this->userId > 0 ? User::with('storagePlan')->find($this->userId) : null;
+    }
 
     // ── Rol ───────────────────────────────────────────────────────────────
     #[On('openRole')]
@@ -122,12 +133,14 @@ new class extends Component {
         $this->userPassword             = '';
         $this->userPasswordConfirmation = '';
         $this->userRoles                = [];
+        $this->userStoragePlan          = null;
 
         if ($id > 0) {
-            $user            = User::with('roles')->findOrFail($id);
-            $this->userName  = $user->name;
-            $this->userEmail = $user->email;
-            $this->userRoles = $user->roles->pluck('id')->map(fn ($i) => (string) $i)->toArray();
+            $user                  = User::with('roles')->findOrFail($id);
+            $this->userName        = $user->name;
+            $this->userEmail       = $user->email;
+            $this->userRoles       = $user->roles->pluck('id')->map(fn ($i) => (string) $i)->toArray();
+            $this->userStoragePlan = $user->storage_plan_id;
         }
 
         $this->resetValidation();
@@ -139,6 +152,7 @@ new class extends Component {
         $rules = [
             'userName'  => 'required|string|max:255',
             'userEmail' => 'required|email|max:255|unique:users,email,' . ($this->userId ?: 'NULL'),
+            'userStoragePlan' => 'nullable|integer|exists:storage_plans,id',
         ];
 
         if ($this->userId === 0 || filled($this->userPassword)) {
@@ -153,7 +167,11 @@ new class extends Component {
 
         if ($isUpdate) {
             $user = User::findOrFail($this->userId);
-            $data = ['name' => $this->userName, 'email' => $this->userEmail];
+            $data = [
+                'name'            => $this->userName,
+                'email'           => $this->userEmail,
+                'storage_plan_id' => $this->userStoragePlan ?: null,
+            ];
             if (filled($this->userPassword)) {
                 $data['password'] = Hash::make($this->userPassword);
             }
@@ -164,6 +182,7 @@ new class extends Component {
                 'name'              => $this->userName,
                 'email'             => $this->userEmail,
                 'password'          => Hash::make($this->userPassword),
+                'storage_plan_id'   => $this->userStoragePlan ?: null,
                 'email_verified_at' => now(),
             ]);
             $user->syncRoles(array_map('intval', $this->userRoles));
@@ -283,6 +302,51 @@ new class extends Component {
                             </label>
                         @endforeach
                     </div>
+                </div>
+            @endif
+
+            @if ($this->storagePlans->count())
+                <div>
+                    <flux:label class="mb-2 block">{{ __('admin_ui.users.columns.storage_plan') }}</flux:label>
+                    <select wire:model="userStoragePlan"
+                            class="w-full h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-white/10 text-sm text-zinc-700 dark:text-zinc-300 px-3 pr-8 focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition">
+                        <option value="">{{ __('admin_ui.users.no_plan') }}</option>
+                        @foreach ($this->storagePlans as $plan)
+                            <option value="{{ $plan->id }}">
+                                {{ $plan->name }} ({{ $plan->limitLabel() }}@if(!$plan->is_free) · ${{ number_format($plan->monthly_price, 2) }}@endif@if(!$plan->is_active) · inactivo @endif)
+                            </option>
+                        @endforeach
+                    </select>
+                    <flux:error name="userStoragePlan" />
+
+                    @if ($this->editingUser)
+                        @php
+                            $eu = $this->editingUser;
+                            $used = \App\Models\User::formatBytes($eu->storage_used_bytes ?? 0);
+                            $pct = $eu->storagePct();
+                            $barColor = $pct >= 90 ? 'bg-rose-500' : ($pct >= 70 ? 'bg-amber-500' : 'bg-violet-600');
+                        @endphp
+                        <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            <div class="flex items-center justify-between mb-1">
+                                <span>{{ __('admin_ui.users.columns.storage_usage') }}:
+                                    <strong class="text-zinc-700 dark:text-zinc-200">{{ $used }}</strong>
+                                    @if ($eu->storage_plan_id && $eu->storagePlan)
+                                        / {{ $eu->storagePlan->limitLabel() }}
+                                    @else
+                                        / {{ __('admin_ui.users.storage_unlimited') }}
+                                    @endif
+                                </span>
+                                @if ($eu->storage_plan_id && $eu->storagePlan)
+                                    <span>{{ $pct }}%</span>
+                                @endif
+                            </div>
+                            @if ($eu->storage_plan_id && $eu->storagePlan)
+                                <span class="block w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                                    <span class="block h-full rounded-full {{ $barColor }}" style="width:{{ $pct }}%"></span>
+                                </span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @endif
 

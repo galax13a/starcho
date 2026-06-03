@@ -14,22 +14,38 @@ class MediaFileController extends Controller
         $this->authorizeInlineAccess($request, $media);
 
         $disk = $this->disk($media);
-        abort_unless($disk->exists($media->path), 404);
+        $variant = $request->query('variant');
+        $path = $variant ? $media->variantPath((string) $variant) : $media->path;
 
-        $stream = $disk->readStream($media->path);
+        abort_unless($path && $disk->exists($path), 404);
+
+        $stream = $disk->readStream($path);
         abort_unless(is_resource($stream), 404);
 
         $name = str_replace(['"', '\\'], '', $media->name ?: $media->original_name ?: basename($media->path));
-        $mime = $media->mime_type ?: $disk->mimeType($media->path) ?: 'application/octet-stream';
+        $mime = $variant ? 'image/webp' : ($media->mime_type ?: $disk->mimeType($path) ?: 'application/octet-stream');
+
+        // Only render images/video/audio/pdf inline. Anything else (e.g. a legacy
+        // HTML/SVG upload) is forced to download so it cannot execute scripts in
+        // this origin. Combined with X-Content-Type-Options: nosniff to stop
+        // browsers from re-interpreting the declared content type.
+        $inlineSafe = $variant
+            || str_starts_with($mime, 'image/')
+            || str_starts_with($mime, 'video/')
+            || str_starts_with($mime, 'audio/')
+            || $mime === 'application/pdf';
+        $inlineSafe = $inlineSafe && $mime !== 'image/svg+xml';
+        $disposition = ($inlineSafe ? 'inline' : 'attachment') . '; filename="' . $name . '"';
 
         return response()->stream(function () use ($stream): void {
             fpassthru($stream);
             fclose($stream);
         }, 200, [
             'Content-Type' => $mime,
-            'Content-Length' => (string) $disk->size($media->path),
-            'Content-Disposition' => 'inline; filename="' . $name . '"',
-            'Cache-Control' => 'private, max-age=300',
+            'Content-Length' => (string) $disk->size($path),
+            'Content-Disposition' => $disposition,
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => $variant ? 'public, max-age=604800' : 'private, max-age=300',
         ]);
     }
 

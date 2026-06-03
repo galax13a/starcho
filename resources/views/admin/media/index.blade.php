@@ -31,6 +31,7 @@
             <flux:heading size="xl" level="1" class="mb-0.5">Galería Multimedia</flux:heading>
             <flux:text class="text-sm text-zinc-500">
                 Driver: <span class="font-semibold text-zinc-700 dark:text-zinc-300">{{ ucfirst($storageSetting->default_driver) }}</span>
+                · Multi-size: <span class="font-semibold {{ $imageVariantsEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500' }}">{{ $imageVariantsEnabled ? 'activo' : 'inactivo' }}</span>
                 @if($storageSetting->isLocal())
                     · URL: <code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs dark:bg-zinc-800">{{ $storageSetting->localBaseUrl() }}/storage/</code>
                 @endif
@@ -66,7 +67,7 @@
         </div>
     </div>
 
-    <div class="rounded-xl border {{ $pct >= 100 ? 'border-red-200 bg-red-50 dark:border-red-700/50 dark:bg-red-900/10' : ($pct >= 80 ? 'border-amber-200 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-900/10' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900') }} p-4 shadow-sm">
+    <div x-data="{ storageInfoOpen: false }" class="rounded-xl border {{ $pct >= 100 ? 'border-red-200 bg-red-50 dark:border-red-700/50 dark:bg-red-900/10' : ($pct >= 80 ? 'border-amber-200 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-900/10' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900') }} p-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="min-w-0 flex-1">
                 <div class="mb-2 flex items-center gap-2">
@@ -80,6 +81,99 @@
                     <span class="shrink-0 font-mono text-xs text-zinc-500">
                         {{ $fmtBytes($usedBytes) }} @if($limitBytes > 0)/ {{ $fmtBytes($limitBytes) }} ({{ $pct }}%)@endif
                     </span>
+                </div>
+            </div>
+
+            <button type="button"
+                    @click="storageInfoOpen = true"
+                    class="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                <i class="fas fa-chart-pie text-violet-500"></i>
+                Detalle storage
+            </button>
+        </div>
+
+        <div x-cloak
+             x-show="storageInfoOpen"
+             x-transition.opacity
+             class="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+             @keydown.escape.window="storageInfoOpen = false">
+            <div x-show="storageInfoOpen"
+                 x-transition.scale.origin.center
+                 @click.outside="storageInfoOpen = false"
+                 class="w-full max-w-2xl overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-950">
+                <div class="flex items-center justify-between gap-3 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+                    <div>
+                        <h2 class="text-base font-bold text-zinc-900 dark:text-zinc-100">Información de storage</h2>
+                        <p class="text-xs text-zinc-500">Plan, consumo, driver y copias responsive.</p>
+                    </div>
+
+                    <button type="button" @click="storageInfoOpen = false" class="grid size-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white" title="Cerrar">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4 p-5">
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                            <p class="text-[11px] font-semibold uppercase text-zinc-400">Usado</p>
+                            <p class="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{{ $fmtBytes($usedBytes) }}</p>
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                            <p class="text-[11px] font-semibold uppercase text-zinc-400">Límite</p>
+                            <p class="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{{ $limitBytes > 0 ? $fmtBytes($limitBytes) : 'Ilimitado' }}</p>
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                            <p class="text-[11px] font-semibold uppercase text-zinc-400">Disponible</p>
+                            <p class="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{{ is_null($remainingBytes) ? 'Ilimitado' : $fmtBytes($remainingBytes) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                            <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Archivos</p>
+                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-zinc-500">
+                                <span>Total: <strong class="text-zinc-800 dark:text-zinc-200">{{ $totals['count'] }}</strong></span>
+                                <span>Imágenes: <strong class="text-zinc-800 dark:text-zinc-200">{{ $totals['images'] }}</strong></span>
+                                <span>Videos: <strong class="text-zinc-800 dark:text-zinc-200">{{ $totals['videos'] }}</strong></span>
+                                <span>Docs: <strong class="text-zinc-800 dark:text-zinc-200">{{ $totals['documents'] }}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                            <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Peso multimedia</p>
+                            <div class="mt-3 space-y-2 text-xs text-zinc-500">
+                                <div class="flex justify-between gap-3"><span>Originales</span><strong class="text-zinc-800 dark:text-zinc-200">{{ $fmtBytes($totals['original_size']) }}</strong></div>
+                                <div class="flex justify-between gap-3"><span>Copias responsive</span><strong class="text-zinc-800 dark:text-zinc-200">{{ $fmtBytes($totals['variants_size']) }}</strong></div>
+                                <div class="flex justify-between gap-3 border-t border-zinc-200 pt-2 dark:border-zinc-800"><span>Total real</span><strong class="text-zinc-900 dark:text-zinc-100">{{ $fmtBytes($totals['size']) }}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Driver {{ ucfirst($storageSetting->default_driver) }}</p>
+                                <p class="mt-1 break-all font-mono text-xs text-zinc-500">
+                                    @if($storageSetting->isLocal())
+                                        {{ $storageSetting->localBaseUrl() }}/storage/
+                                    @elseif($storageSetting->default_driver === 'r2')
+                                        {{ $storageSetting->r2_public_url ?: 'R2 privado: los archivos se sirven por /media/files/{id}' }}
+                                    @else
+                                        {{ $storageSetting->s3_url ?: $storageSetting->do_cdn_url ?: 'URL pública no configurada' }}
+                                    @endif
+                                </p>
+                            </div>
+                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $imageVariantsEnabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                                Multi-size {{ $imageVariantsEnabled ? 'activo' : 'inactivo' }}
+                            </span>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($variantSizes as $size)
+                                <span class="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">{{ $size }}px</span>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,6 +228,12 @@
             </form>
 
             <div class="flex items-center gap-2 rounded-lg border border-zinc-200 p-1 dark:border-zinc-700">
+                <select x-model="previewSize" class="h-8 rounded-md border border-zinc-200 bg-white px-2 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" title="Tamaño de preview" @disabled(!$imageVariantsEnabled)>
+                    @foreach($variantSizes as $size)
+                        <option value="{{ $size }}">{{ $size }}px</option>
+                    @endforeach
+                    <option value="original">Original</option>
+                </select>
                 <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'text-zinc-500'" class="flex size-8 items-center justify-center rounded-md transition" title="Grilla">
                     <i class="fas fa-grip text-xs"></i>
                 </button>
@@ -168,6 +268,18 @@
                         </template>
                         <button type="button" @click="confirmSubmit($refs.bulkDeleteForm, 'Eliminar selección', '¿Eliminar en cascada los archivos seleccionados del storage? Esta acción no se puede deshacer.')" class="h-9 rounded-lg bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700">Eliminar</button>
                     </form>
+
+                    @if($imageVariantsEnabled)
+                        <form method="POST" action="{{ route('admin.media.variants.bulk') }}" x-ref="bulkVariantsForm">
+                            @csrf
+                            <template x-for="id in selected" :key="'variants-' + id">
+                                <input type="hidden" name="media_ids[]" :value="id">
+                            </template>
+                            <button type="button" @click="confirmSubmit($refs.bulkVariantsForm, 'Optimizar imágenes', '¿Generar las copias activas ({{ collect($variantSizes)->map(fn ($size) => $size . 'px')->implode(', ') }}) para las imágenes seleccionadas?')" class="h-9 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
+                                Optimizar
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -205,7 +317,7 @@
                         </label>
 
                         @if($item->isImage())
-                            <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                            <img x-bind:src="previewUrl({{ $item->id }})" src="{{ $item->preview_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
                         @elseif($item->isVideo())
                             <video src="{{ $item->public_url }}" class="h-full w-full object-cover" preload="metadata"></video>
                         @else
@@ -237,6 +349,14 @@
                             <button type="button" onclick="copyUrl('{{ addslashes($item->public_url) }}')" class="flex size-8 items-center justify-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
                                 <i class="fas fa-copy text-xs"></i>
                             </button>
+                            @if($imageVariantsEnabled && $item->isImage())
+                                <form method="POST" action="{{ route('admin.media.variants.generate', $item) }}" data-confirm-title="Optimizar imagen" data-confirm-message="¿Regenerar las copias activas ({{ collect($variantSizes)->map(fn ($size) => $size . 'px')->implode(', ') }}) de {{ e($item->name) }}?">
+                                    @csrf
+                                    <button type="submit" class="flex size-8 items-center justify-center rounded-full bg-emerald-600/90 text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-emerald-500" title="Generar tamaños">
+                                        <i class="fas fa-wand-magic-sparkles text-xs"></i>
+                                    </button>
+                                </form>
+                            @endif
                             <form method="POST" action="{{ route('admin.media.destroy', $item) }}" data-confirm-title="Eliminar archivo" data-confirm-message="¿Eliminar {{ e($item->name) }} del storage? Esta acción no se puede deshacer.">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="flex size-8 items-center justify-center rounded-full bg-rose-600/90 text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-rose-500" title="Eliminar">
@@ -255,6 +375,15 @@
                                 <span class="text-[10px] text-zinc-400">{{ $item->width }}x{{ $item->height }}</span>
                             @endif
                         </div>
+                        @if($imageVariantsEnabled && $item->isImage())
+                            <p class="truncate text-[10px] text-emerald-600 dark:text-emerald-400">
+                                <i class="fas fa-layer-group text-[8px]"></i>
+                                {{ collect($item->variants ?? [])->keys()->implode(', ') ?: 'sin copias' }}
+                                @if($item->variants_size)
+                                    · {{ $item->variantsSizeLabel() }}
+                                @endif
+                            </p>
+                        @endif
                         @if($item->albums->isNotEmpty())
                             <p class="truncate text-[10px] text-emerald-600 dark:text-emerald-400"><i class="fas fa-folder text-[8px]"></i> {{ $item->albums->pluck('name')->implode(', ') }}</p>
                         @endif
@@ -297,7 +426,13 @@
                                 <i class="fas fa-eye text-xs"></i>
                             </button>
                         @endif
-                        <a href="{{ route('admin.media.download', $item) }}" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Descargar"><i class="fas fa-download text-xs"></i></a>
+                        <a href="{{ route('admin.media.download', $item) }}" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Descargar original"><i class="fas fa-download text-xs"></i></a>
+                        @if($imageVariantsEnabled && $item->isImage())
+                            <form method="POST" action="{{ route('admin.media.variants.generate', $item) }}" data-confirm-title="Optimizar imagen" data-confirm-message="¿Regenerar las copias de esta imagen?">
+                                @csrf
+                                <button class="flex size-8 items-center justify-center rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/20" title="Generar tamaños"><i class="fas fa-wand-magic-sparkles text-xs"></i></button>
+                            </form>
+                        @endif
                         <form method="POST" action="{{ route('admin.media.destroy', $item) }}" data-confirm-title="Eliminar archivo" data-confirm-message="¿Eliminar {{ e($item->name) }} del storage? Esta acción no se puede deshacer.">
                             @csrf @method('DELETE')
                             <button class="flex size-8 items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:hover:bg-rose-900/20" title="Eliminar"><i class="fas fa-trash text-xs"></i></button>
@@ -324,8 +459,16 @@
 function mediaLibrary() {
     return {
         viewMode: localStorage.getItem('adminMediaViewMode') || 'grid',
+        imageVariantsEnabled: @js($imageVariantsEnabled),
+        previewSize: @js($imageVariantsEnabled) ? (localStorage.getItem('adminMediaPreviewSize') || @js((string) ($previewVariantSize ?? 240))) : 'original',
+        previewUrls: @js($previewUrls),
         selected: [],
         viewerIds: @js($viewerIds),
+        previewUrl(id) {
+            const urls = this.previewUrls[Number(id)] || {};
+
+            return urls[this.previewSize] || urls.original || '';
+        },
         toggle(id, checked) {
             id = Number(id);
             this.selected = checked
@@ -333,7 +476,7 @@ function mediaLibrary() {
                 : this.selected.filter(item => item !== id);
         },
         openViewerById(id) {
-            Livewire.dispatch('openAdminMediaViewer', { id: Number(id), ids: this.viewerIds });
+            Livewire.dispatch('openAdminMediaViewer', { id: Number(id), ids: this.viewerIds, variant: this.previewSize });
         },
         confirmSubmit(form, title, message) {
             window.Starcho.confirm({
@@ -346,6 +489,7 @@ function mediaLibrary() {
         },
         init() {
             this.$watch('viewMode', value => localStorage.setItem('adminMediaViewMode', value));
+            this.$watch('previewSize', value => localStorage.setItem('adminMediaPreviewSize', value));
         },
     };
 }

@@ -9,12 +9,13 @@ use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 
 class StorageSettingsController extends Controller
 {
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|Redirector
     {
         $validated = $request->validate([
             'default_driver'    => 'required|in:local,s3,do_spaces,r2',
@@ -47,9 +48,31 @@ class StorageSettingsController extends Controller
             'local_folder'      => 'nullable|string|max:120',
             // Custom base URL for local driver (Herd / Valet domains)
             'local_url'         => 'nullable|url|max:255',
+            'image_variants_enabled' => 'boolean',
+            'image_variant_sizes' => 'nullable|array',
+            'image_variant_sizes.*' => 'integer|min:64|max:3840',
+            'image_preview_variant_size' => 'nullable|integer|min:64|max:3840',
+            'avatar_size' => 'nullable|integer|min:64|max:512',
         ]);
 
         $validated['s3_use_path_style'] = $request->boolean('s3_use_path_style');
+
+        if ($request->has('image_variants_enabled') || $request->has('image_variant_sizes')) {
+            $validated['image_variants_enabled'] = $request->boolean('image_variants_enabled');
+            $validated['image_variant_sizes'] = collect($request->input('image_variant_sizes', []))
+                ->map(fn ($size) => (int) $size)
+                ->filter(fn (int $size) => $size >= 64 && $size <= 3840)
+                ->push(240)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+            $previewSize = (int) $request->input('image_preview_variant_size', 240);
+            $validated['image_preview_variant_size'] = in_array($previewSize, $validated['image_variant_sizes'], true) ? $previewSize : 240;
+            $validated['avatar_size'] = min(512, max(64, (int) $request->input('avatar_size', 190)));
+        } else {
+            unset($validated['image_variants_enabled'], $validated['image_variant_sizes'], $validated['image_preview_variant_size'], $validated['avatar_size']);
+        }
 
         StorageSetting::singleton()->update($validated);
 
@@ -88,7 +111,7 @@ class StorageSettingsController extends Controller
         }
     }
 
-    public function link(): RedirectResponse
+    public function link(): RedirectResponse|Redirector
     {
         try {
             if (File::exists(public_path('storage'))) {
@@ -124,7 +147,7 @@ class StorageSettingsController extends Controller
         }
     }
 
-    public function storePlan(Request $request): RedirectResponse
+    public function storePlan(Request $request): RedirectResponse|Redirector
     {
         $data = $request->validate([
             'name'                => 'required|string|max:80',
@@ -145,7 +168,7 @@ class StorageSettingsController extends Controller
             ->with('success', "Plan «{$data['name']}» creado.");
     }
 
-    public function updatePlan(Request $request, StoragePlan $plan): RedirectResponse
+    public function updatePlan(Request $request, StoragePlan $plan): RedirectResponse|Redirector
     {
         $data = $request->validate([
             'name'                => 'required|string|max:80',
@@ -165,7 +188,7 @@ class StorageSettingsController extends Controller
             ->with('success', "Plan «{$plan->name}» actualizado.");
     }
 
-    public function destroyPlan(StoragePlan $plan): RedirectResponse
+    public function destroyPlan(StoragePlan $plan): RedirectResponse|Redirector
     {
         if ($plan->users()->exists()) {
             return redirect()->route('admin.site.index', ['tab' => 'storage'])

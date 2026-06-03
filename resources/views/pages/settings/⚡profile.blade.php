@@ -1,18 +1,21 @@
 <?php
 
 use App\Concerns\ProfileValidationRules;
+use App\Services\StorageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 new #[Title('Profile settings')] class extends Component {
-    use ProfileValidationRules;
+    use ProfileValidationRules, WithFileUploads;
 
     public string $name = '';
     public string $email = '';
+    public $avatarUpload = null;
 
     /**
      * Mount the component.
@@ -41,6 +44,39 @@ new #[Title('Profile settings')] class extends Component {
         $user->save();
 
         $this->dispatch('profile-updated', name: $user->name);
+    }
+
+    public function updateAvatar(): void
+    {
+        $this->validate([
+            'avatarUpload' => ['required', 'image', 'max:3072'],
+        ], [
+            'avatarUpload.required' => 'Selecciona una imagen para tu avatar.',
+            'avatarUpload.image' => 'El avatar debe ser una imagen válida.',
+            'avatarUpload.max' => 'El avatar debe pesar menos de 3 MB.',
+        ]);
+
+        try {
+            $media = app(StorageService::class)->uploadProfileAvatar($this->avatarUpload, Auth::user());
+        } catch (\RuntimeException $exception) {
+            $this->addError('avatarUpload', $exception->getMessage());
+
+            return;
+        }
+
+        $this->reset('avatarUpload');
+
+        $this->dispatch('avatar-updated', url: $media->public_url, name: Auth::user()->name);
+    }
+
+    public function updatedAvatarUpload(): void
+    {
+        $this->validateOnly('avatarUpload', [
+            'avatarUpload' => ['nullable', 'image', 'max:3072'],
+        ], [
+            'avatarUpload.image' => 'El avatar debe ser una imagen válida.',
+            'avatarUpload.max' => 'El avatar debe pesar menos de 3 MB.',
+        ]);
     }
 
     /**
@@ -73,6 +109,7 @@ new #[Title('Profile settings')] class extends Component {
         return ! Auth::user() instanceof MustVerifyEmail
             || (Auth::user() instanceof MustVerifyEmail && Auth::user()->hasVerifiedEmail());
     }
+
 }; ?>
 
 <section class="w-full">
@@ -81,6 +118,56 @@ new #[Title('Profile settings')] class extends Component {
     <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
 
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
+        @php
+            $profileUser = Auth::user();
+            $avatarPreview = $profileUser->avatar_url;
+            $avatarUploadEnabled = \App\Models\SiteSetting::profileAvatarUploadEnabled();
+            $avatarSize = \App\Models\StorageSetting::singleton()->avatarSize();
+        @endphp
+
+        <form wire:submit="updateAvatar" class="my-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="grid shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-violet-600 text-2xl font-bold text-white shadow-sm" style="width: {{ $avatarSize }}px; height: {{ $avatarSize }}px; max-width: 190px; max-height: 190px;">
+                        @if($avatarPreview)
+                            <img src="{{ $avatarPreview }}" alt="{{ $profileUser->name }}" width="{{ $avatarSize }}" height="{{ $avatarSize }}" class="block h-full w-full object-cover">
+                        @else
+                            {{ $profileUser->initials() }}
+                        @endif
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Avatar</p>
+                        <x-action-message class="mt-2 text-sm text-emerald-600 dark:text-emerald-400" on="avatar-updated">
+                            Avatar actualizado.
+                        </x-action-message>
+                    </div>
+                </div>
+
+                @if($avatarUploadEnabled)
+                    <div class="flex flex-col gap-2 sm:min-w-72">
+                        <label for="avatar-upload" class="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                            <i class="fas fa-image text-xs"></i>
+                            Seleccionar imagen
+                        </label>
+                        <input id="avatar-upload" wire:model="avatarUpload" type="file" accept="image/*" class="sr-only">
+                        @if($avatarUpload)
+                            <p class="text-xs text-zinc-500">Imagen lista para subir.</p>
+                        @endif
+                        @error('avatarUpload') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
+
+                        <flux:button variant="primary" type="submit" class="w-full" wire:loading.attr="disabled" wire:target="avatarUpload,updateAvatar">
+                            Cambiar avatar
+                        </flux:button>
+                    </div>
+                @else
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-400">
+                        La subida de avatar está desactivada desde Site.
+                    </div>
+                    @endif
+            </div>
+        </form>
+
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
@@ -124,3 +211,30 @@ new #[Title('Profile settings')] class extends Component {
         @endif
     </x-pages::settings.layout>
 </section>
+
+@script
+<script>
+    $wire.on('avatar-updated', (event) => {
+        const detail = Array.isArray(event) ? event[0] : event;
+        const url = detail?.url;
+        const name = detail?.name || 'Avatar';
+
+        if (!url) return;
+
+        document.querySelectorAll('.sb-footer .avatar, .sa-sb-footer .sa-avatar').forEach((avatar) => {
+            avatar.style.overflow = 'hidden';
+            avatar.innerHTML = '';
+
+            const image = document.createElement('img');
+            image.src = url;
+            image.alt = name;
+            image.style.width = '100%';
+            image.style.height = '100%';
+            image.style.objectFit = 'cover';
+            image.style.display = 'block';
+
+            avatar.appendChild(image);
+        });
+    });
+</script>
+@endscript

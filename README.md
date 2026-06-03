@@ -1,778 +1,539 @@
-# Starcho — Laravel Starter Kit Modular
+# Starcho
 
-Starter kit modular construido sobre **Laravel 13 + Livewire 4 + Flux UI v2**.
+Starter kit modular para construir aplicaciones con **Laravel 13, Livewire 4, Flux UI v2, PowerGrid y Tailwind CSS v4**.
 
-Incluye panel de administración completo (`/admin`), área de usuario (`/app`), sistema de módulos instalables desde el admin, blog con soporte multilenguaje, gestión de medios/almacenamiento, suscripciones, geolocalizacion de usuarios, y arquitectura de assets separada por área.
+Starcho viene con dos superficies claras:
+
+- `/admin`: panel de administracion trabajado sobre **Flux UI**, Livewire y componentes del Star Kit.
+- `/app`: area privada de usuario, modular, con menu dinamico y componentes reutilizables de Starcho.
+
+La regla principal del proyecto es simple: cada nueva funcionalidad debe apoyarse en Laravel, Livewire, Flux UI cuando este en admin, y en las librerias/componentes propios de Starcho antes de inventar UI o servicios nuevos.
 
 ---
 
-## Stack tecnológico
+## Stack
 
-| Capa | Tecnología |
-|------|-----------|
+| Capa | Tecnologia |
+| --- | --- |
 | Backend | Laravel 13, PHP 8.3+ |
-| Frontend reactividad | Livewire 4 + Alpine.js 3 |
-| UI components | Flux UI v2 (área `/admin`) |
-| Tablas reactivas | PowerGrid v6 |
-| Estilos base | Tailwind CSS v4 (Vite plugin) |
-| Build tool | Vite 6 |
-| Autenticación | Laravel Fortify (2FA incluido) |
-| Roles y permisos | Spatie Laravel Permission v7 |
-| Traducción de modelos | Spatie Laravel Translatable |
-| Import / Export | Maatwebsite Excel |
-| Notificaciones JS | Notiflix |
-| Gráficas | ApexCharts (CDN) |
-| Tipografía `/app` | DM Sans + Space Mono (Google Fonts CDN) |
-| Iconos `/app` | Font Awesome 6.5 (CDN) |
-| Iconos `/admin` | Heroicons (Flux integrado) |
+| UI reactiva | Livewire 4 + Alpine.js |
+| Admin UI | Flux UI v2 |
+| Tablas | PowerGrid v6 |
+| CSS | Tailwind CSS v4 + Vite |
+| Auth | Laravel Fortify, email verification, 2FA |
+| Roles/permisos | Spatie Laravel Permission |
+| Traducciones de modelos | Spatie Laravel Translatable |
+| Storage | Local, Amazon S3, DigitalOcean Spaces, Cloudflare R2 |
+| AI | Laravel AI con OpenAI, DeepSeek, Anthropic y OpenRouter |
+| Graficas | ApexCharts via `x-starcho-chart` |
+| JS | `resources/js/starcho.js` + bundles por area |
 
 ---
 
-## Instalación rápida
+## Instalacion
 
 ```bash
 git clone <repo>
 cd starcho
+composer install
+npm install
 php artisan starcho:install
 npm run dev
 ```
 
-El comando `php artisan starcho:install` realiza automáticamente:
-
-- Creación de `.env` desde `.env.example` si no existe
-- Solicitud interactiva del motor (`mysql` o `pgsql`) y credenciales de BD
-- `composer install` y `npm install`
-- Migraciones y seeder `StarchoInstallAppSeeder`
-- Creación de `storage:link` cuando aplica
-- Build de frontend con `npm run build` al final
-
-Progreso por etapas durante la ejecución:
-
-```
-Paso 1/9  Preparando archivo de entorno
-Paso 2/9  Configurando base de datos
-Paso 5/9  Instalando dependencias
-Paso 6/9  Migrando base de datos
-Paso 8/9  Generando assets de producción
-OK: ...   al finalizar cada etapa
-```
-
-Opciones útiles:
-
-```bash
-# Sin confirmación inicial
-php artisan starcho:install --force
-
-# Ayuda completa
-php artisan help starcho:install
-```
-
-El seeder crea:
-
-- Usuario administrador: `admin@starcho.com` / `password`
-- Roles `admin` y `root` asignados
-- Permisos básicos de roles/permisos/usuarios
-- Módulo `tasks` (instalado y activo)
-- Módulo `contacts` (disponible, no instalado)
-- Ítems de menú para `/app`: Dashboard, Mis Tareas, Contactos
-
----
-
-## Flujo de desarrollo local
-
-```bash
-composer install
-npm install
-php artisan migrate --seed --seeder=StarchoInstallAppSeeder
-npm run dev
-```
-
-Build de producción:
+Build de produccion:
 
 ```bash
 npm run build
 php artisan optimize
 ```
 
-> Si los estilos no cargan en producción/local con build, verificar que `public/hot` no exista:
-> ```bash
-> Remove-Item public/hot
-> php artisan optimize:clear
-> ```
-
----
-
-## Estructura del proyecto
-
-```
-starcho/
-├── app/
-│   ├── Console/Commands/
-│   │   └── StarchoInstallCommand.php       — Instalador guiado interactivo
-│   ├── Exports/                            — Clases Excel por área (app/admin)
-│   ├── Imports/                            — Clases de importación por área
-│   ├── Http/Controllers/
-│   │   ├── Admin/
-│   │   │   ├── CacheController.php         — Limpieza de caché
-│   │   │   ├── ContentSettingsController   — Config de contenido/blog
-│   │   │   ├── DashboardController.php     — Datos del dashboard admin
-│   │   │   ├── GeoLocationsController.php  — Geolocalizaciones de usuarios
-│   │   │   ├── MediaController.php         — Galería multimedia
-│   │   │   ├── MenuController.php          — Constructor de menú
-│   │   │   ├── ModuleController.php        — CRUD de módulos
-│   │   │   ├── PermissionController.php
-│   │   │   ├── PostController.php          — Blog posts
-│   │   │   ├── RoleController.php
-│   │   │   ├── SiteController.php          — Configuración del sitio
-│   │   │   ├── StorageSettingsController   — Planes y storage
-│   │   │   ├── TaskController.php
-│   │   │   ├── UserBanController.php       — Baneo de usuarios
-│   │   │   └── UserController.php
-│   │   ├── BlogController.php              — Blog público
-│   │   ├── LanguageController.php          — Cambio de idioma (es/en/pt-BR)
-│   │   ├── PageController.php              — Páginas estáticas
-│   │   └── SitemapController.php           — Sitemap XML
-│   ├── Livewire/
-│   │   ├── Admin/
-│   │   │   ├── ContactsTable.php
-│   │   │   ├── GeoLocationsTable.php
-│   │   │   ├── MenuBuilder.php             — Árbol CRUD de ítems de menú
-│   │   │   ├── ModulesManager.php          — Instalar/desinstalar módulos
-│   │   │   ├── NotesTable.php
-│   │   │   ├── PagesTable.php
-│   │   │   ├── PermissionsTable.php
-│   │   │   ├── PostCategoriesTable.php
-│   │   │   ├── PostsTable.php
-│   │   │   ├── PostTagsTable.php
-│   │   │   ├── RolesTable.php
-│   │   │   ├── TasksTable.php
-│   │   │   ├── UserBansTable.php
-│   │   │   └── UsersTable.php
-│   │   ├── App/
-│   │   │   ├── ContactsTable.php
-│   │   │   └── NotesTable.php
-│   │   ├── Tasks/
-│   │   │   └── UserTasksTable.php
-│   │   └── Concerns/
-│   │       └── DispatchesStarchoNotify.php — Trait de notificaciones CRUD
-│   ├── Models/
-│   │   ├── AppSetting.php
-│   │   ├── BrokenLink.php
-│   │   ├── Contact.php                     — SoftDeletes + ownership + statuses
-│   │   ├── ContentSetting.php
-│   │   ├── GeoIPCache.php
-│   │   ├── Media.php
-│   │   ├── Note.php
-│   │   ├── Post.php                        — Translatable (spatie)
-│   │   ├── PostCategory.php
-│   │   ├── PostTag.php
-│   │   ├── SiteLanguage.php
-│   │   ├── SitePageSetting.php
-│   │   ├── SiteSetting.php
-│   │   ├── SiteSocialNetwork.php
-│   │   ├── StarchoMenuItem.php             — Árbol de menú con caché
-│   │   ├── StarchoMenuSection.php
-│   │   ├── StarchoModule.php               — Módulos instalables
-│   │   ├── StoragePlan.php
-│   │   ├── StorageSetting.php
-│   │   ├── Subscription.php
-│   │   ├── Task.php
-│   │   ├── User.php                        — HasRoles + TwoFactor + HasBan
-│   │   ├── UserBan.php
-│   │   └── UserGeoLocation.php
-│   └── Models/Concerns/
-│       └── EnforcesOwnership.php           — Scope + hooks de ownership por user_id
-│
-├── database/
-│   ├── migrations/                         — 48 migraciones ordenadas cronológicamente
-│   └── seeders/
-│       ├── AdminSeeder.php                 — Usuario admin + roles
-│       ├── BlogPostAiLaravelSeeder.php
-│       ├── BlogPostWebDesignSeeder.php
-│       ├── BlogTaxonomySeeder.php
-│       ├── ImportantPagesSeeder.php
-│       ├── MenuSeeder.php
-│       ├── SiteLanguagesSeeder.php
-│       ├── SiteSocialNetworksSeeder.php
-│       ├── StarchoInstallAppSeeder.php     — Punto único de inicialización
-│       ├── StarchoSeeder.php               — Módulos + menú inicial
-│       └── StoragePlansSeeder.php
-│
-├── resources/
-│   ├── css/
-│   │   ├── app.css                         — Tailwind + Flux (base compartida)
-│   │   ├── starcho-admin.css               — Estilos exclusivos de /admin
-│   │   ├── starcho-app.css                 — Estilos exclusivos de /app
-│   │   ├── starcho-auth.css                — Estilos de login/register
-│   │   ├── starcho-components.css          — Componentes Blade reutilizables
-│   │   └── starcho-home.css                — Landing pública
-│   ├── js/
-│   │   ├── starcho.js                      — Librería compartida (window.Starcho)
-│   │   ├── app.js                          — Entry point JS de /app
-│   │   ├── admin.js                        — Entry point JS de /admin
-│   │   └── starcho-editor-page.js          — Editor de páginas
-│   └── views/
-│       ├── layouts/
-│       │   ├── admin/sidebar.blade.php     — Layout Flux del /admin
-│       │   └── app/sidebar.blade.php       — Layout custom del /app
-│       ├── admin/                          — Vistas del panel admin (20 secciones)
-│       ├── components/                     — 36 componentes Blade reutilizables
-│       ├── livewire/                       — Componentes Livewire
-│       └── partials/
-│           └── head.blade.php              — <head> compartido
-│
-├── routes/
-│   ├── web.php                             — Rutas públicas (home, blog, pages, language)
-│   ├── app.php                             — Rutas /app (auth + verified)
-│   ├── admin.php                           — Rutas /admin (auth + role:admin)
-│   └── settings.php                        — Rutas de configuración de perfil
-│
-└── lang/
-    ├── es/                                 — Traducciones español (15 archivos)
-    ├── en/                                 — Traducciones inglés (15 archivos)
-    └── pt_BR/                              — Traducciones portugués brasileño
-```
-
----
-
-## Panel de administración (`/admin`)
-
-Acceso: usuarios con rol `admin` o `root`. Ruta base: `/admin`.
-
-| Sección | Ruta | Descripción |
-|---------|------|-------------|
-| Dashboard | `/admin` | Métricas generales con gráficas ApexCharts |
-| Roles | `/admin/roles` | CRUD + import/export Excel |
-| Permisos | `/admin/permissions` | CRUD + import/export Excel |
-| Usuarios | `/admin/users` | CRUD + asignación de roles |
-| Baneos | `/admin/users-ban` | Baneos temporales y permanentes |
-| Geolocalizaciones | `/admin/geolocations` | Mapa y tabla de accesos por IP |
-| Tareas | `/admin/tasks` | Listado global con PowerGrid |
-| Contactos | `/admin/contacts` | Gestión global de contactos |
-| Notas | `/admin/notes` | Gestión global de notas |
-| Blog — Posts | `/admin/posts` | CRUD multilenguaje de posts |
-| Blog — Categorías | `/admin/post-categories` | Taxonomías multilenguaje |
-| Blog — Etiquetas | `/admin/post-tags` | Tags multilenguaje |
-| Páginas | `/admin/pages` | Páginas estáticas con editor |
-| Medios | `/admin/media` | Galería multimedia (storage plan) |
-| Configuración del sitio | `/admin/site` | Branding, idiomas, redes sociales |
-| Almacenamiento | `/admin/storage` | Planes de almacenamiento |
-| Contenido | `/admin/content` | Opciones de sitemap y contenido |
-| **Módulos** | `/admin/modules` | Instalar/activar/desactivar módulos |
-| **Menú lateral** | `/admin/menu` | Árbol CRUD del menú de `/app` |
-| **Caché** | `/admin/cache` | Limpiar cachés de la aplicación |
-
----
-
-## Área de usuario (`/app`)
-
-Acceso: usuarios autenticados y verificados. Ruta base: `/app`.
-
-| Módulo | Ruta | Estado por defecto |
-|--------|------|--------------------|
-| Core (dashboard) | `/app` | Siempre activo |
-| Tasks | `/app/tasks` | Instalado + activo |
-| Contacts | `/app/contacts` | Disponible (instalar desde admin) |
-| Notes | `/app/notes` | Disponible (instalar desde admin) |
-
-### Layout (`layouts/app/sidebar.blade.php`)
-
-- **Sidebar collapsible** (264px / 68px) con persistencia en `localStorage`
-- **Menú de 3 niveles** con animación smooth y conectores visuales
-- **Topbar**: búsqueda, dark mode, notificaciones, logout
-- **Popup de usuario** en el footer del sidebar
-- **Modal de logout** con confirmación
-- **Toasts** mediante evento `@notify.window`
-- **Dark mode** persistido en `localStorage['starcho_theme']`
-
----
-
-## Sistema de módulos
-
-Los módulos permiten activar/desactivar funcionalidades completas desde `/admin/modules`.
-
-```php
-// Instalar: activa el módulo y crea ítems de menú
-$module->install();
-
-// Desinstalar: elimina ítems de menú, no borra datos de negocio
-$module->uninstall();
-
-// Solo activar/desactivar sin tocar schema
-$module->activate();
-$module->deactivate();
-
-// Verificar estado (cacheado 1h)
-StarchoModule::isActive('contacts');
-```
-
-### Ciclo de vida
-
-```
-Disponible → [install()] → Instalado+Activo → [deactivate()] → Instalado+Inactivo
-                                   ↓                                   ↓
-                            [uninstall()]                        [activate()]
-                                   ↓
-                           Disponible de nuevo
-```
-
-> Los datos del módulo **nunca se borran** con `uninstall()`. Solo se oculta el módulo del menú.
-
-### Registrar un módulo nuevo
-
-```php
-StarchoModule::updateOrCreate(
-    ['key' => 'invoices'],
-    [
-        'name'        => 'Facturas',
-        'description' => 'Sistema de facturación',
-        'icon'        => 'document-text',
-        'installed'   => false,
-        'active'      => false,
-        'config'      => [
-            'menu_items' => [
-                [
-                    'panel'      => 'app',
-                    'section'    => 'App',
-                    'name'       => ['es' => 'Facturas', 'en' => 'Invoices', 'pt_BR' => 'Faturas'],
-                    'icon'       => 'document-text',
-                    'route'      => 'app.invoices.index',
-                    'sort_order' => 40,
-                    'target'     => '_self',
-                ],
-            ],
-        ],
-    ]
-);
-```
-
----
-
-## Sistema de menú lateral (`/app`)
-
-El menú es **100% dinámico desde la base de datos**, cacheado 1 hora.
-
-```php
-// Obtener menú (usa caché automáticamente)
-StarchoMenuItem::getCachedMenu();
-
-// Invalidar caché
-StarchoMenuItem::clearMenuCache();
-```
-
-La caché se invalida automáticamente al instalar/desinstalar/activar/desactivar módulos o editar ítems desde `/admin/menu`.
-
----
-
-## Arquitectura de assets
-
-Cada área carga solo sus propios assets. No existe bundle monolítico.
-
-```
-partials/head.blade.php
-  └── app.css           (Tailwind + Flux — base compartida)
-
-layouts/app/sidebar.blade.php
-  ├── starcho-app.css   (layout /app, sidebar, topbar, componentes)
-  └── app.js            (starcho.js + PowerGrid)
-
-layouts/admin/sidebar.blade.php
-  ├── starcho-admin.css (overrides Flux, .sa-btn, .sa-card, .sa-stat-card)
-  └── admin.js          (starcho.js + PowerGrid + adminLayout())
-```
-
-### vite.config.js — entradas configuradas
-
-```js
-input: [
-    'resources/css/app.css',
-    'resources/css/starcho-app.css',
-    'resources/css/starcho-admin.css',
-    'resources/css/starcho-auth.css',
-    'resources/css/starcho-home.css',
-    'resources/css/starcho-components.css',
-    'resources/js/app.js',
-    'resources/js/admin.js',
-]
-```
-
----
-
-## Componentes Blade reutilizables
-
-| Componente | Propósito |
-|-----------|-----------|
-| `x-starcho-popup-kick` / `stripe` / `tiktok` | Modales por skin visual del módulo |
-| `x-starcho-btn-kick` / `stripe` / `tiktok` | CTA principal por skin |
-| `x-starcho-card-app-kick` / `stripe` / `tiktok` | Tarjetas de métricas por skin |
-| `x-starcho-card-admin-stats` | Tarjeta de estadísticas para `/admin` |
-| `x-starcho-crud1` | Acciones editar/eliminar en PowerGrid |
-| `x-starcho-btn-view-table` | Toggle de columnas visibles en PowerGrid |
-| `x-starcho-btn-excel` | Botón de exportación Excel (bulk) |
-| `x-starcho-noty` | Icono de notificaciones con dropdown |
-| `x-starcho-alert` | Toast del sistema (evento `notify`) |
-| `x-starcho-active` | Estado activo/inactivo con icono semántico |
-| `x-starcho-active-switch` | Switch booleano en formularios |
-| `x-starcho-status` | Estado multilenguaje con color e icono |
-| `x-starcho-chart` | Gráfica ApexCharts (8 tipos) |
-| `x-starcho-popup-admin-import` | Modal de importación admin |
-| `x-starcho-popup-standar` | Modal genérico reutilizable |
-| `x-starcho-popup-logout` | Modal de confirmación de logout |
-| `x-starcho-btn-primary` | Botón primario genérico |
-| `x-starcho-home-header` / `footer` / `lang` | Componentes de la landing pública |
-| `x-starcho-site-name` | Nombre del sitio dinámico desde BD |
-
-### Skins visuales por módulo `/app`
-
-| Skin | Módulo | Popup | Botón | Card |
-|------|--------|-------|-------|------|
-| **Kick** | tasks | `starcho-popup-kick` | `starcho-btn-kick` | `starcho-card-app-kick` |
-| **Stripe** | contacts | `starcho-popup-stripe` | `starcho-btn-stripe` | `starcho-card-app-stripe` |
-| **TikTok** | notes | `starcho-popup-tiktok` | `starcho-btn-tiktok` | `starcho-card-app-tiktok` |
-
----
-
-## Gráficas (`x-starcho-chart`)
-
-Componente universal basado en **ApexCharts + Alpine.js**. Soporta 8 tipos:
-
-`donut` | `pie` | `bar` | `area` | `line` | `radialBar` | `heatmap` | `scatter`
-
-```blade
-@assets
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
-@endassets
-
-<x-starcho-chart
-    type="donut"
-    :title="'Tareas por estado'"
-    :series="$byStatus->values()->toArray()"
-    :labels="$byStatus->keys()->toArray()"
-    :total-label="'Total'"
-/>
-
-<x-starcho-chart
-    type="bar"
-    :title="'Actividad (7 días)'"
-    :series="[['name' => 'Tareas', 'data' => $last7Days]]"
-    :categories="$last7DaysLabels"
-    :height="180"
-/>
-```
-
----
-
-## Seguridad y ownership
-
-Se aplica control de ownership por modelo para entidades con `user_id`.
-
-```php
-// app/Models/Concerns/EnforcesOwnership.php
-// Aplica global scope por user_id para usuarios no admin/root
-// En creating: asigna user_id automáticamente
-// En updating/deleting: valida propiedad del registro
-```
-
-Modelos con `EnforcesOwnership`:
-- `Task`
-- `Contact`
-- `Note`
-
-Roles que bypass el scope: `root`, `admin`.
-
----
-
-## Notificaciones CRUD (`DispatchesStarchoNotify`)
-
-Trait Livewire para toasts estandarizados en todos los módulos:
-
-```php
-// En cualquier componente Livewire (app o admin)
-$this->notifyCrud('tasks', 'created', ['name' => $taskTitle]);
-$this->notifyCrud('tasks', 'updated', ['name' => $taskTitle]);
-$this->notifyCrud('tasks', 'deleted');
-$this->notifyCrud('tasks', 'not_found');
-$this->notifyCrud('tasks', 'forbidden');
-```
-
-Mapeo automático de tipo de toast:
-- `success`: created, updated
-- `warning`: deleted
-- `failure`: not_found, forbidden, error
-
-Desde JS:
-```js
-Starcho.notify('success', 'Operación completada');
-Starcho.notify('warning', 'Registro eliminado');
-Starcho.notify('error', 'Error al procesar');
-```
-
----
-
-## PowerGrid — tablas reactivas
-
-### Componentes existentes
-
-| Componente | Área | Modelo |
-|-----------|------|--------|
-| `Admin\RolesTable` | /admin | Role (Spatie) |
-| `Admin\PermissionsTable` | /admin | Permission (Spatie) |
-| `Admin\UsersTable` | /admin | User |
-| `Admin\UserBansTable` | /admin | UserBan |
-| `Admin\TasksTable` | /admin | Task |
-| `Admin\ContactsTable` | /admin | Contact |
-| `Admin\NotesTable` | /admin | Note |
-| `Admin\PostsTable` | /admin | Post |
-| `Admin\PostCategoriesTable` | /admin | PostCategory |
-| `Admin\PostTagsTable` | /admin | PostTag |
-| `Admin\PagesTable` | /admin | SitePageSetting |
-| `Admin\GeoLocationsTable` | /admin | UserGeoLocation |
-| `Tasks\UserTasksTable` | /app | Task |
-| `App\ContactsTable` | /app | Contact |
-| `App\NotesTable` | /app | Note |
-
-### Setup estándar por tabla
-
-```php
-public function setUp(): array
-{
-    $this->persist(['columns'], 'app'); // o 'admin'
-
-    return [
-        PowerGrid::header()
-            ->showSearchInput()
-            ->showToggleColumns()
-            ->includeViewOnTop('mi-modulo.pg-header'),
-        PowerGrid::footer()
-            ->showPerPage(15)
-            ->showRecordCount(),
-    ];
-}
-```
-
----
-
-## Import / Export (Excel)
-
-Disponible en todos los módulos del área admin y en los módulos del área app (tasks, contacts, notes).
-
-| Módulo | Export admin | Import admin | Export app | Import app |
-|--------|-------------|-------------|-----------|-----------|
-| Roles | `AdminRolesExport` | `AdminRolesImport` | — | — |
-| Permisos | `AdminPermissionsExport` | `AdminPermissionsImport` | — | — |
-| Usuarios | `AdminUsersExport` | `AdminUsersImport` | — | — |
-| Tasks | `AdminTasksExport` | `AdminTasksImport` | `AppTasksExport` | `AppTasksImport` |
-| Contacts | `AdminContactsExport` | `AdminContactsImport` | `AppContactsExport` | `AppContactsImport` |
-| Notes | `AdminNotesExport` | `AdminNotesImport` | `AppNotesExport` | `AppNotesImport` |
-| Menú | `AdminMenuExport` | `AdminMenuImport` | — | — |
-| Módulos | `AdminModulesExport` | `AdminModulesImport` | — | — |
-
----
-
-## Internacionalización
-
-Idiomas: **Español** (default), **English**, **Português (BR)**.
-
-```
-GET /language/{locale}    locale: es | en | pt-BR
-```
-
-El locale se persiste en `users.locale` y se aplica vía middleware `SetLocale`.
-
-### Archivos de traducción
-
-```
-lang/
-├── es/   (15 archivos: actions, admin_pages, admin_ui, app_dashboard,
-│          app_layout, app_pages, auth, contacts, http-statuses,
-│          js, notes, pagination, passwords, tasks, validation)
-├── en/   (mismos 15 archivos)
-└── pt_BR/ (mismos archivos)
-```
-
----
-
-## Sistema de suscripciones y almacenamiento
-
-### Suscripciones
-
-- Cada usuario tiene un nivel de suscripción (`free`, u otros planes).
-- Al crear un usuario se genera automáticamente una suscripción activa.
-- El modelo `Subscription` registra nivel, estado (`is_active`), fechas y datos del período.
-
-### Almacenamiento
-
-- Los usuarios pueden tener un `StoragePlan` asignado con límite de bytes.
-- El modelo `Media` registra cada archivo subido con su tamaño y ruta.
-- El usuario tiene métodos: `storageRemaining()`, `storageExceeded()`, `storagePct()`.
-- Los planes de almacenamiento se gestionan desde `/admin/storage`.
-
----
-
-## Blog multilenguaje
-
-El módulo de blog usa **Spatie Laravel Translatable** para posts, categorías y etiquetas.
-
-- Posts con soporte de slug, categorías, etiquetas, posición en navegación y campos de sitemap.
-- Categorías y etiquetas completamente traducibles.
-- Blog público accesible desde el frontend en `/blog`.
-- Sitemap automático en `/sitemap.xml`.
-- Las páginas estáticas se gestionan desde `/admin/pages` con editor.
-
----
-
-## Geolocalización de usuarios
-
-- Registra la IP, país, ciudad y coordenadas de cada acceso autenticado.
-- Caché de resolución de IP en `GeoIPCache` para evitar consultas repetidas.
-- Tabla de geolocalizaciones accesible desde `/admin/geolocations`.
-
----
-
-## Bans de usuarios
-
-- Baneos temporales (con fecha de expiración) y permanentes.
-- Flujo 100% Livewire desde `/admin/users-ban`.
-- El modelo `UserBan` registra motivo, tipo, fechas y quién aplicó el ban.
-- El trait `HasBan` en `User` expone métodos de consulta de estado de ban.
-
----
-
-## Gestión de caché
-
-| Caché | Clave | TTL | Dónde limpiar |
-|-------|-------|-----|----------------|
-| Menú lateral | `starcho_menu_items` | 1h | `/admin/cache` o automático |
-| Estado de módulo | `starcho_module_{key}` | 1h | Automático al instalar/activar |
-| Permisos Spatie | interna Spatie | sesión | `/admin/cache` → Permisos |
-| App/rutas/config | `php artisan optimize` | — | `/admin/cache` → Optimizar |
-
----
-
-## CSS custom properties
-
-**`starcho-app.css`**:
-```css
---primary: #fe2c55     /* rojo Starcho */
---purple:  #7c3aed
---cyan:    #25f4ee
---sidebar-w: 264px
---topbar-h:  64px
-```
-
-**`starcho-admin.css`** (prefijo `--sa-`):
-```css
---sa-primary: #fe2c55
---sa-radius:  10px
-```
-
-**Reglas CSS**:
-- No usar `@apply` — solo reglas CSS nativas.
-- `/app`: clases sin prefijo (`.sidebar`, `.menu-link`).
-- `/admin`: prefijo `.sa-` para evitar colisiones con Flux/Tailwind.
-
----
-
-## Librería JS (`starcho.js`)
-
-| Exportación | Tipo | Descripción |
-|-------------|------|-------------|
-| `Starcho.confirm(opts)` | función | Diálogo de confirmación con Notiflix |
-| `Starcho.notify(type, msg)` | función | Despacha evento `notify` para toasts |
-| `Starcho.dark.toggle()` | método | Alterna tema oscuro/claro |
-| `Starcho.dark.set('dark')` | método | Fuerza tema específico |
-| `window.starchoDelete(...)` | función | Confirma eliminación y despacha evento Livewire |
-| `window.starchoApp(openMenuIds)` | Alpine component | Estado global del layout `/app` |
-| `window.adminLayout()` | Alpine component | Estado global del layout `/admin` |
-
----
-
-## Workflow para crear un módulo nuevo
-
-### 1. Estructura de archivos
-
-```text
-# Para /app
-app/Livewire/App/<Modulo>Table.php
-resources/views/<modulo>/index.blade.php
-resources/views/<modulo>/pg-header.blade.php
-resources/views/livewire/app/<modulo>-modal.blade.php
-routes/app.php  ← agregar ruta
-lang/es/<modulo>.php
-lang/en/<modulo>.php
-lang/pt_BR/<modulo>.php
-```
-
-### 2. Registrar en `starcho_modules`
-
-```php
-StarchoModule::updateOrCreate(['key' => 'mi-modulo'], [
-    'name'      => 'Mi Módulo',
-    'installed' => false,
-    'active'    => false,
-    'config'    => ['menu_items' => [...]],
-]);
-```
-
-### 3. Checklist de publicación
-
-1. Seguridad: `EnforcesOwnership` si tiene `user_id`.
-2. Notificaciones: `notifyCrud(...)` en cada acción CRUD.
-3. Componentes: reutilizar `x-starcho-popup-*`, `x-starcho-crud1`, etc.
-4. PowerGrid: persistencia de columnas por panel (`app`/`admin`).
-5. Traducciones: textos en `lang/es`, `lang/en`, `lang/pt_BR`.
-6. Build: `npm run build` y `php artisan view:cache` sin errores.
-
----
-
-## Comandos útiles
-
-```bash
-# Desarrollo con hot reload
-npm run dev
-
-# Producción
-npm run build
-
-# Reset completo de BD
-php artisan migrate:fresh --seed --seeder=StarchoInstallAppSeeder
-
-# Limpiar todo el caché
-php artisan cache:clear && php artisan view:clear && php artisan config:clear
-
-# Optimizar para producción
-php artisan optimize
-
-# Ver rutas registradas por área
-php artisan route:list --path=admin
-php artisan route:list --path=app
-
-# Linter PHP
-./vendor/bin/pint
-
-# Tests
-php artisan test
-```
-
----
-
-## Agente especializado
-
-El proyecto incluye un agente para acelerar el desarrollo sobre la arquitectura Starcho:
-
-- Archivo: `.github/agents/galax-starcho.agent.md`
-- Fuente de verdad: `README.md` y `MODULES_AND_MENU.md`
-- Enfoque: Laravel 13 + Livewire 4 + PowerGrid + arquitectura modular Starcho
-
----
-
-## Credenciales de desarrollo
+Credenciales iniciales:
 
 | Campo | Valor |
-|-------|-------|
+| --- | --- |
 | Email | `admin@starcho.com` |
 | Password | `password` |
 | Rol | `admin` |
+
+---
+
+## Rutas principales
+
+### Publicas
+
+| Ruta | Nombre | Uso |
+| --- | --- | --- |
+| `/` | `home` | Home publica desde `PageController::home` |
+| `/language/{locale}` | `language.switch` | Cambia idioma |
+| `/sitemap.xml` | `sitemap` | Sitemap XML |
+| `/media/files/{media}` | `media.files.show` | Proxy/entrega de archivos y variantes |
+| `/media/albums/{album:slug}` | `media.albums.show` | Album publico |
+| `/media/albums/{album:slug}/unlock` | `media.albums.unlock` | Desbloqueo de album protegido |
+| `/{locale}/blog` | `blog.index` | Blog publico localizado |
+| `/{locale}/blog/{slug}` | `blog.show` | Post publico localizado |
+| `/{locale}/{slug}` | `page.show` | Pagina CMS localizada |
+
+### Admin
+
+Todas las rutas admin viven bajo `/admin` y usan `auth`, `verified`, `role:root|admin` y `permission:view-admin`.
+
+| Ruta | Nombre | Uso |
+| --- | --- | --- |
+| `/admin` | `admin.index` | Dashboard |
+| `/admin/dashboard` | `admin.dashboard` | Dashboard |
+| `/admin/site` | `admin.site.index` | Site Manager: branding, SEO, idiomas, social, storage y AI |
+| `/admin/site` `PUT` | `admin.site.update` | Guardar configuracion del sitio |
+| `/admin/site/ai` `PUT` | `admin.site.ai.update` | Guardar AI providers/modelos |
+| `/admin/site/page-editor` | `admin.site.pages.edit` | Editor de paginas Folio |
+| `/admin/storage` `PUT` | `admin.storage.update` | Guardar storage |
+| `/admin/storage/link` | `admin.storage.link` | Crear/verificar `storage:link` |
+| `/admin/storage/test` | `admin.storage.test` | Subida de prueba |
+| `/admin/storage/test-delete` | `admin.storage.test-delete` | Borrar prueba |
+| `/admin/storage/plans` | `admin.storage.plans.store` | Crear plan de storage |
+| `/admin/storage/plans/{plan}` | `admin.storage.plans.update` | Actualizar plan |
+| `/admin/media` | `admin.media.index` | Galeria multimedia |
+| `/admin/media/upload` | `admin.media.upload` | Subir archivos |
+| `/admin/media/variants/bulk` | `admin.media.variants.bulk` | Generar variantes en lote |
+| `/admin/media/{media}/variants` | `admin.media.variants.generate` | Generar variantes de un archivo |
+| `/admin/media/albums` | `admin.media.albums.index` | Albums multimedia |
+| `/admin/posts` | `admin.posts.index` | Posts del blog |
+| `/admin/posts/create` | `admin.posts.create` | Crear post |
+| `/admin/posts/{post}/edit` | `admin.posts.edit` | Editar post |
+| `/admin/posts/upload-image` | `admin.posts.upload-image` | Subida al editor |
+| `/admin/pages` | `admin.pages.index` | Paginas CMS |
+| `/admin/pages/create` | `admin.pages.create` | Crear pagina CMS |
+| `/admin/pages/{post}/edit` | `admin.pages.edit` | Editar pagina CMS |
+| `/admin/content/settings` | `admin.content.settings` | Contenido, sitemap y broken links |
+| `/admin/modules` | `admin.modules.index` | Modulos instalables |
+| `/admin/menu` | `admin.menu.index` | Constructor del menu de `/app` |
+| `/admin/cache` | `admin.cache.index` | Limpieza/optimizacion de caches |
+| `/admin/roles` | `admin.roles.index` | Roles |
+| `/admin/permissions` | `admin.permissions.index` | Permisos |
+| `/admin/users` | `admin.users.index` | Usuarios |
+| `/admin/users-ban` | `admin.users-ban.index` | Baneos |
+| `/admin/geolocations` | `admin.geolocations.index` | Geolocalizacion |
+| `/admin/tasks` | `admin.tasks.index` | Tareas globales |
+| `/admin/contacts` | `admin.contacts.index` | Contactos globales |
+| `/admin/notes` | `admin.notes.index` | Notas globales |
+
+### App
+
+`/app` es el area de usuario autenticado/verificado. El menu se arma desde base de datos con `StarchoMenuItem` y los modulos se activan desde `/admin/modules`.
+
+| Ruta | Uso |
+| --- | --- |
+| `/app` | Dashboard privado |
+| `/app/tasks` | Tareas del usuario |
+| `/app/contacts` | Contactos del usuario |
+| `/app/notes` | Notas del usuario |
+
+---
+
+## Admin con Flux UI
+
+El admin se debe construir primero con **Flux UI** y despues con componentes Starcho. El layout base esta en:
+
+- `resources/views/layouts/admin/sidebar.blade.php`
+- `resources/css/starcho-admin.css`
+- `resources/js/admin.js`
+
+Reglas de UI para `/admin`:
+
+- Usar Flux para inputs, buttons, tabs, modals, cards, dropdowns y layouts administrativos.
+- Reutilizar componentes `x-starcho-*` cuando ya exista un patron del Star Kit.
+- No duplicar HTML de botones, badges, acciones CRUD, estados o tarjetas si existe componente.
+- Prefijar estilos propios de admin con `.sa-` o variables `--sa-*`.
+- Mantener textos en `lang/es`, `lang/en` y `lang/pt_BR` cuando sean UI reutilizable.
+
+Componentes clave del Star Kit:
+
+| Componente | Uso |
+| --- | --- |
+| `x-starcho-card-admin-stats` | KPI admin |
+| `x-starcho-card-statsOne` | Stats compactas |
+| `x-starcho-crud1` | Acciones edit/delete en tablas |
+| `x-starcho-btn-view-table` | Toggle de columnas PowerGrid |
+| `x-starcho-btn-excel` | Import/export Excel |
+| `x-starcho-active` | Estado activo/inactivo |
+| `x-starcho-active-switch` | Booleanos en formularios |
+| `x-starcho-status` | Estados semanticos |
+| `x-starcho-chart` | Graficas ApexCharts |
+| `x-starcho-popup-standar` | Modal base |
+| `x-starcho-popup-admin-import` | Modal de importacion admin |
+| `x-starcho-noty` | Notificaciones |
+| `x-starcho-alert` | Toasts |
+
+---
+
+## Storage
+
+El manejo de archivos esta centralizado en:
+
+- `app/Models/StorageSetting.php`
+- `app/Services/StorageService.php`
+- `app/Models/Media.php`
+- `app/Http/Controllers/Admin/StorageSettingsController.php`
+- `app/Http/Controllers/MediaFileController.php`
+
+Drivers soportados:
+
+| Driver | Disco runtime | Campos principales |
+| --- | --- | --- |
+| `local` | `public` | `local_folder`, `local_url` |
+| `s3` | `starcho_s3` | key, secret, region, bucket, endpoint, url, folder |
+| `do_spaces` | `starcho_do` | key, secret, region, bucket, endpoint, CDN url, folder |
+| `r2` | `starcho_r2` | account id, key, secret, bucket, endpoint, public url, folder |
+
+Flujo de subida:
+
+1. El usuario sube un archivo desde media, post editor, album, avatar o galeria.
+2. `StorageService::upload()` valida cuota del usuario.
+3. Las imagenes se convierten a WebP cuando GD esta disponible.
+4. Se guarda el archivo en el disco activo.
+5. Se crea un registro `Media` con driver, disk, path, url, mime, size, width, height, contexto y owner.
+6. Si las variantes estan activas, se generan copias WebP responsive.
+7. Se incrementa `users.storage_used_bytes`.
+
+Configuracion importante en `/admin/site`:
+
+- Driver por defecto.
+- Carpeta raiz por driver.
+- URL local/canonica para que Herd, Valet o dominios custom no generen URLs con `localhost`.
+- Activar/desactivar variantes.
+- Tamanos de variantes.
+- Variante usada como preview.
+- Tamano de avatar.
+- Planes de storage.
+
+Variantes de imagen:
+
+- Se guardan en `media.variants`.
+- El peso total extra se guarda en `media.variants_size`.
+- `Media::preview_url` usa el tamano configurado.
+- `Media::variantUrl($size)` entrega la mejor variante disponible por la ruta `media.files.show`.
+- `StorageService::generateImageVariants($media, force: true)` regenera variantes.
+
+Entrega de archivos:
+
+- Local: `{local_url}/storage/{path}`.
+- S3/Spaces: URL publica del disco si existe.
+- R2: `r2_public_url` si esta configurado; si no, URL temporal desde Laravel.
+- Variantes: siempre pueden pasar por `/media/files/{media}?variant=240`.
+
+Avatares:
+
+- `StorageService::uploadProfileAvatar()` recorta y convierte a WebP cuadrado.
+- Usa `avatar_size` de `StorageSetting`.
+- Reemplaza el avatar anterior y ajusta cuota.
+
+---
+
+## Galeria multimedia
+
+Modelos principales:
+
+- `Media`
+- `MediaAlbum`
+- `MediaTag`
+- `MediaComment`
+- `MediaRating`
+- `MediaFavorite`
+
+Funcionalidades:
+
+- Subida multiple.
+- Albums privados/publicos con slug.
+- Adjuntar/desadjuntar archivos.
+- Ordenar archivos dentro de album.
+- Comentarios y ratings en archivos o albums.
+- Favoritos.
+- Tags.
+- Descarga.
+- Generacion individual o masiva de variantes.
+- Visor Livewire en `App\Livewire\Admin\MediaViewer`.
+
+Rutas publicas de media:
+
+- `/media/files/{media}`
+- `/media/albums/{album:slug}`
+- `/media/albums/{album:slug}/unlock`
+
+Rutas admin de media:
+
+- `/admin/media`
+- `/admin/media/albums`
+- `/admin/media/variants/bulk`
+- `/admin/media/{media}/variants`
+- `/admin/media/{media}/download`
+
+---
+
+## AI
+
+La configuracion AI vive en:
+
+- `app/Models/AiSetting.php`
+- `app/Services/PageAiContentService.php`
+- `app/Http/Controllers/Admin/AiSettingsController.php`
+- `app/Livewire/Admin/PageAiAssistant.php`
+- `app/Livewire/Admin/PageAiCreator.php`
+- `app/Livewire/Admin/PostAiCreator.php`
+- `app/Livewire/Admin/SitePageSeoAi.php`
+- `app/Livewire/Admin/PostInsights.php`
+
+Providers soportados:
+
+| Provider | Campo de API key | Modelos base |
+| --- | --- | --- |
+| `openai` | `openai_api_key` | `gpt-5.4-nano`, `gpt-5.4-mini`, `gpt-5.4`, `gpt-5.4-pro` |
+| `deepseek` | `deepseek_api_key` | `deepseek-chat`, `deepseek-reasoner` |
+| `anthropic` | `anthropic_api_key` | `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` |
+| `openrouter` | `openrouter_api_key` | `openai/gpt-4o-mini`, `anthropic/claude-sonnet-4.6`, `google/gemini-2.0-flash-001`, `deepseek/deepseek-chat`, otros |
+
+Seguridad:
+
+- Las API keys se guardan con cast `encrypted`.
+- `AiSetting::singleton()` mantiene una sola configuracion.
+- AI debe estar habilitado y tener key del provider activo.
+- Los modelos se pueden activar/desactivar desde `model_settings`.
+
+Acciones AI actuales:
+
+- Crear pagina CMS completa.
+- Crear post de blog completo.
+- Editar contenido existente.
+- Generar contenido en Editor.js.
+- Generar bloques HTML + Tailwind dentro del bloque `starchoHtml`.
+- Generar extracto.
+- Generar SEO.
+- Auditar contenido.
+- Proponer inspiracion.
+- Editar paginas Folio.
+- Generar SEO de paginas Folio.
+- Regenerar desde memoria editorial.
+
+Trazabilidad AI:
+
+- `PostAiGeneration` guarda provider, model, action, locale, prompts, payload, response, tokens, duracion y rating.
+- `PostAiMemory` guarda aprendizajes editoriales activos, manuales o derivados de generaciones.
+- `PostInsights` muestra stats, historial AI, tokens, ratings, comentarios y memorias.
+- `PostComment` agrega comentarios internos con respuestas hasta 3 niveles visuales.
+
+Rutas relacionadas:
+
+- `/admin/site` para configurar providers/modelos y ver estadisticas.
+- `/admin/site/ai` para guardar AI.
+- `/admin/posts` y `/admin/posts/create` para creacion AI de posts.
+- `/admin/pages` y `/admin/pages/create` para creacion AI de paginas.
+- `/admin/site/page-editor` para editar paginas Folio y SEO con AI.
+
+---
+
+## Site Manager
+
+`App\Livewire\Admin\SiteManager` concentra la administracion del sitio dentro de `/admin/site`.
+
+Incluye:
+
+- Branding y metadatos globales.
+- Favicon y OG image.
+- Idiomas del sitio.
+- Redes sociales.
+- SEO por paginas Folio detectadas en `resources/views/pages`.
+- Home source y pagina CMS home.
+- Configuracion AI.
+- Estadisticas AI.
+- Configuracion Storage.
+- Planes de Storage.
+
+El Site Manager reutiliza controladores existentes mediante requests internos:
+
+- `SiteController`
+- `AiSettingsController`
+- `StorageSettingsController`
+
+---
+
+## Blog, paginas e insights
+
+`Post` soporta dos tipos:
+
+- `post`: blog.
+- `page`: paginas CMS.
+
+El contenido es multilenguaje con Spatie Translatable. Las vistas publicas estan en:
+
+- `resources/views/blog/show.blade.php`
+- `resources/views/page/show.blade.php`
+
+Novedades principales:
+
+- Conteo de vistas en `posts.views_count`.
+- Galeria por post usando `Media`.
+- Editor con subida de imagen.
+- AI creator para posts y paginas.
+- AI assistant en edicion.
+- Post Insights para estadisticas, historial AI, comments y memories.
+- Bloque `starchoHtml` para contenido HTML + Tailwind generado o editado.
+
+---
+
+## Modulos y menu dinamico
+
+Los modulos se administran desde `/admin/modules`.
+
+Modelo:
+
+- `app/Models/StarchoModule.php`
+
+Menu:
+
+- `app/Models/StarchoMenuItem.php`
+- `app/Models/StarchoMenuSection.php`
+- `/admin/menu`
+
+Ciclo:
+
+```php
+$module->install();
+$module->activate();
+$module->deactivate();
+$module->uninstall();
+
+StarchoModule::isActive('contacts');
+StarchoMenuItem::getCachedMenu();
+StarchoMenuItem::clearMenuCache();
+```
+
+Regla: desinstalar un modulo no debe borrar datos de negocio; solo retira entradas del menu y cambia estado.
+
+---
+
+## Assets
+
+Cada area carga sus propios assets.
+
+| Archivo | Uso |
+| --- | --- |
+| `resources/css/app.css` | Tailwind + Flux base |
+| `resources/css/starcho-admin.css` | Ajustes exclusivos de `/admin` |
+| `resources/css/starcho-app.css` | Layout privado `/app` |
+| `resources/css/starcho-auth.css` | Login/register/reset |
+| `resources/css/starcho-home.css` | Home publica |
+| `resources/css/starcho-components.css` | Componentes compartidos |
+| `resources/js/starcho.js` | Utilidades globales |
+| `resources/js/admin.js` | Bundle admin |
+| `resources/js/app.js` | Bundle app |
+| `public/js/starcho-html-editor.js` | Editor HTML del bloque `starchoHtml` |
+
+Reglas:
+
+- No mezclar CSS de `/app` con `/admin`.
+- No crear JS ad-hoc si Livewire/Alpine o `Starcho.*` resuelven el flujo.
+- No instanciar graficas manualmente si `x-starcho-chart` aplica.
+
+---
+
+## Skill Starcho: construir apps con Laravel + Starcho
+
+Usa este skill como contrato operativo cuando se cree una nueva app, modulo o pantalla dentro de Starcho.
+
+### Identidad
+
+Eres un builder senior de Starcho. Construyes con Laravel 13, Livewire 4, Flux UI en `/admin`, PowerGrid para tablas y componentes del Star Kit. Tu prioridad es entregar una app mantenible, modular, traducible y consistente con el sistema existente.
+
+### Fuentes de verdad
+
+1. `README.md`
+2. `MODULES_AND_MENU.md`
+3. Rutas en `routes/admin.php`, `routes/app.php`, `routes/web.php`
+4. Componentes en `resources/views/components`
+5. Layouts en `resources/views/layouts`
+
+### Reglas de construccion
+
+1. Dar siempre rutas concretas: path HTTP, route name y archivo donde se implementa.
+2. En `/admin`, usar Flux UI como base visual.
+3. Reutilizar componentes `x-starcho-*` antes de escribir markup nuevo.
+4. Si hay tabla, usar PowerGrid.
+5. Si hay archivos, usar `StorageService`.
+6. Si hay AI, usar `AiSetting` y `PageAiContentService`.
+7. Si hay contenido traducible, usar Spatie Translatable y lang files.
+8. Si hay `user_id`, aplicar ownership real en modelo o query.
+9. Si hay CRUD Livewire, usar `DispatchesStarchoNotify`.
+10. Si algo se repite dos veces, convertirlo en componente Starcho.
+
+### Estructura recomendada para un modulo app
+
+```text
+app/Models/<Model>.php
+app/Livewire/App/<Module>Table.php
+resources/views/<module>/index.blade.php
+resources/views/<module>/pg-header.blade.php
+resources/views/livewire/app/<module>-modal.blade.php
+routes/app.php
+lang/es/<module>.php
+lang/en/<module>.php
+lang/pt_BR/<module>.php
+database/migrations/xxxx_xx_xx_xxxxxx_create_<module>_table.php
+```
+
+### Estructura recomendada para una pantalla admin
+
+```text
+app/Http/Controllers/Admin/<Module>Controller.php
+app/Livewire/Admin/<Module>Table.php
+resources/views/admin/<module>/index.blade.php
+resources/views/admin/<module>/pg-header.blade.php
+resources/views/livewire/admin/<module>-modal.blade.php
+routes/admin.php
+lang/es/admin_ui.php
+lang/en/admin_ui.php
+lang/pt_BR/admin_ui.php
+```
+
+### Checklist antes de terminar
+
+- Ruta registrada y nombrada.
+- Middleware correcto.
+- UI basada en Flux en admin.
+- Componentes Starcho reutilizados.
+- Textos traducibles.
+- Storage via `StorageService` si aplica.
+- AI via `PageAiContentService` si aplica.
+- Ownership si aplica.
+- Notificaciones con `DispatchesStarchoNotify`.
+- Cache/menu invalidado si toca modulos o menu.
+- `npm run build`, `php artisan route:list` y `php artisan test` cuando el entorno tenga PHP disponible.
+
+---
+
+## Comandos utiles
+
+```bash
+npm run dev
+npm run build
+
+php artisan starcho:install
+php artisan migrate:fresh --seed --seeder=StarchoInstallAppSeeder
+php artisan route:list --path=admin
+php artisan route:list --path=app
+php artisan optimize:clear
+php artisan optimize
+php artisan test
+./vendor/bin/pint
+```
+
+---
+
+## Agente del proyecto
+
+El repo incluye un agente especializado:
+
+- `.github/agents/galax-starcho.agent.md`
+
+Debe mantenerse alineado con este README. Si cambian rutas, componentes, storage, AI o convenciones del Star Kit, actualizar README primero y despues el agente.
 
 ---
 

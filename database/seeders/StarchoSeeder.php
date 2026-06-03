@@ -169,6 +169,13 @@ class StarchoSeeder extends Seeder
                         [
                             'panel'      => 'admin',
                             'section'    => 'Contenido',
+                            'name'       => ['es' => 'Comentarios', 'en' => 'Comments', 'pt_BR' => 'Comentários'],
+                            'icon'       => 'fas fa-comments',
+                            'route'      => 'admin.comments.index',
+                            'sort_order' => 65,
+                        ],                        [
+                            'panel'      => 'admin',
+                            'section'    => 'Contenido',
                             'name'       => ['es' => 'Configuración', 'en' => 'Content Settings', 'pt_BR' => 'Configurações'],
                             'icon'       => 'fas fa-sliders',
                             'route'      => 'admin.content.settings',
@@ -181,27 +188,6 @@ class StarchoSeeder extends Seeder
                             'icon'       => 'fas fa-link-slash',
                             'route'      => 'admin.content.broken-links',
                             'sort_order' => 66,
-                        ],
-                    ],
-                ],
-            ],
-            [
-                'key'         => 'ip-geolocation',
-                'name'        => ['es' => 'Geolocalización IP', 'en' => 'IP Geolocation', 'pt_BR' => 'Geolocalização IP'],
-                'description' => ['es' => 'Consulta y registra la ubicación geográfica de las IPs que visitan el sitio.', 'en' => 'Query and log the geographic location of IPs visiting the site.', 'pt_BR' => 'Consulta e registra a localização geográfica dos IPs que visitam o site.'],
-                'icon'        => 'map-pin',
-                'installed'   => true,
-                'active'      => true,
-                'config'      => [
-                    'menu_items' => [
-                        [
-                            'panel'        => 'admin',
-                            'section'      => 'Sistema',
-                            'parent_route' => 'admin.site.index',
-                            'name'         => ['es' => 'Geolocalización IP', 'en' => 'IP Geolocation', 'pt_BR' => 'Geolocalização IP'],
-                            'icon'         => 'fas fa-map-marker-alt',
-                            'route'        => 'admin.geolocations.index',
-                            'sort_order'   => 67,
                         ],
                     ],
                 ],
@@ -236,6 +222,7 @@ class StarchoSeeder extends Seeder
 
         $this->call(MenuSeeder::class);
         $this->call(StoragePlansSeeder::class);
+        $this->call(AiPlansSeeder::class);
 
         $this->command->info('Starcho modules seeded.');
     }

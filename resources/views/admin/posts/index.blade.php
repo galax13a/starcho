@@ -54,5 +54,6 @@
 
     <livewire:admin.posts-table />
     <livewire:admin.post-ai-creator />
+    <livewire:admin.post-insights />
 
 </x-layouts::admin>

@@ -40,12 +40,11 @@
 
                 <flux:field>
                     <flux:label>Modelo</flux:label>
-                    <input list="site-page-seo-ai-models" wire:model="model" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
-                    <datalist id="site-page-seo-ai-models">
+                    <select wire:model="model" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
                         @foreach($models as $modelName)
-                            <option value="{{ $modelName }}"></option>
+                            <option value="{{ $modelName }}">{{ $modelName }}</option>
                         @endforeach
-                    </datalist>
+                    </select>
                 </flux:field>
             </div>
         </div>

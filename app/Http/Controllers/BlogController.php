@@ -89,14 +89,7 @@ class BlogController extends Controller
     public function show(string $locale, string $slug): mixed
     {
         $post = Post::where('type', Post::TYPE_POST)
-            ->where(function ($q) use ($slug, $locale) {
-                $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(slug, '$.$locale')) = ?", [$slug]);
-                foreach (SiteLanguage::activeCodes() as $code) {
-                    if ($code !== $locale) {
-                        $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(slug, '$.$code')) = ?", [$slug]);
-                    }
-                }
-            })
+            ->whereSlug($slug)
             ->where('status', Post::STATUS_PUBLISHED)
             ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
             ->with(['categories', 'tags', 'author'])
@@ -105,6 +98,8 @@ class BlogController extends Controller
         if (!$post) {
             abort(404);
         }
+
+        $post->increment('views_count');
 
         $settings        = ContentSetting::cached();
         $activeCodes     = SiteLanguage::activeCodes();

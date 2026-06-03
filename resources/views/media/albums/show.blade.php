@@ -38,7 +38,7 @@
                     <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="aspect-square bg-zinc-100 dark:bg-zinc-800">
                             @if($item->isImage())
-                                <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover transition group-hover:scale-105">
+                                <img src="{{ $item->preview_url }}" alt="{{ $item->alt ?? $item->name }}" class="h-full w-full object-cover transition group-hover:scale-105">
                             @else
                                 <div class="flex h-full w-full items-center justify-center text-3xl text-zinc-400">
                                     <i class="fas {{ $item->isVideo() ? 'fa-film' : 'fa-file-lines' }}"></i>

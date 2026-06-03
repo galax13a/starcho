@@ -69,9 +69,7 @@ class SitePageEditor extends Component
 
         $this->ensurePageLoaded();
 
-        if ($this->supported) {
-            File::put($this->page['file_path'], $this->replaceVisualEditableContent($this->bladeContent, $this->visualHtml));
-        }
+        File::put($this->page['file_path'], $this->visualHtml);
 
         $this->savePageSeoSettings($this->seoRows);
         $this->loadPage();
@@ -83,7 +81,7 @@ class SitePageEditor extends Component
     {
         $this->validate([
             'aiPrompt' => ['required', 'string', 'min:8', 'max:4000'],
-            'provider' => ['required', 'in:openai,deepseek,anthropic'],
+            'provider' => ['required', 'in:openai,deepseek,anthropic,openrouter'],
             'model' => ['required', 'string', 'max:120'],
         ]);
 
@@ -135,10 +133,9 @@ class SitePageEditor extends Component
             throw new RuntimeException('Página Folio no encontrada.');
         }
 
-        $visual = $this->extractVisualEditableContent($page['blade_content']);
         $this->page = $page;
-        $this->supported = (bool) $visual['supported'];
-        $this->visualHtml = (string) ($visual['html'] ?? '');
+        $this->supported = true;
+        $this->visualHtml = (string) $page['blade_content'];
         $this->bladeContent = (string) $page['blade_content'];
         $this->seoRows = $this->buildPageSeoRows([$page]);
     }

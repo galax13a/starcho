@@ -5,6 +5,9 @@
             $isFavorite = $media->favorites->contains('user_id', auth()->id());
             $averageRating = $media->ratings->isNotEmpty() ? round($media->ratings->avg('rating'), 1) : null;
             $mediaUrl = $media->public_url;
+            $variantsEnabled = \App\Models\StorageSetting::singleton()->imageVariantsEnabled();
+            $viewerImageUrl = (! $variantsEnabled || $variantSize === 'original') ? $mediaUrl : $media->variantUrl($variantSize);
+            $downloadVariants = collect($media->variants ?? [])->filter(fn ($variant) => filled($variant['path'] ?? null));
         @endphp
 
         <div
@@ -52,7 +55,7 @@
 
                 <div class="relative flex min-h-[220px] flex-1 items-center justify-center overflow-hidden bg-black" style="max-height: min(430px, calc(100vh - 13rem));">
                     @if($media->isImage())
-                        <img src="{{ $mediaUrl }}" alt="{{ $media->alt ?? $media->name }}" class="h-auto w-auto object-contain transition duration-300 ease-out" style="max-width: 100%; max-height: min(430px, calc(100vh - 13rem));">
+                        <img src="{{ $viewerImageUrl }}" alt="{{ $media->alt ?? $media->name }}" class="h-auto w-auto object-contain transition duration-300 ease-out" style="max-width: 100%; max-height: min(430px, calc(100vh - 13rem));">
                     @elseif($media->isVideo())
                         <video src="{{ $mediaUrl }}" controls autoplay class="h-auto w-auto object-contain transition duration-300 ease-out" style="max-width: 100%; max-height: min(430px, calc(100vh - 13rem));"></video>
                     @endif
@@ -70,9 +73,32 @@
                             </button>
                         @endif
 
-                        <a href="{{ route('admin.media.download', $media) }}" class="grid size-10 place-items-center rounded-lg bg-white/10 text-white transition hover:bg-white hover:text-zinc-950" title="Descargar">
-                            <flux:icon.arrow-down-tray class="size-5" />
-                        </a>
+                        @if($variantsEnabled && $media->isImage())
+                            <div class="inline-flex items-center gap-1 rounded-lg bg-white/10 p-1">
+                                @foreach(\App\Models\StorageSetting::singleton()->imageVariantSizes() as $size)
+                                    <button type="button" wire:click="setVariantSize('{{ $size }}')" class="h-8 rounded-md px-2 text-[11px] font-semibold transition {{ $variantSize === (string) $size ? 'bg-white text-zinc-950' : 'text-white hover:bg-white/10' }}" title="Ver {{ $size }}px">
+                                        {{ $size }}
+                                    </button>
+                                @endforeach
+                                <button type="button" wire:click="setVariantSize('original')" class="h-8 rounded-md px-2 text-[11px] font-semibold transition {{ $variantSize === 'original' ? 'bg-white text-zinc-950' : 'text-white hover:bg-white/10' }}" title="Ver original">
+                                    Original
+                                </button>
+                            </div>
+                        @endif
+
+                        <div class="inline-flex flex-wrap items-center gap-1 rounded-lg bg-white/10 p-1">
+                            <a href="{{ route('admin.media.download', $media) }}" class="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[11px] font-semibold text-white transition hover:bg-white hover:text-zinc-950" title="Descargar original">
+                                <flux:icon.arrow-down-tray class="size-4" />
+                                Original
+                            </a>
+                            @if($variantsEnabled && $media->isImage() && $downloadVariants->isNotEmpty())
+                                @foreach($downloadVariants as $size => $variant)
+                                    <a href="{{ route('admin.media.download', ['media' => $media, 'variant' => $size]) }}" class="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[11px] font-semibold text-white transition hover:bg-white hover:text-zinc-950" title="Descargar copia {{ $size }}px · {{ isset($variant['size']) ? number_format(((int) $variant['size']) / 1024, 1) . ' KB' : 'copia generada' }}">
+                                        {{ $size }}px
+                                    </a>
+                                @endforeach
+                            @endif
+                        </div>
 
                         <a href="{{ $mediaUrl }}" target="_blank" rel="noopener" class="grid size-10 place-items-center rounded-lg bg-white/10 text-white transition hover:bg-white hover:text-zinc-950" title="Abrir URL">
                             <flux:icon.arrow-top-right-on-square class="size-5" />

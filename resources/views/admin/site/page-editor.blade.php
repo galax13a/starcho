@@ -19,11 +19,5 @@
         </div>
     @endif
 
-    @if(!$visualData['supported'])
-        <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-300">
-            {{ __('admin_ui.site.visual_editor.unsupported') }}
-        </div>
-    @endif
-
     <livewire:admin.site-page-editor :path="$path" />
 @endsection

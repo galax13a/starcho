@@ -283,7 +283,7 @@
                                         <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block h-full w-full overflow-hidden">
                                     @endif
                                         @if($item->isImage())
-                                            <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+                                            <img src="{{ $item->preview_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                                         @elseif($item->isVideo())
                                             <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                                         @else
@@ -434,7 +434,7 @@
                                                     <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="block size-12 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="width: 3rem; height: 3rem;">
                                                 @endif
                                                     @if($item->isImage())
-                                                        <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        <img src="{{ $item->preview_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
                                                     @elseif($item->isVideo())
                                                         <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                                                     @else
@@ -523,7 +523,7 @@
                         <div class="flex min-w-0 items-center gap-3">
                             <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="width: 2.75rem; height: 2.75rem;">
                                 @if($item->isImage())
-                                    <img src="{{ $item->public_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="{{ $item->preview_url }}" alt="{{ $item->alt ?? $item->name }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;">
                                 @elseif($item->isVideo())
                                     <video src="{{ $item->public_url }}" class="block h-full w-full object-cover" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                                 @else

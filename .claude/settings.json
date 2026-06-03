@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Item \"getAnonymousComponentNamespaces\\(\\)\\)\")",
+      "Bash(Select-Object Name, Length, LastWriteTime, PSIsContainer)",
+      "Bash(Get-Item \"value\\('s3_secret'\\)\\)\")"
+    ]
+  }
+}

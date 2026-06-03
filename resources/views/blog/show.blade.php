@@ -48,6 +48,16 @@
 }
 .post-back-link:hover { color: var(--c-text2); }
 .post-back-link i { font-size: .75rem; }
+.post-edit-link {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .8rem; font-weight: 700;
+    color: var(--c-accent3, #7c3aed);
+    background: color-mix(in srgb, var(--c-accent3, #7c3aed) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c-accent3, #7c3aed) 30%, transparent);
+    padding: .4rem .85rem; border-radius: 999px; transition: .15s;
+}
+.post-edit-link:hover { background: color-mix(in srgb, var(--c-accent3, #7c3aed) 22%, transparent); }
+.post-edit-link i { font-size: .75rem; }
 
 .post-cats {
     display: flex;
@@ -474,9 +484,25 @@
 
 <div class="post-hero" style="padding-left:0;padding-right:0;max-width:100%">
 
-    <a href="{{ url('/' . $locale . '/blog') }}" class="post-back-link">
-        <i class="fas fa-arrow-left"></i> Blog
-    </a>
+    @php
+        $canEditPost = auth()->check() && (
+            auth()->id() === $post->author_id
+            || auth()->id() === $post->user_id
+            || (method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['root', 'admin']))
+        );
+    @endphp
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <a href="{{ url('/' . $locale . '/blog') }}" class="post-back-link">
+            <i class="fas fa-arrow-left"></i> Blog
+        </a>
+
+        @if ($canEditPost)
+            <a href="{{ route('admin.posts.edit', $post) }}" class="post-edit-link" title="{{ __('Editar este artículo') }}">
+                <i class="fas fa-pen-to-square"></i> {{ __('Editar') }}
+            </a>
+        @endif
+    </div>
 
     @if ($usingFallback)
         <div class="post-fallback">
@@ -586,6 +612,12 @@
     @endif
 
 </div>
+
+@if ($post->allow_comments)
+    <div class="post-content-wrap">
+        @livewire('post-comments', ['post' => $post], 'post-comments-'.$post->id)
+    </div>
+@endif
 </div>{{-- /main column --}}
 
 {{-- ── Sidebar ── --}}

@@ -54,6 +54,14 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(124,58,237,.3) 30%, rgba(6,182,212,.3) 70%, transparent);
 }
+.page-edit-link {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .8rem; font-weight: 700; color: var(--c-accent, #7c3aed);
+    background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.25);
+    padding: .4rem .85rem; border-radius: 999px; transition: .15s; margin-bottom: 1.25rem;
+}
+.page-edit-link:hover { background: rgba(124,58,237,.2); }
+.page-edit-link i { font-size: .75rem; }
 
 /* ── Fallback banner ── */
 .page-fallback-banner {
@@ -134,9 +142,24 @@
 {{-- Hero --}}
 <div class="site-container" style="padding-bottom:0">
     <div class="page-hero">
-        <div class="page-hero-eyebrow">
-            <i class="fas fa-file-alt" style="font-size:.7rem"></i>
-            {{ __('Page') }}
+        @php
+            $canEditPage = auth()->check() && (
+                auth()->id() === $page->author_id
+                || auth()->id() === $page->user_id
+                || (method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['root', 'admin']))
+            );
+        @endphp
+
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+            <div class="page-hero-eyebrow">
+                <i class="fas fa-file-alt" style="font-size:.7rem"></i>
+                {{ __('Page') }}
+            </div>
+            @if ($canEditPage)
+                <a href="{{ route('admin.pages.edit', $page) }}" class="page-edit-link" title="{{ __('Editar esta página') }}">
+                    <i class="fas fa-pen-to-square"></i> {{ __('Editar') }}
+                </a>
+            @endif
         </div>
         <h1>{{ $pageTitle }}</h1>
         @if($pageExcerpt)
@@ -163,6 +186,10 @@
 
     <div class="page-content-wrap">
         <div class="page-body" id="page-content"></div>
+
+        @if ($page->allow_comments)
+            @livewire('post-comments', ['post' => $page], 'page-comments-'.$page->id)
+        @endif
     </div>
 
 </div>
