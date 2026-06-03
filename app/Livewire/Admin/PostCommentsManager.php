@@ -12,6 +12,12 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * Admin panel for moderating both content comments (PostComment) and media
+ * comments (MediaComment) across the site. Supports filtering by source, status,
+ * content type, date range, and free-text search. Admins can reply inline or
+ * change the approval status of any comment.
+ */
 class PostCommentsManager extends Component
 {
     use DispatchesStarchoNotify;

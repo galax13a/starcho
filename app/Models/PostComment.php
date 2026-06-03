@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * A comment on a Post or Page. Supports up to MAX_DEPTH levels of nesting
+ * (depth 0 = root comment, 1 = reply, 2 = reply-to-reply).
+ */
 class PostComment extends Model
 {
+    /** Depth 0 = root, 1 = reply, 2 = reply-to-reply (maximum). */
     public const MAX_DEPTH = 2;
 
     protected $fillable = [

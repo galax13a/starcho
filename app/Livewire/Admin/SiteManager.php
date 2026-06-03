@@ -27,6 +27,12 @@ use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
+/**
+ * Central Livewire component that consolidates all site settings: general info,
+ * SEO per page/locale, social networks, languages, storage plans, and AI config.
+ * Each section delegates writes to its respective controller to keep business
+ * logic out of the component.
+ */
 class SiteManager extends Component
 {
     use DispatchesStarchoNotify;

@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
+/** Thrown when a user exceeds the AI generation quota defined by their AI plan. */
 class AiQuotaExceededException extends RuntimeException
 {
     public static function for(string $type): self

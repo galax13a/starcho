@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
 
+/**
+ * An AI usage plan that sets per-user monthly quotas for text tokens, images,
+ * and videos. null quota = unlimited; 0 = type not included in the plan.
+ */
 class AiPlan extends Model
 {
     use HasTranslations;

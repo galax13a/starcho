@@ -12,6 +12,11 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+/**
+ * Slide-over panel that surfaces per-post analytics: word count, AI generation
+ * history with quality ratings, threaded comments, and AI memory snippets.
+ * Opened via the `openPostInsights` browser event from the posts table.
+ */
 class PostInsights extends Component
 {
     use DispatchesStarchoNotify;

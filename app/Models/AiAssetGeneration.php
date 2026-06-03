@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Tracks a single AI-generated image or video asset: its provider, model,
+ * status lifecycle (processing → completed | failed), cost, and the Media record
+ * produced when the generation succeeds.
+ */
 class AiAssetGeneration extends Model
 {
     public const TYPE_TEXT  = 'text';

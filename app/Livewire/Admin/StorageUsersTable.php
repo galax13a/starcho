@@ -12,6 +12,10 @@ use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
+/**
+ * PowerGrid table that lists all users with their storage usage and lets admins
+ * assign or change storage plans inline via a <select> rendered per row.
+ */
 final class StorageUsersTable extends PowerGridComponent
 {
     use DispatchesStarchoNotify;
