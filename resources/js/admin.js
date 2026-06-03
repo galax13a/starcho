@@ -48,6 +48,7 @@ window.adminLayout = function () {
         collapsed: false,
         mobOpen:   false,
         showLogout: false,
+        sidebarPosition: 'left',
 
         init() {
             // Usar el sistema unificado de tema de Starcho
@@ -62,6 +63,7 @@ window.adminLayout = function () {
             // Cargar estado del sidebar desde localStorage
             try {
                 this.collapsed = localStorage.getItem('sa_collapsed') === 'true';
+                this.sidebarPosition = localStorage.getItem('sa_sidebar_position') || 'left';
             } catch (e) {}
 
             // Sincronizar isDark → Starcho.dark
@@ -78,6 +80,15 @@ window.adminLayout = function () {
         toggleCollapsed() {
             this.collapsed = !this.collapsed;
             try { localStorage.setItem('sa_collapsed', String(this.collapsed)); } catch (e) {}
+        },
+
+        setSidebarPosition(position) {
+            if (!['left', 'right', 'bottom'].includes(position)) {
+                return;
+            }
+
+            this.sidebarPosition = position;
+            try { localStorage.setItem('sa_sidebar_position', position); } catch (e) {}
         },
 
         /** Muestra un toast. Delega en window.Starcho.notify. */

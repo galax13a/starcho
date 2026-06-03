@@ -59,7 +59,7 @@
 </head>
 <body x-data="adminLayout()">
 
-<div class="sa-app">
+<div class="sa-app" :class="'sa-sidebar-' + sidebarPosition">
 
     {{-- ─────────────── SIDEBAR ─────────────── --}}
     <aside class="sa-sidebar" :class="{ 'sa-collapsed': collapsed, 'sa-mob-open': mobOpen }">
@@ -74,9 +74,28 @@
             </a>
             <button class="sa-collapse-btn"
                     @click="toggleCollapsed()"
+                    data-sa-tooltip
+                    :data-tip="collapsed ? 'Expandir menú' : 'Colapsar menú'"
                     :title="collapsed ? 'Expandir menú' : 'Colapsar menú'">
                 <i class="fas" :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
             </button>
+            <div class="sa-position-tools" aria-label="Posición del menú admin">
+                <button type="button" class="sa-position-btn" data-sa-tooltip data-tip="Menú a la izquierda"
+                        :class="{ 'is-active': sidebarPosition === 'left' }"
+                        @click="setSidebarPosition('left')">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button type="button" class="sa-position-btn" data-sa-tooltip data-tip="Menú a la derecha"
+                        :class="{ 'is-active': sidebarPosition === 'right' }"
+                        @click="setSidebarPosition('right')">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button type="button" class="sa-position-btn" data-sa-tooltip data-tip="Menú abajo"
+                        :class="{ 'is-active': sidebarPosition === 'bottom' }"
+                        @click="setSidebarPosition('bottom')">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </div>
         </div>
 
         {{-- Nav --}}

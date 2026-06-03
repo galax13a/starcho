@@ -47,6 +47,8 @@
         @endforeach
     </div>
 
+    <x-starcho-editorjs-ai-spend />
+
     <style>
         .posts-top-stats .sa-stat-card { padding: .8rem; min-height: 106px; }
         .posts-top-stats .sa-stat-label { font-size: .68rem; line-height: 1rem; }

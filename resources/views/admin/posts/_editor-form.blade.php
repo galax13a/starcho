@@ -331,23 +331,7 @@
         <div class="space-y-4 min-w-0">
 
             {{-- Collapse / expand the right panel --}}
-            <div class="flex justify-end gap-2">
-                <button type="button" @click="toggleSidebar()"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700
-                           text-xs text-zinc-600 dark:text-zinc-300 hover:border-violet-300 dark:hover:border-violet-600 transition">
-                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                         :class="sidebar ? '' : 'rotate-180'">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-                    </svg>
-                    <span x-text="sidebar ? 'Ocultar panel' : 'Mostrar panel'"></span>
-                </button>
-                <button type="button" onclick="editorClearContent()"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-600
-                           transition hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-950/35">
-                    <i class="fas fa-eraser text-[11px]"></i>
-                    <span>Limpiar editor</span>
-                </button>
-            </div>
+            <x-starcho-editorjs-panel-controls />
 
             {{-- Editor.js card --}}
             <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700/60
@@ -366,23 +350,7 @@
                         @endif
                     </div>
                     <div class="flex items-center gap-2 text-xs text-zinc-400">
-                        @if($isEditing)
-                            <button type="button" onclick="editorOpenAiAssistant('content')"
-                                    class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:bg-violet-700">
-                                <i class="fas fa-wand-magic-sparkles text-[11px]"></i>
-                                AI
-                            </button>
-                            <button type="button" onclick="editorOpenAiAssistant('inspiration')"
-                                    class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-amber-500/20 transition hover:bg-amber-600">
-                                <i class="fas fa-lightbulb text-[11px]"></i>
-                                Inspiración
-                            </button>
-                            <button type="button" onclick="editorOpenAiAssistant('memory_regenerate')"
-                                    class="inline-flex h-8 items-center gap-1.5 rounded-full bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-violet-500/25 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:shadow-violet-500/35">
-                                <i class="fas fa-brain text-[11px]"></i>
-                                <span>Regenerar con memory</span>
-                            </button>
-                        @endif
+                        <x-starcho-editorjs-ai-actions :is-editing="$isEditing" />
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono">Tab</kbd>
                         <span class="hidden sm:inline text-zinc-300 dark:text-zinc-600">para bloques</span>
                     </div>

@@ -18,6 +18,7 @@
             };
             this.nodes = {};
             this.previewVisible = true;
+            this.visualEditing = false;
         }
 
         decodeEscapedMarkup(value) {
@@ -42,9 +43,12 @@
             header.innerHTML = [
                 '<div>',
                 '<p class="text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">HTML + CSS</p>',
-                '<p class="text-[11px] text-zinc-400 dark:text-zinc-500">Bloque renderizable con clases Tailwind y CSS propio.</p>',
+                '<p class="text-[11px] text-zinc-400 dark:text-zinc-500">Bloque renderizable con clases Tailwind, modo claro/oscuro y CSS propio.</p>',
                 '</div>',
+                '<div class="flex shrink-0 items-center gap-2">',
+                '<button type="button" class="starcho-html-editor-visual inline-flex h-8 items-center rounded-lg border border-violet-200 bg-violet-50 px-3 text-xs font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-violet-200">Editar vista</button>',
                 '<button type="button" class="starcho-html-editor-refresh inline-flex h-8 items-center rounded-lg bg-zinc-950 px-3 text-xs font-semibold text-white transition hover:bg-black dark:bg-white dark:text-zinc-950">Ocultar preview</button>',
+                '</div>',
             ].join('');
 
             const grid = document.createElement('div');
@@ -64,13 +68,15 @@
             this.nodes.css = css.textarea;
             this.nodes.preview = preview;
             this.nodes.previewButton = wrapper.querySelector('.starcho-html-editor-refresh');
+            this.nodes.visualButton = wrapper.querySelector('.starcho-html-editor-visual');
 
             this.nodes.previewButton?.addEventListener('click', () => this.togglePreview());
+            this.nodes.visualButton?.addEventListener('click', () => this.toggleVisualEditing());
             this.nodes.html.addEventListener('input', () => {
-                if (this.previewVisible) this.refreshPreview();
+                if (this.previewVisible && !this.visualEditing) this.refreshPreview();
             });
             this.nodes.css.addEventListener('input', () => {
-                if (this.previewVisible) this.refreshPreview();
+                if (this.previewVisible && !this.visualEditing) this.refreshPreview();
             });
 
             this.refreshPreview();
@@ -105,6 +111,7 @@
             const css = this.nodes.css?.value || '';
             const html = this.decodeEscapedMarkup(this.nodes.html?.value || '');
             this.nodes.preview.innerHTML = '<style>' + css + '</style><div class="starcho-html-editor-render">' + html + '</div>';
+            this.applyVisualEditingState();
         }
 
         togglePreview() {
@@ -125,7 +132,59 @@
             }
         }
 
+        toggleVisualEditing() {
+            if (!this.previewVisible) {
+                this.previewVisible = true;
+                this.nodes.preview?.classList.remove('hidden');
+            }
+
+            if (this.visualEditing) {
+                this.syncHtmlFromPreview();
+            }
+
+            this.visualEditing = !this.visualEditing;
+            this.applyVisualEditingState();
+        }
+
+        applyVisualEditingState() {
+            const render = this.nodes.preview?.querySelector('.starcho-html-editor-render');
+
+            if (!render) {
+                return;
+            }
+
+            render.contentEditable = this.visualEditing ? 'true' : 'false';
+            render.classList.toggle('outline', this.visualEditing);
+            render.classList.toggle('outline-2', this.visualEditing);
+            render.classList.toggle('outline-violet-400', this.visualEditing);
+            render.classList.toggle('outline-offset-4', this.visualEditing);
+
+            if (this.nodes.visualButton) {
+                this.nodes.visualButton.textContent = this.visualEditing ? 'Guardar vista' : 'Editar vista';
+            }
+
+            if (this.nodes.previewButton) {
+                this.nodes.previewButton.disabled = this.visualEditing;
+                this.nodes.previewButton.classList.toggle('opacity-50', this.visualEditing);
+                this.nodes.previewButton.classList.toggle('cursor-not-allowed', this.visualEditing);
+            }
+        }
+
+        syncHtmlFromPreview() {
+            const render = this.nodes.preview?.querySelector('.starcho-html-editor-render');
+
+            if (render && this.nodes.html) {
+                this.nodes.html.value = render.innerHTML.trim();
+            }
+        }
+
         save() {
+            if (this.visualEditing) {
+                this.syncHtmlFromPreview();
+                this.visualEditing = false;
+                this.applyVisualEditingState();
+            }
+
             return {
                 html: this.decodeEscapedMarkup(this.nodes.html?.value || ''),
                 css: this.decodeEscapedMarkup(this.nodes.css?.value || ''),

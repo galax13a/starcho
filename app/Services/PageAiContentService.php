@@ -108,7 +108,7 @@ PROMPT;
         $localeList = collect($locales)->filter()->values()->join(', ');
 
         $formatInstruction = $contentFormat === 'html'
-            ? 'Para cada idioma agrega tambien "html" con una pieza completa de HTML semantico usando clases Tailwind. No incluyas <html>, <head> ni <body>. Si necesitas CSS propio, agrega "css".'
+            ? 'Para cada idioma agrega tambien "html" con una pieza completa de HTML semantico usando clases Tailwind. Debe verse bien en modo claro y oscuro: usa clases dark:, colores con contraste y evita depender de un solo fondo. No incluyas <html>, <head> ni <body>. Si necesitas CSS propio, agrega "css" con soporte para prefers-color-scheme o selectores .dark.'
             : 'No agregues HTML completo: usa sections para contenido estructurado de Editor.js.';
 
         $instructions = <<<PROMPT
@@ -353,6 +353,7 @@ PROMPT;
             return <<<'PROMPT'
 Eres un diseñador editorial para un CMS Laravel con Editor.js.
 Genera contenido visual en HTML semantico con clases Tailwind listas para renderizar en el bloque starchoHtml.
+El HTML debe funcionar en modo claro y modo oscuro: usa variantes dark:, fondos/textos con contraste y CSS propio con prefers-color-scheme o .dark solo cuando Tailwind no baste.
 Responde unicamente JSON valido, sin markdown ni bloque de codigo.
 Estructura exacta:
 {
@@ -386,7 +387,7 @@ PROMPT,
 Eres un editor jefe de contenido para un CMS Laravel.
 Regenera el articulo usando el contenido actual y la memoria editorial seleccionada como contexto de aprendizaje.
 Debes mejorar estructura, precision, tono, SEO y claridad sin perder la intencion original.
-Si el formato solicitado es HTML + Tailwind, entrega una pieza visual pulida y semantica; si no, entrega contenido listo para Editor.js.
+Si el formato solicitado es HTML + Tailwind, entrega una pieza visual pulida, semantica y compatible con modo claro/oscuro usando clases dark: o CSS sensible al tema; si no, entrega contenido listo para Editor.js.
 No copies literalmente memorias antiguas: usalas para evitar repetir errores, rescatar buenas ideas y producir una version mejor.
 PROMPT,
             'excerpt' => <<<'PROMPT'
