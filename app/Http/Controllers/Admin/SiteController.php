@@ -238,6 +238,10 @@ class SiteController extends Controller
             }
 
             $network->update([
+                'label' => filled($data['label'] ?? null) ? $data['label'] : $network->label,
+                'icon' => filled($data['icon'] ?? null) ? $data['icon'] : $network->icon,
+                'color' => filled($data['color'] ?? null) ? $data['color'] : $network->color,
+                'sort_order' => (int) ($data['sort_order'] ?? $network->sort_order),
                 'active' => isset($data['active']) ? (bool) $data['active'] : false,
                 'url' => filled($data['url'] ?? null) ? $data['url'] : null,
             ]);

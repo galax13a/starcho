@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\PostTag;
 use App\Models\SiteLanguage;
+use App\Services\ContentRenderCache;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -135,8 +136,20 @@ class BlogController extends Controller
 
         $sidebar = $this->sidebarData($locale);
 
-        return view('blog.show', compact(
+        $viewData = compact(
             'post', 'settings', 'locale', 'fallbackLocale', 'usingFallback', 'readingTime', 'langUrls', 'sidebar'
-        ));
+        );
+
+        $html = app(ContentRenderCache::class)->remember(
+            $post,
+            $locale,
+            fn () => view('blog.show', $viewData)->render()
+        );
+
+        if ($html !== null) {
+            return response($html)->header('X-Starcho-Render-Cache', 'enabled');
+        }
+
+        return view('blog.show', $viewData);
     }
 }

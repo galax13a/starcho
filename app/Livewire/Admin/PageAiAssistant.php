@@ -6,12 +6,14 @@ use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiSetting;
 use App\Models\Post;
 use App\Models\PostAiMemory;
+use App\Models\SiteLanguage;
 use App\Services\PageAiContentService;
 use Illuminate\Support\Str;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Livewire\Component;
 use Throwable;
 
@@ -22,13 +24,20 @@ class PageAiAssistant extends Component
     public Post $post;
     public bool $open = false;
     public string $locale;
+    public string $sourceLocale = '';
     public string $currentContentJson = '{}';
     public string $prompt = '';
+    #[Session(key: 'starcho.page_ai_assistant.provider')]
     public string $provider = 'openai';
+    #[Session(key: 'starcho.page_ai_assistant.model')]
     public string $model = '';
+    #[Session(key: 'starcho.page_ai_assistant.mode')]
     public string $mode = 'replace';
     public string $target = 'content';
+    #[Session(key: 'starcho.page_ai_assistant.output_format')]
     public string $outputFormat = 'editorjs';
+    #[Session(key: 'starcho.page_ai_assistant.translate_prompt')]
+    public string $translateLocalePrompt = '';
     public ?string $result = null;
     public ?string $errorMessage = null;
     public array $selectedMemoryIds = [];
@@ -45,27 +54,37 @@ class PageAiAssistant extends Component
         $this->post = $post;
         $this->locale = $locale;
         $settings = AiSetting::singleton();
-        $this->provider = $settings->hasProviderKey($settings->provider)
-            ? $settings->provider
-            : (array_key_first($settings->configuredProviders()) ?: 'openai');
-        $this->model = $settings->modelOptions($this->provider)[0] ?? $settings->default_model;
+
+        if (! filled($this->provider)) {
+            $this->provider = $settings->hasProviderKey($settings->provider)
+                ? $settings->provider
+                : (array_key_first($settings->configuredProviders()) ?: 'openai');
+        }
+
+        $this->syncProviderDefaults();
     }
 
     #[On('openPageAiAssistant')]
-    public function openAssistant(string $locale, string $content, string $target = 'content'): void
+    public function openAssistant(string $locale, string $content, string $target = 'content', ?string $sourceLocale = null): void
     {
         $this->locale = $locale;
+        $this->sourceLocale = $sourceLocale ?: $this->fallbackSourceLocale($locale);
         $this->currentContentJson = $content;
-        $this->target = in_array($target, ['content', 'excerpt', 'seo', 'inspiration', 'audit', 'memory_regenerate'], true) ? $target : 'content';
-        $this->mode = $this->target === 'content' ? $this->mode : 'replace';
+        $this->target = in_array($target, ['content', 'excerpt', 'seo', 'inspiration', 'audit', 'memory_regenerate', 'translate_locale'], true) ? $target : 'content';
+        $this->mode = in_array($this->target, ['content', 'translate_locale'], true) ? $this->mode : 'replace';
         if ($this->target === 'inspiration') {
             $this->mode = 'append';
         }
-        $this->outputFormat = 'editorjs';
+        if ($this->target === 'translate_locale') {
+            $this->mode = 'replace';
+        }
         $this->selectedMemoryIds = $this->target === 'memory_regenerate'
             ? $this->post->aiMemories()->where('active', true)->limit(5)->pluck('id')->all()
             : [];
-        $this->prompt = $this->defaultPromptFor($this->target);
+        $defaultPrompt = $this->defaultPromptFor($this->target);
+        $this->prompt = $this->target === 'translate_locale' && filled($this->translateLocalePrompt)
+            ? $this->translateLocalePrompt
+            : $defaultPrompt;
         $this->result = null;
         $this->errorMessage = null;
         $this->syncProviderDefaults();
@@ -86,24 +105,27 @@ class PageAiAssistant extends Component
             'prompt' => ['required', 'string', 'min:6', 'max:4000'],
             'model' => ['required', 'string', 'max:120'],
             'mode' => ['required', 'in:replace,append'],
-            'target' => ['required', 'in:content,excerpt,seo,inspiration,audit,memory_regenerate'],
+            'target' => ['required', 'in:content,excerpt,seo,inspiration,audit,memory_regenerate,translate_locale'],
             'outputFormat' => ['required', 'in:editorjs,html'],
             'selectedMemoryIds' => ['array'],
             'selectedMemoryIds.*' => ['integer'],
         ]);
 
         $this->errorMessage = null;
+        if ($this->target === 'translate_locale') {
+            $this->translateLocalePrompt = $this->prompt;
+        }
 
         try {
             $this->result = $service->generate(
                 $this->post,
                 $this->locale,
-                $this->prompt,
+                $this->target === 'translate_locale' ? $this->translationPrompt() : $this->prompt,
                 $this->currentContentJson,
                 $this->model,
                 $this->provider,
                 $this->target,
-                in_array($this->target, ['content', 'memory_regenerate'], true) ? $this->outputFormat : 'editorjs',
+                in_array($this->target, ['content', 'memory_regenerate', 'translate_locale'], true) ? $this->outputFormat : 'editorjs',
                 $this->memoryContext(),
             );
             $generation = $this->post->aiGenerations()->create($service->lastGenerationRecord([
@@ -184,6 +206,7 @@ class PageAiAssistant extends Component
             'inspiration' => 'Genera 5 ideas de inspiración para ampliar, variar o mejorar este artículo. Incluye sugerencias concretas y cómo aplicarlas.',
             'audit' => 'Audita este artículo como si fuera a posicionar en Google y ser leído por público real. Dame scores de 1 a 10, fortalezas, riesgos y mejoras priorizadas.',
             'memory_regenerate' => 'Regenera este artículo usando las memorias seleccionadas. Mejora estructura, SEO, profundidad y calidad editorial; conserva intención, datos útiles y el idioma activo.',
+            'translate_locale' => 'Traduce y recrea este contenido para el idioma activo. Conserva intención, estructura, datos, SEO y tono, pero escribe natural para ese idioma.',
             default => 'Mejora este contenido para el CMS, conserva el idioma activo, mantén los datos importantes y devuelve una versión lista para publicar.',
         };
     }
@@ -196,8 +219,28 @@ class PageAiAssistant extends Component
             'inspiration' => 'inspiración',
             'audit' => 'test del artículo',
             'memory_regenerate' => 'regeneración con memory',
+            'translate_locale' => 'traducción/recreación',
             default => 'contenido',
         };
+    }
+
+    private function fallbackSourceLocale(string $targetLocale): string
+    {
+        $locales = SiteLanguage::activeCodes() ?: ['es'];
+
+        return collect($locales)->first(fn (string $locale) => $locale !== $targetLocale) ?: $targetLocale;
+    }
+
+    private function translationPrompt(): string
+    {
+        return trim(<<<PROMPT
+{$this->prompt}
+
+Idioma fuente: {$this->sourceLocale}
+Idioma destino: {$this->locale}
+
+Recrea el contenido para el idioma destino usando el contenido fuente como base. No lo resumas salvo que el usuario lo pida. Mantén estructura editorial, intención, datos importantes, SEO y llamados a la acción. Si el formato es HTML + Tailwind, conserva soporte light/dark con clases dark:*.
+PROMPT);
     }
 
     private function memoryContext(): string
@@ -248,6 +291,7 @@ class PageAiAssistant extends Component
                 'model' => $this->model,
                 'target' => $this->target,
                 'locale' => $this->locale,
+                'source_locale' => $this->sourceLocale,
                 'memory_ids' => $this->selectedMemoryIds,
             ],
         ]);

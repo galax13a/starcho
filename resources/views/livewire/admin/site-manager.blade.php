@@ -484,30 +484,120 @@
         {{-- ════ SOCIAL ════ --}}
         <div x-show="tab === 'social'" x-cloak class="space-y-6">
             <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
-                <flux:heading size="lg">{{ __('admin_ui.site.sections.social_networks') }}</flux:heading>
-                <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.social_help') }}</flux:text>
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <flux:heading size="lg">{{ __('admin_ui.site.sections.social_networks') }}</flux:heading>
+                        <flux:text class="text-sm text-zinc-500">{{ __('admin_ui.site.social_help') }}</flux:text>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" wire:click="exportSocialNetworks"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+                            <i class="fas fa-file-code text-[11px]"></i>
+                            Exportar JSON
+                        </button>
+                        <button type="button" wire:click="openSocialImportModal"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                            <i class="fas fa-file-import text-[11px]"></i>
+                            Importar
+                        </button>
+                        <button type="button"
+                                @click="window.Starcho?.confirm ? window.Starcho.confirm({
+                                    title: 'Eliminar redes',
+                                    message: 'Se eliminarán las redes sociales seleccionadas. Esta acción no se puede deshacer.',
+                                    okText: 'Eliminar',
+                                    cancelText: 'Cancelar',
+                                    onConfirm: () => $wire.deleteSelectedSocialNetworks(),
+                                }) : $wire.deleteSelectedSocialNetworks()"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+                            <i class="fas fa-trash text-[11px]"></i>
+                            Eliminar seleccionadas
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-violet-200 bg-violet-50/50 p-4 dark:border-violet-900/50 dark:bg-violet-950/20">
+                    <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
+                        <i class="fas fa-plus-circle text-xs"></i>
+                        Agregar red social
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                        <input type="text" wire:model="newSocialKey" placeholder="key: threads"
+                               class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-violet-900/60 dark:bg-zinc-950 dark:text-white md:col-span-1">
+                        <input type="text" wire:model="newSocialLabel" placeholder="Nombre"
+                               class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-violet-900/60 dark:bg-zinc-950 dark:text-white md:col-span-1">
+                        <input type="text" wire:model="newSocialIcon" placeholder="fab fa-instagram"
+                               class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-violet-900/60 dark:bg-zinc-950 dark:text-white md:col-span-1">
+                        <input type="color" wire:model="newSocialColor"
+                               class="h-10 rounded-lg border border-violet-200 bg-white px-2 py-1 dark:border-violet-900/60 dark:bg-zinc-950 md:col-span-1">
+                        <input type="url" wire:model="newSocialUrl" placeholder="https://..."
+                               class="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-violet-900/60 dark:bg-zinc-950 dark:text-white md:col-span-1">
+                        <div class="flex gap-2 md:col-span-1">
+                            <input type="number" wire:model="newSocialSortOrder" min="0" max="65535" placeholder="Orden"
+                                   class="min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-violet-900/60 dark:bg-zinc-950 dark:text-white">
+                            <button type="button" wire:click="addSocialNetwork"
+                                    class="inline-flex h-10 items-center justify-center rounded-lg bg-violet-600 px-3 text-sm font-semibold text-white transition hover:bg-violet-700">
+                                <i class="fas fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2 grid grid-cols-1 gap-1 text-xs text-rose-600 dark:text-rose-300 md:grid-cols-3">
+                        @error('newSocialKey') <span>{{ $message }}</span> @enderror
+                        @error('newSocialLabel') <span>{{ $message }}</span> @enderror
+                        @error('newSocialUrl') <span>{{ $message }}</span> @enderror
+                    </div>
+                </div>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs uppercase tracking-wide">
                             <tr>
-                                <th class="px-3 py-2 text-left">#</th>
+                                <th class="px-3 py-2 text-left">
+                                    <span class="sr-only">Seleccionar</span>
+                                </th>
+                                <th class="px-3 py-2 text-left">Orden</th>
                                 <th class="px-3 py-2 text-left">{{ __('admin_ui.site.social_table.network') }}</th>
+                                <th class="px-3 py-2 text-left">Icono</th>
+                                <th class="px-3 py-2 text-left">Color</th>
                                 <th class="px-3 py-2 text-left">{{ __('admin_ui.site.social_table.url') }}</th>
                                 <th class="px-3 py-2 text-center">{{ __('admin_ui.site.social_table.active') }}</th>
+                                <th class="px-3 py-2 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             @foreach ($socialNetworks as $sn)
                                 <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-                                    <td class="px-3 py-3 text-zinc-400 text-xs">{{ $sn->sort_order }}</td>
                                     <td class="px-3 py-3">
-                                        <div class="flex items-center gap-2">
+                                        <input type="checkbox" wire:model.live="selectedSocialNetworks" value="{{ $sn->id }}"
+                                               class="size-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500">
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <input type="number" name="social_networks[{{ $sn->key }}][sort_order]"
+                                               value="{{ old('social_networks.'.$sn->key.'.sort_order', $sn->sort_order) }}"
+                                               min="0" max="65535"
+                                               class="w-20 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
+                                    </td>
+                                    <td class="px-3 py-3 min-w-56">
+                                        <div class="flex items-center gap-2 mb-2">
                                             <span style="color:{{ $sn->color }};width:1.2rem;text-align:center">
                                                 <i class="{{ $sn->icon }}"></i>
                                             </span>
-                                            <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $sn->label }}</span>
+                                            <span class="font-mono text-[11px] text-zinc-400">{{ $sn->key }}</span>
                                         </div>
+                                        <input type="text" name="social_networks[{{ $sn->key }}][label]"
+                                               value="{{ old('social_networks.'.$sn->key.'.label', $sn->label) }}"
+                                               class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
+                                    </td>
+                                    <td class="px-3 py-3 min-w-44">
+                                        <input type="text" name="social_networks[{{ $sn->key }}][icon]"
+                                               value="{{ old('social_networks.'.$sn->key.'.icon', $sn->icon) }}"
+                                               placeholder="fab fa-instagram"
+                                               class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white">
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <input type="color" name="social_networks[{{ $sn->key }}][color]"
+                                               value="{{ old('social_networks.'.$sn->key.'.color', $sn->color ?: '#6b7280') }}"
+                                               class="h-9 w-14 rounded-lg border border-zinc-300 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900">
                                     </td>
                                     <td class="px-3 py-3 w-full max-w-xs">
                                         <input type="url" name="social_networks[{{ $sn->key }}][url]"
@@ -524,6 +614,19 @@
                                                 :checked="old('social_networks.'.$sn->key.'.active', $sn->active)"
                                             />
                                         </div>
+                                    </td>
+                                    <td class="px-3 py-3 text-right">
+                                        <button type="button"
+                                                @click="window.Starcho?.confirm ? window.Starcho.confirm({
+                                                    title: 'Eliminar red social',
+                                                    message: '¿Eliminar {{ addslashes($sn->label) }}?',
+                                                    okText: 'Eliminar',
+                                                    cancelText: 'Cancelar',
+                                                    onConfirm: () => $wire.deleteSocialNetwork({{ $sn->id }}),
+                                                }) : $wire.deleteSocialNetwork({{ $sn->id }})"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-rose-950/20 dark:hover:text-rose-300">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -1666,6 +1769,43 @@
         </div>
 
     </div>
+
+    <x-starcho-popup-standar
+        name="modal-site-social-import"
+        width="md:w-[560px]"
+        submit-action="importSocialNetworks"
+        title="Importar redes sociales"
+        subtitle="Carga un JSON exportado desde Starcho. Puedes reemplazar todas las redes o fusionarlas por key."
+        save-label="Importar"
+        saving-label="Importando..."
+        loading-target="importSocialNetworks"
+    >
+        <div class="space-y-4">
+            <flux:field>
+                <flux:label>Modo de importación</flux:label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="cursor-pointer rounded-xl border p-3 text-sm transition {{ $socialImportMode === 'replace' ? 'border-sky-400 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-100' : 'border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300' }}">
+                        <input type="radio" wire:model.live="socialImportMode" value="replace" class="sr-only">
+                        <span class="block font-semibold">Reemplazar</span>
+                        <span class="mt-1 block text-xs opacity-75">Elimina las actuales y carga el JSON.</span>
+                    </label>
+                    <label class="cursor-pointer rounded-xl border p-3 text-sm transition {{ $socialImportMode === 'merge' ? 'border-sky-400 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-100' : 'border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300' }}">
+                        <input type="radio" wire:model.live="socialImportMode" value="merge" class="sr-only">
+                        <span class="block font-semibold">Fusionar</span>
+                        <span class="mt-1 block text-xs opacity-75">Actualiza por key y conserva el resto.</span>
+                    </label>
+                </div>
+                <flux:error name="socialImportMode" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Archivo JSON</flux:label>
+                <input type="file" wire:model="socialImportFile" accept="application/json,.json,.txt"
+                       class="block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                <flux:error name="socialImportFile" />
+            </flux:field>
+        </div>
+    </x-starcho-popup-standar>
 
     <livewire:admin.site-page-seo-ai />
 </div>

@@ -7,6 +7,7 @@ use App\Models\BrokenLink;
 use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Models\SiteLanguage;
+use App\Services\ContentRenderCache;
 use Livewire\Component;
 
 class ContentSettingsForm extends Component
@@ -49,6 +50,13 @@ class ContentSettingsForm extends Component
             'form.blog_layout' => ['required', 'in:grid,list'],
             'form.sitemap_include_pages' => ['boolean'],
             'form.sitemap_include_posts' => ['boolean'],
+            'form.render_cache_enabled' => ['boolean'],
+            'form.render_cache_posts_enabled' => ['boolean'],
+            'form.render_cache_pages_enabled' => ['boolean'],
+            'form.render_cache_guest_only' => ['boolean'],
+            'form.render_cache_per_locale' => ['boolean'],
+            'form.render_cache_ttl_minutes' => ['required', 'integer', 'min:1', 'max:10080'],
+            'form.render_cache_strategy' => ['required', 'in:safe,balanced,aggressive'],
             'excludedUrls' => ['array'],
             'excludedUrls.*' => ['string', 'max:2000'],
         ]);
@@ -58,6 +66,24 @@ class ContentSettingsForm extends Component
         ContentSetting::singleton()->update($payload);
 
         $this->notifySuccess(__('admin_ui.content.notify.settings_saved'));
+    }
+
+    public function clearRenderCache(string $scope = 'all'): void
+    {
+        $service = app(ContentRenderCache::class);
+        $count = match ($scope) {
+            'posts' => $service->clearPosts(),
+            'pages' => $service->clearPages(),
+            default => $service->clearAll(),
+        };
+
+        $label = match ($scope) {
+            'posts' => 'posts',
+            'pages' => 'páginas',
+            default => 'contenido',
+        };
+
+        $this->notifySuccess("Cache de {$label} limpiado ({$count} claves).");
     }
 
     public function toggleExcluded(string $url): void
@@ -113,6 +139,7 @@ class ContentSettingsForm extends Component
             'sitemapExists' => file_exists($sitemapFile),
             'sitemapDate' => file_exists($sitemapFile) ? \Carbon\Carbon::createFromTimestamp(filemtime($sitemapFile)) : null,
             'sitemapSize' => file_exists($sitemapFile) ? round(filesize($sitemapFile) / 1024, 1) : null,
+            'renderCacheStats' => app(ContentRenderCache::class)->stats(),
         ]);
     }
 

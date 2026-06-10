@@ -205,4 +205,21 @@ class Post extends Model
 
         return $query->whereRaw("JSON_SEARCH(slug, 'one', ?, '\\\\') IS NOT NULL", [$escaped]);
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $post): void {
+            $changed = collect($post->getChanges())
+                ->keys()
+                ->diff(['views_count', 'updated_at'])
+                ->isNotEmpty();
+
+            if ($changed) {
+                app(\App\Services\ContentRenderCache::class)->clearForPost($post);
+            }
+        });
+
+        static::deleted(fn (self $post) => app(\App\Services\ContentRenderCache::class)->clearForPost($post));
+        static::restored(fn (self $post) => app(\App\Services\ContentRenderCache::class)->clearForPost($post));
+    }
 }

@@ -85,6 +85,13 @@ class ContentSettingsController extends Controller
             'sitemap_include_posts'       => 'boolean',
             'sitemap_excluded_urls'       => 'nullable|array',
             'sitemap_excluded_urls.*'     => 'nullable|string|max:2000',
+            'render_cache_enabled'        => 'boolean',
+            'render_cache_posts_enabled'  => 'boolean',
+            'render_cache_pages_enabled'  => 'boolean',
+            'render_cache_guest_only'     => 'boolean',
+            'render_cache_per_locale'     => 'boolean',
+            'render_cache_ttl_minutes'    => 'required|integer|min:1|max:10080',
+            'render_cache_strategy'       => 'required|in:safe,balanced,aggressive',
         ]);
 
         // Checkboxes come as 0/1 when not checked they are absent — normalize
@@ -95,6 +102,9 @@ class ContentSettingsController extends Controller
             'blog_sidebar_enabled', 'breadcrumbs_enabled',
             'track_broken_links', 'reading_time_enabled',
             'sitemap_include_pages', 'sitemap_include_posts',
+            'render_cache_enabled', 'render_cache_posts_enabled',
+            'render_cache_pages_enabled', 'render_cache_guest_only',
+            'render_cache_per_locale',
         ];
 
         foreach ($bools as $key) {

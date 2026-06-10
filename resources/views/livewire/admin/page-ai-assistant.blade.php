@@ -1,6 +1,6 @@
 <div>
     @php
-        $isContentTarget = in_array($this->target, ['content', 'inspiration', 'memory_regenerate'], true);
+        $isContentTarget = in_array($this->target, ['content', 'inspiration', 'memory_regenerate', 'translate_locale'], true);
         $isAuditTarget = $this->target === 'audit';
         $resultHelp = match ($this->target) {
             'excerpt' => 'Revisa el extracto antes de aplicarlo al campo.',
@@ -8,6 +8,7 @@
             'inspiration' => 'Revisa las ideas; si te sirven puedes agregarlas al final del artículo.',
             'audit' => 'Resultado informativo: no se aplica al editor.',
             'memory_regenerate' => 'Regenera una versión completa basada en las memorias seleccionadas.',
+            'translate_locale' => 'Revisa la versión recreada para este idioma antes de aplicarla.',
             default => 'Revisa el texto antes de aplicarlo.',
         };
     @endphp
@@ -38,6 +39,17 @@
                         {{ $locale }}
                     </div>
                 </flux:field>
+
+                @if($this->target === 'translate_locale')
+                    <flux:field>
+                        <flux:label>Idioma base</flux:label>
+                        <div class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold uppercase text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                            <i class="fas fa-arrow-right-arrow-left text-xs"></i>
+                            {{ $sourceLocale }}
+                        </div>
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">El editor ya envió el contenido de este idioma como referencia.</p>
+                    </flux:field>
+                @endif
 
                 <flux:field>
                     <flux:label>Proveedor</flux:label>
@@ -183,6 +195,26 @@
         <x-slot:actions>
             <button
                 type="submit"
+                x-data="{
+                    elapsed: 0,
+                    timer: null,
+                    startTimer() {
+                        this.elapsed = 0;
+                        clearInterval(this.timer);
+                        this.timer = setInterval(() => this.elapsed++, 1000);
+                    },
+                    stopTimer() {
+                        clearInterval(this.timer);
+                        this.timer = null;
+                    },
+                    elapsedLabel() {
+                        const minutes = Math.floor(this.elapsed / 60);
+                        const seconds = this.elapsed % 60;
+                        return minutes > 0 ? `${minutes}m ${seconds.toString().padStart(2, '0')}s` : `${seconds}s`;
+                    }
+                }"
+                x-init="if (window.Livewire) Livewire.hook('commit', ({ succeed, fail }) => { succeed(() => stopTimer()); fail(() => stopTimer()); })"
+                @click="startTimer()"
                 class="relative inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 text-sm font-medium text-[var(--color-accent-foreground)] shadow-sm transition hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_10%)] disabled:pointer-events-none disabled:opacity-75"
                 wire:loading.attr="disabled"
                 wire:target="generate"
@@ -193,7 +225,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span wire:loading.remove wire:target="generate">Generar</span>
-                <span wire:loading wire:target="generate">Generando...</span>
+                <span wire:loading wire:target="generate" x-text="`Generando... ${elapsedLabel()} / máx {{ config('starcho_ai.request_timeout', 120) }}s`">Generando...</span>
             </button>
 
             <button

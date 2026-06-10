@@ -22,6 +22,7 @@ use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Livewire\Component;
 use Throwable;
 
@@ -39,36 +40,66 @@ class PageAiCreator extends Component
     private const DEFAULT_EDITORIAL_PROMPT = 'Actúa como redactor profesional senior, estratega SEO y editor técnico. Crea contenido publicable, claro, persuasivo y bien investigado. Si el formato elegido es HTML + Tailwind, entrega una pieza visual premium, responsive, semántica y moderna con secciones, cards, llamados a la acción y clases Tailwind limpias; no uses scripts, iframes ni assets externos. Si el formato elegido es Editor.js, estructura el contenido en secciones editables con títulos, párrafos y listas útiles.';
 
     public string $description = '';
+    #[Session(key: 'starcho.page_ai_creator.provider')]
     public string $provider = 'openai';
+    #[Session(key: 'starcho.page_ai_creator.model')]
     public string $model = '';
+    #[Session(key: 'starcho.page_ai_creator.content_format')]
     public string $contentFormat = 'editorjs';
+    #[Session(key: 'starcho.page_ai_creator.language_mode')]
+    public string $languageMode = 'multi';
+    #[Session(key: 'starcho.page_ai_creator.selected_locale')]
+    public string $selectedLocale = '';
+    #[Session(key: 'starcho.page_ai_creator.editorial_prompt')]
     public string $editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
+    #[Session(key: 'starcho.page_ai_creator.article_size')]
     public string $articleSize = 'medium';
+    #[Session(key: 'starcho.page_ai_creator.max_tokens')]
     public int $maxTokens = 2200;
     public string $status = Post::STATUS_DRAFT;
+    #[Session(key: 'starcho.page_ai_creator.nav_position')]
     public string $navPosition = Post::NAV_NONE;
+    #[Session(key: 'starcho.page_ai_creator.author_id')]
     public int $authorId = 0;
+    #[Session(key: 'starcho.page_ai_creator.parent_id')]
     public int $parentId = 0;
+    #[Session(key: 'starcho.page_ai_creator.menu_order')]
     public int $menuOrder = 0;
+    #[Session(key: 'starcho.page_ai_creator.allow_comments')]
     public bool $allowComments = false;
     public ?string $errorMessage = null;
 
     // ── AI featured image ─────────────────────────────────────────────
+    #[Session(key: 'starcho.page_ai_creator.gen_image')]
     public bool $genImage = false;
+    #[Session(key: 'starcho.page_ai_creator.image_mode')]
     public string $imageMode = 'article';   // article | prompt
     public string $imagePrompt = '';
+    #[Session(key: 'starcho.page_ai_creator.image_size_preset')]
     public string $imageSizePreset = '800x600'; // 800x600 | 480x360 | custom
+    #[Session(key: 'starcho.page_ai_creator.img_custom_w')]
     public int $imgCustomW = 800;
+    #[Session(key: 'starcho.page_ai_creator.img_custom_h')]
     public int $imgCustomH = 600;
 
     public function mount(): void
     {
         $settings = AiSetting::singleton();
-        $this->provider = $settings->hasProviderKey($settings->provider)
-            ? $settings->provider
-            : (array_key_first($settings->configuredProviders()) ?: 'openai');
-        $this->model = $settings->modelOptions($this->provider)[0] ?? $settings->default_model;
-        $this->authorId = auth()->id() ?: (int) User::query()->value('id');
+        if (! filled($this->provider)) {
+            $this->provider = $settings->hasProviderKey($settings->provider)
+                ? $settings->provider
+                : (array_key_first($settings->configuredProviders()) ?: 'openai');
+        }
+
+        $this->syncProviderDefaults();
+
+        if ($this->authorId <= 0) {
+            $this->authorId = auth()->id() ?: (int) User::query()->value('id');
+        }
+
+        $this->selectedLocale = in_array($this->selectedLocale, $this->languages, true)
+            ? $this->selectedLocale
+            : ($this->languages[0] ?? 'es');
     }
 
     #[Computed]
@@ -97,16 +128,10 @@ class PageAiCreator extends Component
     public function open(): void
     {
         $this->description = '';
-        $this->contentFormat = 'editorjs';
-        $this->editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
-        $this->articleSize = 'medium';
-        $this->maxTokens = self::ARTICLE_PROFILES['medium']['tokens'];
-        $this->status = Post::STATUS_DRAFT;
-        $this->navPosition = Post::NAV_NONE;
-        $this->parentId = 0;
-        $this->menuOrder = 0;
-        $this->allowComments = false;
         $this->errorMessage = null;
+        $this->selectedLocale = in_array($this->selectedLocale, $this->languages, true)
+            ? $this->selectedLocale
+            : ($this->languages[0] ?? 'es');
         $this->syncProviderDefaults();
         $this->resetValidation();
         $this->js("document.dispatchEvent(new CustomEvent('modal-show',{detail:{name:'modal-page-ai-creator'}}))");
@@ -125,6 +150,8 @@ class PageAiCreator extends Component
             'provider' => ['required', 'in:openai,deepseek,anthropic,openrouter'],
             'model' => ['required', 'string', 'max:120'],
             'contentFormat' => ['required', 'in:editorjs,html'],
+            'languageMode' => ['required', 'in:single,multi'],
+            'selectedLocale' => ['required', 'string', 'max:20'],
             'editorialPrompt' => ['nullable', 'string', 'max:3000'],
             'articleSize' => ['required', 'in:small,medium,large,xlarge'],
             'maxTokens' => ['required', 'integer', 'min:800', 'max:8000'],
@@ -157,9 +184,10 @@ class PageAiCreator extends Component
         @set_time_limit((int) config('starcho_ai.request_timeout', 120) + (int) config('starcho_ai.time_limit_buffer', 15));
 
         try {
+            $targetLocales = $this->targetLocales();
             $blueprint = $service->generatePageBlueprint(
                 $this->generationPrompt(),
-                $this->languages,
+                $targetLocales,
                 $this->model,
                 $this->provider,
                 $this->contentFormat,
@@ -184,6 +212,8 @@ class PageAiCreator extends Component
                     'provider' => $this->provider,
                     'model' => $this->model,
                     'content_format' => $this->contentFormat,
+                    'language_mode' => $this->languageMode,
+                    'target_locales' => $targetLocales,
                     'article_size' => $this->articleSize,
                     'max_tokens' => $this->maxTokens,
                 ],
@@ -285,6 +315,27 @@ class PageAiCreator extends Component
         }
     }
 
+    public function resetUiState(): void
+    {
+        $this->contentFormat = 'editorjs';
+        $this->languageMode = 'multi';
+        $this->selectedLocale = $this->languages[0] ?? 'es';
+        $this->editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
+        $this->articleSize = 'medium';
+        $this->maxTokens = self::ARTICLE_PROFILES['medium']['tokens'];
+        $this->navPosition = Post::NAV_NONE;
+        $this->parentId = 0;
+        $this->menuOrder = 0;
+        $this->allowComments = false;
+        $this->genImage = false;
+        $this->imageMode = 'article';
+        $this->imagePrompt = '';
+        $this->imageSizePreset = '800x600';
+        $this->imgCustomW = 800;
+        $this->imgCustomH = 600;
+        $this->syncProviderDefaults();
+    }
+
     #[Computed]
     public function finalPrompt(): string
     {
@@ -324,7 +375,7 @@ class PageAiCreator extends Component
 
     private function pluckLocaleField(array $blueprint, string $field): array
     {
-        return collect($this->languages)
+        return collect($this->targetLocales())
             ->mapWithKeys(fn (string $locale) => [$locale => $blueprint[$locale][$field] ?? null])
             ->filter(fn ($value) => filled($value))
             ->all();
@@ -332,13 +383,24 @@ class PageAiCreator extends Component
 
     private function slugsFor(array $titles, string $fallbackTitle): array
     {
-        return collect($this->languages)
+        return collect($this->targetLocales())
             ->mapWithKeys(function (string $locale) use ($titles, $fallbackTitle): array {
                 $base = Str::slug($titles[$locale] ?? $fallbackTitle) ?: 'pagina-ai';
 
                 return [$locale => Post::generateSlug($base)];
             })
             ->all();
+    }
+
+    private function targetLocales(): array
+    {
+        $languages = $this->languages ?: ['es'];
+
+        if ($this->languageMode === 'single') {
+            return [in_array($this->selectedLocale, $languages, true) ? $this->selectedLocale : $languages[0]];
+        }
+
+        return $languages;
     }
 
     private function syncProviderDefaults(): void
@@ -383,10 +445,16 @@ class PageAiCreator extends Component
         $profile = self::ARTICLE_PROFILES[$this->articleSize] ?? self::ARTICLE_PROFILES['medium'];
         $format = $this->contentFormat === 'html' ? 'HTML + Tailwind renderizable en starchoHtml' : 'Editor.js estructurado';
         $htmlParameters = $this->contentFormat === 'html' ? "\n\n" . $this->htmlThemeParameters() : '';
+        $localeLine = $this->languageMode === 'single'
+            ? 'Generar únicamente el idioma: ' . ($this->targetLocales()[0] ?? 'es') . '.'
+            : 'Generar todos los idiomas activos: ' . implode(', ', $this->targetLocales()) . '.';
 
         return trim(<<<PROMPT
 Objetivo de la página:
 {$this->description}
+
+Idiomas:
+{$localeLine}
 
 Instrucción editorial adicional:
 {$this->editorialPrompt}

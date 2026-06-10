@@ -32,6 +32,13 @@ class ContentSetting extends Model
         'sitemap_include_pages',
         'sitemap_include_posts',
         'sitemap_excluded_urls',
+        'render_cache_enabled',
+        'render_cache_posts_enabled',
+        'render_cache_pages_enabled',
+        'render_cache_guest_only',
+        'render_cache_per_locale',
+        'render_cache_ttl_minutes',
+        'render_cache_strategy',
     ];
 
     protected $casts = [
@@ -50,6 +57,12 @@ class ContentSetting extends Model
         'sitemap_include_pages'       => 'boolean',
         'sitemap_include_posts'       => 'boolean',
         'sitemap_excluded_urls'       => 'array',
+        'render_cache_enabled'        => 'boolean',
+        'render_cache_posts_enabled'  => 'boolean',
+        'render_cache_pages_enabled'  => 'boolean',
+        'render_cache_guest_only'     => 'boolean',
+        'render_cache_per_locale'     => 'boolean',
+        'render_cache_ttl_minutes'    => 'integer',
     ];
 
     public static function defaults(): array
@@ -76,6 +89,13 @@ class ContentSetting extends Model
             'sitemap_include_pages'       => true,
             'sitemap_include_posts'       => true,
             'sitemap_excluded_urls'       => null,
+            'render_cache_enabled'        => false,
+            'render_cache_posts_enabled'  => true,
+            'render_cache_pages_enabled'  => true,
+            'render_cache_guest_only'     => true,
+            'render_cache_per_locale'     => true,
+            'render_cache_ttl_minutes'    => 60,
+            'render_cache_strategy'       => 'balanced',
         ];
     }
 
@@ -97,7 +117,13 @@ class ContentSetting extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget(self::CACHE_KEY));
-        static::deleted(fn () => Cache::forget(self::CACHE_KEY));
+        static::saved(function (): void {
+            Cache::forget(self::CACHE_KEY);
+            app(\App\Services\ContentRenderCache::class)->clearAll();
+        });
+        static::deleted(function (): void {
+            Cache::forget(self::CACHE_KEY);
+            app(\App\Services\ContentRenderCache::class)->clearAll();
+        });
     }
 }

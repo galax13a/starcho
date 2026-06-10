@@ -206,6 +206,15 @@
                     {{ $localeBadge($locale) }}
                 </button>
                 @endforeach
+                @if($isEditing)
+                <button type="button"
+                        onclick="editorOpenAiAssistant('translate_locale')"
+                        title="Traducir o recrear este idioma con IA desde el idioma base"
+                        class="ml-1 inline-flex h-7 items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2.5 text-[11px] font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                    <i class="fas fa-language text-[10px]"></i>
+                    AI
+                </button>
+                @endif
             </div>
             @endif
 
@@ -270,6 +279,12 @@
                     {{ $localeBadge($locale) }}
                 </button>
                 @endforeach
+                @if($isEditing)
+                <button type="button" onclick="editorOpenAiAssistant('translate_locale')"
+                    class="inline-flex h-6 items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-2 text-[10px] font-bold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                    <i class="fas fa-language text-[9px]"></i> AI
+                </button>
+                @endif
             </div>
         </div>
         @endif
@@ -1667,16 +1682,37 @@
         return { time: Date.now(), blocks, version: '2.30.0' };
     }
 
-    function aiSnapshot() {
+    function localeHasContent(locale) {
+        const content = contentPerLocale[locale] || {};
+        return Boolean(
+            (content.blocks || []).length ||
+            d.titles[locale] ||
+            d.excerpts[locale] ||
+            d.seoTitles[locale] ||
+            d.seoDescs[locale]
+        );
+    }
+
+    function sourceLocaleForTranslation() {
+        if (currentLocale !== PRIMARY && localeHasContent(PRIMARY)) {
+            return PRIMARY;
+        }
+
+        return LANGUAGES.find(locale => locale !== currentLocale && localeHasContent(locale))
+            || LANGUAGES.find(locale => locale !== currentLocale)
+            || currentLocale;
+    }
+
+    function aiSnapshot(locale = currentLocale) {
         return {
-            content: contentPerLocale[currentLocale] || {},
-            title: d.titles[currentLocale] || '',
-            excerpt: d.excerpts[currentLocale] || '',
-            seo_title: d.seoTitles[currentLocale] || '',
-            seo_description: d.seoDescs[currentLocale] || '',
-            seo_keywords: d.seoKeywords[currentLocale] || '',
-            og_title: d.ogTitles[currentLocale] || '',
-            og_description: d.ogDescs[currentLocale] || '',
+            content: contentPerLocale[locale] || {},
+            title: d.titles[locale] || '',
+            excerpt: d.excerpts[locale] || '',
+            seo_title: d.seoTitles[locale] || '',
+            seo_description: d.seoDescs[locale] || '',
+            seo_keywords: d.seoKeywords[locale] || '',
+            og_title: d.ogTitles[locale] || '',
+            og_description: d.ogDescs[locale] || '',
         };
     }
 
@@ -1724,11 +1760,15 @@
         try { contentPerLocale[currentLocale] = await editor.save(); }
         catch { contentPerLocale[currentLocale] = {}; }
 
+        const sourceLocale = target === 'translate_locale' ? sourceLocaleForTranslation() : currentLocale;
+        const snapshotLocale = target === 'translate_locale' ? sourceLocale : currentLocale;
+
         if (window.Livewire) {
             window.Livewire.dispatch('openPageAiAssistant', {
                 locale: currentLocale,
-                content: JSON.stringify(aiSnapshot()),
-                target: target
+                content: JSON.stringify(aiSnapshot(snapshotLocale)),
+                target: target,
+                sourceLocale: sourceLocale
             });
         }
     };

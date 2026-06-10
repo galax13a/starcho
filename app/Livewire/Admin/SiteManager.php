@@ -19,6 +19,7 @@ use App\Models\StorageSetting;
 use App\Models\StarchoModule;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +27,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Central Livewire component that consolidates all site settings: general info,
@@ -40,6 +42,15 @@ class SiteManager extends Component
 
     public $favicon = null;
     public $ogImage = null;
+    public $socialImportFile = null;
+    public array $selectedSocialNetworks = [];
+    public string $socialImportMode = 'replace';
+    public string $newSocialKey = '';
+    public string $newSocialLabel = '';
+    public string $newSocialIcon = 'fas fa-link';
+    public string $newSocialColor = '#6b7280';
+    public string $newSocialUrl = '';
+    public int $newSocialSortOrder = 100;
 
     public function saveSite(array $pairs): void
     {
@@ -156,6 +167,166 @@ class SiteManager extends Component
         $this->notifyWarning('Plan eliminado.');
     }
 
+    public function addSocialNetwork(): void
+    {
+        $this->validate([
+            'newSocialKey' => ['nullable', 'string', 'max:60'],
+            'newSocialLabel' => ['required', 'string', 'max:80'],
+            'newSocialIcon' => ['nullable', 'string', 'max:80'],
+            'newSocialColor' => ['nullable', 'string', 'max:20'],
+            'newSocialUrl' => ['nullable', 'url', 'max:255'],
+            'newSocialSortOrder' => ['nullable', 'integer', 'min:0', 'max:65535'],
+        ]);
+
+        $key = $this->normalizeSocialKey($this->newSocialKey ?: $this->newSocialLabel);
+
+        if ($key === '') {
+            $this->notifyFailure('Escribe una red social valida.');
+
+            return;
+        }
+
+        SiteSocialNetwork::query()->updateOrCreate(
+            ['key' => $key],
+            [
+                'label' => trim($this->newSocialLabel),
+                'icon' => trim($this->newSocialIcon) ?: 'fas fa-link',
+                'color' => trim($this->newSocialColor) ?: '#6b7280',
+                'url' => filled($this->newSocialUrl) ? trim($this->newSocialUrl) : null,
+                'active' => true,
+                'sort_order' => $this->newSocialSortOrder,
+            ]
+        );
+
+        $this->resetNewSocialForm();
+        $this->notifySuccess('Red social guardada.');
+    }
+
+    public function deleteSelectedSocialNetworks(): void
+    {
+        $ids = collect($this->selectedSocialNetworks)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            $this->notifyWarning('Selecciona al menos una red social.');
+
+            return;
+        }
+
+        SiteSocialNetwork::query()->whereIn('id', $ids)->delete();
+        $this->selectedSocialNetworks = [];
+
+        $this->notifyWarning('Redes sociales eliminadas.');
+    }
+
+    public function deleteSocialNetwork(int $id): void
+    {
+        SiteSocialNetwork::query()->whereKey($id)->delete();
+        $this->selectedSocialNetworks = array_values(array_filter(
+            $this->selectedSocialNetworks,
+            fn ($selected) => (int) $selected !== $id
+        ));
+
+        $this->notifyWarning('Red social eliminada.');
+    }
+
+    public function exportSocialNetworks(): StreamedResponse
+    {
+        $payload = [
+            'version' => 1,
+            'type' => 'starcho_site_social_networks',
+            'exported_at' => now()->toIso8601String(),
+            'items' => SiteSocialNetwork::query()
+                ->orderBy('sort_order')
+                ->orderBy('label')
+                ->get()
+                ->map(fn (SiteSocialNetwork $network): array => [
+                    'key' => $network->key,
+                    'label' => $network->label,
+                    'icon' => $network->icon,
+                    'color' => $network->color,
+                    'url' => $network->url,
+                    'active' => (bool) $network->active,
+                    'sort_order' => (int) $network->sort_order,
+                ])
+                ->values()
+                ->all(),
+        ];
+
+        $this->notifySuccess('Exportando redes sociales.');
+
+        return response()->streamDownload(function () use ($payload): void {
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }, 'starcho-social-networks-' . now()->format('Ymd-His') . '.json', [
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ]);
+    }
+
+    public function openSocialImportModal(): void
+    {
+        $this->reset('socialImportFile');
+        $this->socialImportMode = 'replace';
+        $this->resetValidation();
+        $this->js("document.dispatchEvent(new CustomEvent('modal-show',{detail:{name:'modal-site-social-import'}}))");
+    }
+
+    public function importSocialNetworks(): void
+    {
+        $this->validate([
+            'socialImportFile' => ['required', 'file', 'mimes:json,txt', 'max:4096'],
+            'socialImportMode' => ['required', 'in:replace,merge'],
+        ]);
+
+        $decoded = json_decode((string) file_get_contents($this->socialImportFile->getRealPath()), true);
+        $items = is_array($decoded) ? data_get($decoded, 'items', $decoded) : null;
+
+        if (! is_array($items)) {
+            $this->notifyFailure('El JSON de redes sociales no es valido.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($items): void {
+            if ($this->socialImportMode === 'replace') {
+                SiteSocialNetwork::query()->delete();
+            }
+
+            foreach ($items as $index => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+
+                $label = trim((string) data_get($row, 'label', ''));
+                $key = $this->normalizeSocialKey((string) (data_get($row, 'key') ?: $label));
+
+                if ($key === '' || $label === '') {
+                    continue;
+                }
+
+                SiteSocialNetwork::query()->updateOrCreate(
+                    ['key' => $key],
+                    [
+                        'label' => $label,
+                        'icon' => trim((string) data_get($row, 'icon', 'fas fa-link')) ?: 'fas fa-link',
+                        'color' => trim((string) data_get($row, 'color', '#6b7280')) ?: '#6b7280',
+                        'url' => filled(data_get($row, 'url')) ? trim((string) data_get($row, 'url')) : null,
+                        'active' => (bool) data_get($row, 'active', true),
+                        'sort_order' => (int) data_get($row, 'sort_order', ($index + 1) * 10),
+                    ]
+                );
+            }
+        });
+
+        $this->reset('socialImportFile');
+        $this->selectedSocialNetworks = [];
+        $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-site-social-import'}}))");
+        $this->notifySuccess('Redes sociales importadas.');
+    }
+
     public function render(): View
     {
         $settings = SiteSetting::singleton();
@@ -221,6 +392,27 @@ class SiteManager extends Component
                 ->get(),
             'recent' => $runs,
         ];
+    }
+
+    private function resetNewSocialForm(): void
+    {
+        $this->newSocialKey = '';
+        $this->newSocialLabel = '';
+        $this->newSocialIcon = 'fas fa-link';
+        $this->newSocialColor = '#6b7280';
+        $this->newSocialUrl = '';
+        $this->newSocialSortOrder = ((int) SiteSocialNetwork::query()->max('sort_order')) + 10;
+    }
+
+    private function normalizeSocialKey(string $value): string
+    {
+        return Str::of($value)
+            ->lower()
+            ->ascii()
+            ->replaceMatches('/[^a-z0-9]+/', '_')
+            ->trim('_')
+            ->limit(60, '')
+            ->toString();
     }
 
     private function makeRequest(string $method, array $input, array $files = []): Request

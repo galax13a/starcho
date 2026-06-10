@@ -18,6 +18,14 @@
                     </div>
                 @endunless
 
+                <div class="flex justify-end">
+                    <button type="button" wire:click="resetUiState"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-500 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-violet-950/20 dark:hover:text-violet-300">
+                        <i class="fas fa-rotate-left text-[10px]"></i>
+                        Restablecer ajustes
+                    </button>
+                </div>
+
                 <flux:field>
                     <flux:label>Descripción de la página</flux:label>
                     <textarea
@@ -75,10 +83,35 @@
             <div class="space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Idiomas</p>
-                    <div class="mt-2 flex flex-wrap gap-1.5">
-                        @foreach($this->languages as $locale)
-                            <span class="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold uppercase text-violet-700 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-violet-300 dark:ring-zinc-700">{{ $locale }}</span>
-                        @endforeach
+                    <div class="mt-2 grid gap-2">
+                        <label class="cursor-pointer rounded-xl border p-3 text-sm transition {{ $languageMode === 'single' ? 'border-sky-400 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-100' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300' }}">
+                            <input type="radio" wire:model.live="languageMode" value="single" class="sr-only">
+                            <span class="block font-semibold">Solo un idioma</span>
+                            <span class="mt-1 block text-xs opacity-75">Más rápido para crear primero una versión.</span>
+                        </label>
+                        <label class="cursor-pointer rounded-xl border p-3 text-sm transition {{ $languageMode === 'multi' ? 'border-sky-400 bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-100' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300' }}">
+                            <input type="radio" wire:model.live="languageMode" value="multi" class="sr-only">
+                            <span class="block font-semibold">Multi idioma</span>
+                            <span class="mt-1 block text-xs opacity-75">Llena todos los idiomas activos.</span>
+                        </label>
+                    </div>
+
+                    @if($languageMode === 'single')
+                        <select wire:model.live="selectedLocale" class="mt-2 w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-semibold uppercase text-zinc-900 dark:border-sky-900/60 dark:bg-zinc-950 dark:text-white">
+                            @foreach($this->languages as $locale)
+                                <option value="{{ $locale }}">{{ $locale }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            @foreach($this->languages as $locale)
+                                <span class="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold uppercase text-violet-700 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-violet-300 dark:ring-zinc-700">{{ $locale }}</span>
+                            @endforeach
+                        </div>
+                    @endif
+                    <div class="mt-1">
+                        <flux:error name="languageMode" />
+                        <flux:error name="selectedLocale" />
                     </div>
                 </div>
 

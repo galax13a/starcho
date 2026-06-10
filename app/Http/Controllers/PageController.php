@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
+use App\Services\ContentRenderCache;
 use Illuminate\View\View;
 
 class PageController extends Controller
 {
-    public function home(): View
+    public function home(): mixed
     {
         $settings = SiteSetting::cached();
 
@@ -39,10 +40,22 @@ class PageController extends Controller
             $langUrls[$lang->code] = url('/');
         }
 
-        return view('page.show', compact('page', 'locale', 'fallbackLocale', 'usingFallback', 'langUrls'));
+        $viewData = compact('page', 'locale', 'fallbackLocale', 'usingFallback', 'langUrls');
+
+        $html = app(ContentRenderCache::class)->remember(
+            $page,
+            $locale,
+            fn () => view('page.show', $viewData)->render()
+        );
+
+        if ($html !== null) {
+            return response($html)->header('X-Starcho-Render-Cache', 'enabled');
+        }
+
+        return view('page.show', $viewData);
     }
 
-    public function show(string $locale, string $slug): View
+    public function show(string $locale, string $slug): mixed
     {
         $page = Post::where('type', Post::TYPE_PAGE)
             ->whereSlug($slug)
@@ -79,6 +92,18 @@ class PageController extends Controller
             $langUrls[$lang->code] = $page->publicUrl($lang->code);
         }
 
-        return view('page.show', compact('page', 'locale', 'fallbackLocale', 'usingFallback', 'langUrls'));
+        $viewData = compact('page', 'locale', 'fallbackLocale', 'usingFallback', 'langUrls');
+
+        $html = app(ContentRenderCache::class)->remember(
+            $page,
+            $locale,
+            fn () => view('page.show', $viewData)->render()
+        );
+
+        if ($html !== null) {
+            return response($html)->header('X-Starcho-Render-Cache', 'enabled');
+        }
+
+        return view('page.show', $viewData);
     }
 }

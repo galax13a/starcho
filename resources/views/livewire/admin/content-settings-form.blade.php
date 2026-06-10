@@ -22,6 +22,7 @@
                 'comments' => ['label' => 'Comentarios', 'icon' => 'fas fa-comments'],
                 'seo' => ['label' => 'SEO y lectura', 'icon' => 'fas fa-magnifying-glass'],
                 'links' => ['label' => 'Links rotos', 'icon' => 'fas fa-link-slash'],
+                'cache' => ['label' => 'Cache artículo', 'icon' => 'fas fa-bolt'],
                 'sitemap' => ['label' => 'Sitemap', 'icon' => 'fas fa-sitemap'],
             ] as $key => $meta)
                 <button type="button" @click="tab = '{{ $key }}'" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition" :class="tab === '{{ $key }}' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'">
@@ -114,6 +115,102 @@
                     <div class="cs-row">
                         <div><div class="cs-label">Detectados</div><div class="cs-desc">Links rotos activos actualmente.</div></div>
                         <span class="text-2xl font-bold {{ $brokenCount > 0 ? 'text-red-500' : 'text-emerald-500' }}">{{ $brokenCount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="tab === 'cache'" class="space-y-4">
+                <div class="rounded-2xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-100">
+                    <div class="flex items-start gap-3">
+                        <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-sm">
+                            <i class="fas fa-bolt text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Cache de renderizado por artículo, página e idioma</div>
+                            <p class="mt-1 leading-6 text-violet-800/80 dark:text-violet-200/75">
+                                Starcho guarda el HTML final de posts y pages por locale. Esto evita reconstruir Editor.js, HTML, SEO, sidebar y relaciones en cada visita.
+                                A diferencia de un cache simple tipo WordPress, se invalida al editar contenido real y no se rompe por contador de vistas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div class="cs-card lg:col-span-2">
+                        <div class="cs-head"><span class="cs-title"><i class="fas fa-microchip mr-1.5"></i>Motor de cache</span></div>
+                        @foreach ([
+                            'render_cache_enabled' => ['Activar cache de renderizado', 'Guarda el HTML final de posts y páginas públicas para responder más rápido.'],
+                            'render_cache_posts_enabled' => ['Cachear posts', 'Aplica a artículos del blog publicados.'],
+                            'render_cache_pages_enabled' => ['Cachear pages', 'Aplica a páginas CMS publicadas, incluyendo home dinámico.'],
+                            'render_cache_guest_only' => ['Solo visitantes públicos', 'Evita cache para usuarios logueados, útil si hay contenido personalizado.'],
+                            'render_cache_per_locale' => ['Separar por idioma', 'Crea una versión independiente para es, en, pt_BR u otros idiomas activos.'],
+                        ] as $field => [$label, $desc])
+                            <label class="cs-row cursor-pointer">
+                                <div><div class="cs-label">{{ $label }}</div><div class="cs-desc">{{ $desc }}</div></div>
+                                <span class="cs-toggle"><input type="checkbox" wire:model="form.{{ $field }}"><span class="cs-track"></span><span class="cs-thumb"></span></span>
+                            </label>
+                        @endforeach
+
+                        <div class="cs-row">
+                            <div><div class="cs-label">Tiempo de vida del cache</div><div class="cs-desc">Minutos antes de refrescar automáticamente. Safe limita a 30; Aggressive fuerza mínimo 360.</div></div>
+                            <input type="number" min="1" max="10080" wire:model="form.render_cache_ttl_minutes" class="cs-input w-28">
+                        </div>
+
+                        <div class="cs-row">
+                            <div><div class="cs-label">Estrategia</div><div class="cs-desc">Controla qué tan conservador debe ser el cache para producción.</div></div>
+                            <select wire:model="form.render_cache_strategy" class="cs-input">
+                                <option value="safe">Safe · máximo control editorial</option>
+                                <option value="balanced">Balanced · recomendado</option>
+                                <option value="aggressive">Aggressive · tráfico alto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="cs-card">
+                        <div class="cs-head"><span class="cs-title"><i class="fas fa-chart-simple mr-1.5"></i>Estado</span></div>
+                        <div class="p-4 space-y-3">
+                            <div class="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/60">
+                                <div class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Claves activas</div>
+                                <div class="mt-1 text-3xl font-bold text-zinc-900 dark:text-zinc-50">{{ $renderCacheStats['total_keys'] }}</div>
+                                <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ $renderCacheStats['post_keys'] }} posts · {{ $renderCacheStats['page_keys'] }} pages</div>
+                            </div>
+                            <div class="rounded-xl bg-zinc-50 p-3 text-xs text-zinc-500 dark:bg-zinc-800/60 dark:text-zinc-400">
+                                @if($renderCacheStats['last_cleared_at'])
+                                    Última limpieza: {{ \Carbon\Carbon::parse($renderCacheStats['last_cleared_at'])->format('d/m/Y H:i') }}
+                                    <br>Scope: {{ $renderCacheStats['last_cleared_scope'] }} · {{ $renderCacheStats['last_cleared_count'] }} claves
+                                @else
+                                    Todavía no se ha limpiado desde este panel.
+                                @endif
+                            </div>
+                        </div>
+                        <div class="border-t border-zinc-100 p-4 dark:border-zinc-800">
+                            <div class="grid gap-2">
+                                <button type="button" wire:click="clearRenderCache('all')" class="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 text-xs font-semibold text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
+                                    <i class="fas fa-broom text-[10px]"></i> Limpiar todo
+                                </button>
+                                <button type="button" wire:click="clearRenderCache('posts')" class="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-zinc-200 px-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <i class="fas fa-newspaper text-[10px]"></i> Limpiar posts
+                                </button>
+                                <button type="button" wire:click="clearRenderCache('pages')" class="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-zinc-200 px-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <i class="fas fa-file-lines text-[10px]"></i> Limpiar pages
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Safe</div>
+                        <p class="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">Ideal mientras editas mucho. TTL corto, limpieza manual frecuente y menor riesgo de ver contenido viejo.</p>
+                    </div>
+                    <div class="rounded-xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-900/60 dark:bg-violet-950/20">
+                        <div class="text-sm font-semibold text-violet-900 dark:text-violet-100">Balanced</div>
+                        <p class="mt-1 text-xs leading-5 text-violet-700/80 dark:text-violet-200/70">Recomendado: cache por idioma, solo guests, invalida al guardar contenido y acelera tráfico real.</p>
+                    </div>
+                    <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Aggressive</div>
+                        <p class="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">Para campañas o alto tráfico. Usa TTL largo y limpieza puntual después de cambios editoriales.</p>
                     </div>
                 </div>
             </div>

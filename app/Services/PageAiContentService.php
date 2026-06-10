@@ -81,7 +81,7 @@ PROMPT;
 
         $text = trim($response->text);
 
-        if (in_array($target, ['content', 'memory_regenerate'], true) && $outputFormat === 'html') {
+        if (in_array($target, ['content', 'memory_regenerate', 'translate_locale'], true) && $outputFormat === 'html') {
             $payload = $this->parseJsonResponse($text);
             $html = is_string($payload['html'] ?? null) ? $payload['html'] : $text;
             $css = is_string($payload['css'] ?? null) ? $payload['css'] : '';
@@ -354,7 +354,7 @@ PROMPT;
 
     private function instructionsFor(string $target, string $outputFormat = 'editorjs'): string
     {
-        if (in_array($target, ['content', 'memory_regenerate'], true) && $outputFormat === 'html') {
+        if (in_array($target, ['content', 'memory_regenerate', 'translate_locale'], true) && $outputFormat === 'html') {
             $htmlThemeGuidelines = $this->htmlThemeGuidelines();
 
             return <<<PROMPT
@@ -396,6 +396,11 @@ Regenera el articulo usando el contenido actual y la memoria editorial seleccion
 Debes mejorar estructura, precision, tono, SEO y claridad sin perder la intencion original.
 Si el formato solicitado es HTML + Tailwind, entrega una pieza visual pulida, semantica y compatible con modo claro/oscuro usando clases dark: o CSS sensible al tema; si no, entrega contenido listo para Editor.js.
 No copies literalmente memorias antiguas: usalas para evitar repetir errores, rescatar buenas ideas y producir una version mejor.
+PROMPT,
+            'translate_locale' => <<<'PROMPT'
+Eres un traductor editorial senior para un CMS Laravel multi idioma.
+Recrea el contenido fuente en el idioma destino indicado. Conserva estructura, intención, datos, SEO, CTA y calidad editorial, pero escribe natural para hablantes nativos del idioma destino.
+Entrega contenido listo para Editor.js, sin explicaciones, sin markdown decorativo y sin envolver en comillas.
 PROMPT,
             'excerpt' => <<<'PROMPT'
 Eres un asistente editorial para un CMS Laravel.
