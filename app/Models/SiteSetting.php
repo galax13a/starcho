@@ -157,7 +157,7 @@ class SiteSetting extends Model
             $settings = static::cached();
             $name = $settings?->app_name;
 
-            return filled($name) ? $name : 'Starcho';
+            return filled($name) ? $name : config('app.name', 'Starcho');
         }
 
         /**

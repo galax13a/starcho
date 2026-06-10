@@ -1,13 +1,17 @@
     @php
         $siteStorageSetting = \App\Models\StorageSetting::singleton();
-        $siteAssetUrl = function (?string $path) use ($siteStorageSetting): ?string {
+        $siteAssetUrl = function (?string $path, bool $preferWebp = false): ?string {
             if (! filled($path)) {
                 return null;
             }
 
             $media = \App\Models\Media::query()->where('path', $path)->latest()->first();
 
-            return $media?->public_url ?: $siteStorageSetting->localPublicUrl($path);
+            if ($media) {
+                return $preferWebp ? $media->webp_url : $media->public_url;
+            }
+
+            return app(\App\Services\StorageService::class)->publicUrlForPath($path);
         };
     @endphp
 
@@ -142,7 +146,7 @@
                         <div class="flex items-start gap-4">
                             <div class="shrink-0">
                                 @if($settings->og_image_path)
-                                    <img src="{{ $siteAssetUrl($settings->og_image_path) }}" alt="og image"
+                                    <img src="{{ $siteAssetUrl($settings->og_image_path, true) }}" alt="og image"
                                          class="h-20 w-36 rounded-lg border border-zinc-200 dark:border-zinc-700 object-cover">
                                 @else
                                     <div class="h-20 w-36 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 grid place-items-center bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15 text-violet-400">
@@ -155,7 +159,7 @@
                                     <i class="fas fa-upload text-xs"></i> Cambiar imagen OG
                                 </span>
                                 <input type="file" name="og_image" wire:model="ogImage" class="hidden" accept="image/png,image/jpeg,image/webp">
-                                <span class="mt-1 block text-[11px] text-zinc-400">1200×630 px recomendado · PNG/JPG/WebP · máx 4&nbsp;MB</span>
+                                <span class="mt-1 block text-[11px] text-zinc-400 dark:text-zinc-500">1200×630 px recomendado · se guarda como WebP · máx 4&nbsp;MB</span>
                             </label>
                         </div>
                         <flux:error name="og_image" />

@@ -466,6 +466,152 @@ Novedades principales:
 
 ---
 
+## Editor.js en posts y paginas
+
+El editor principal de contenido vive en `/admin/posts/*` y `/admin/pages/*`. Ambos flujos comparten el formulario:
+
+- `resources/views/admin/posts/_editor-form.blade.php`
+- `resources/views/admin/posts/create.blade.php`
+- `resources/views/admin/posts/edit.blade.php`
+- `resources/views/admin/pages/create.blade.php`
+- `resources/views/admin/pages/edit.blade.php`
+
+Rutas principales:
+
+| Ruta | Nombre | Uso |
+| --- | --- | --- |
+| `/admin/posts/create` | `admin.posts.create` | Crear post con Editor.js o AI |
+| `/admin/posts/{post}/edit` | `admin.posts.edit` | Editar post, galeria y AI assistant |
+| `/admin/pages/create` | `admin.pages.create` | Crear pagina CMS con Editor.js o AI |
+| `/admin/pages/{post}/edit` | `admin.pages.edit` | Editar pagina CMS |
+| `/admin/posts/upload-image` | `admin.posts.upload-image` | Subida de imagen desde Editor.js |
+| `/admin/posts/{post}/gallery` | `admin.posts.gallery.upload` | Agregar imagenes a la galeria del contenido |
+| `/admin/posts/{post}/gallery/{media}` | `admin.posts.gallery.destroy` | Quitar imagen de la galeria |
+
+### Herramientas cargadas
+
+El formulario carga Editor.js desde CDN y registra herramientas base:
+
+- Header
+- List
+- Paragraph
+- Quote
+- Code
+- Delimiter
+- Image
+- Embed
+- Table
+- Warning
+- InlineCode
+- Marker
+- `starchoHtml`
+
+El bloque `starchoHtml` esta implementado en `public/js/starcho-html-editor.js`. Guarda dos campos:
+
+- `html`: markup renderizable.
+- `css`: estilos propios del bloque.
+
+El bloque ofrece:
+
+- Textareas para HTML y CSS.
+- Preview renderizado dentro del editor.
+- Boton para ocultar/mostrar preview.
+- Modo `Editar vista` con `contentEditable`, que permite ajustar texto directamente en la vista y sincronizarlo de vuelta al HTML.
+- Soporte esperado para modo claro/oscuro mediante clases Tailwind `dark:*`, CSS compatible con `.dark` y `prefers-color-scheme`.
+
+### AI dentro del editor
+
+La AI de contenido se coordina con:
+
+- `App\Livewire\Admin\PostAiCreator`
+- `App\Livewire\Admin\PageAiCreator`
+- `App\Livewire\Admin\PageAiAssistant`
+- `App\Services\PageAiContentService`
+- `App\Models\PostAiGeneration`
+- `App\Models\PostAiMemory`
+
+Formatos disponibles:
+
+- `editorjs`: genera bloques editables nativos de Editor.js.
+- `html`: genera una pieza visual HTML + Tailwind dentro de `starchoHtml`.
+
+Cuando el formato es HTML, los prompts pasan parametros obligatorios para:
+
+- Usar HTML semantico y responsive.
+- Evitar scripts, iframes y assets externos.
+- Incluir estados claro/oscuro con `dark:*`.
+- Evitar `bg-white`, `text-zinc-900` u otros colores rigidos sin equivalente `dark:*`.
+- Mantener contraste AA, espaciados consistentes y componentes legibles en mobile/desktop.
+
+El assistant de edicion puede actuar sobre:
+
+- Contenido completo.
+- Extracto.
+- SEO.
+- Inspiracion.
+- Auditoria.
+- Regeneracion con memory.
+
+`memory_regenerate` usa memorias editoriales seleccionadas de `PostAiMemory` y puede devolver Editor.js estructurado o `starchoHtml`, segun el formato elegido por el usuario.
+
+### Controles Starcho del editor
+
+Los controles reutilizables deben vivir como componentes `x-starcho-editorjs-*` antes de duplicar markup:
+
+| Componente | Uso |
+| --- | --- |
+| `x-starcho-editorjs-ai-actions` | Botones AI del editor, incluido regenerar con memory |
+| `x-starcho-editorjs-panel-controls` | Controles de sidebar/panel del editor |
+| `x-starcho-editorjs-ai-spend` | Popup/resumen de gasto AI en posts y paginas |
+
+Reglas:
+
+- Si un control se repite en posts y paginas, convertirlo en `resources/views/components/starcho-editorjs-*.blade.php`.
+- Mantener el estilo en `/admin` sobre Flux UI, Tailwind y componentes Starcho.
+- Usar `Starcho.confirm` para confirmaciones destructivas.
+- Persistir preferencias de UI con `localStorage` cuando sean por usuario/navegador, como panel abierto/cerrado o posicion del sidebar.
+
+### Imagenes, galeria y storage
+
+La subida de imagenes del editor y la galeria pasan por `PostController` y `StorageService`:
+
+- `PostController::uploadEditorImage()` guarda imagenes insertadas dentro de Editor.js.
+- `PostController::uploadGalleryImage()` guarda imagenes de galeria con contexto `gallery`.
+- `PostController::destroyGalleryImage()` quita una imagen de la galeria del post/pagina.
+- `Post::gallery()` devuelve los `Media` asociados al contenido.
+
+La galeria se muestra al final del post o pagina publica en:
+
+- `resources/views/blog/show.blade.php`
+- `resources/views/page/show.blade.php`
+
+Storage se resuelve desde la configuracion activa del sitio:
+
+- Local: usa `StorageSetting::localPublicUrl` para construir URL publica y evita depender de `localhost`.
+- R2: usa `r2_public_url` si existe; si no, URL temporal del disco.
+- S3/Spaces: usa la URL publica del disco configurado.
+- Variantes: pueden entregarse con `/media/files/{media}?variant=...`.
+
+### Render publico
+
+Las vistas publicas leen el JSON de Editor.js y renderizan los bloques soportados. Para `starchoHtml`, el render inyecta el HTML y CSS guardados por el bloque, por eso las reglas de seguridad y estilo se deben aplicar desde la generacion y desde la edicion:
+
+- No guardar scripts.
+- No depender de assets externos.
+- Mantener clases Tailwind compatibles con el build.
+- Revisar que el HTML generado funcione en light y dark mode.
+
+### Checklist para tocar Editor.js
+
+- Revisar primero `resources/views/admin/posts/_editor-form.blade.php`.
+- Reutilizar o crear un componente `x-starcho-editorjs-*` si el cambio aplica a posts y paginas.
+- Si hay AI, actualizar prompts en `PostAiCreator`, `PageAiCreator` y/o `PageAiContentService`.
+- Si hay archivos, usar `StorageService` y respetar local/R2/S3.
+- Si hay galeria publica, validar `blog/show.blade.php` y `page/show.blade.php`.
+- Ejecutar `php artisan view:cache` y `npm run build`.
+
+---
+
 ## Modulos y menu dinamico
 
 Los modulos se administran desde `/admin/modules`.

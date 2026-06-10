@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import './starcho-components.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
 /*
  * starcho-app.css — Estilos del área /app
  * ==========================================
@@ -202,6 +204,79 @@ body {
 .content > .relative {
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Settings pages need explicit app-level dark surfaces because Flux controls
+   can otherwise keep light backgrounds in the /app bundle. */
+.settings-shell {
+    color: var(--text);
+}
+.settings-shell [data-flux-heading],
+.settings-shell h1,
+.settings-shell h2,
+.settings-shell h3 {
+    color: var(--text) !important;
+}
+.settings-shell [data-flux-subheading],
+.settings-shell [data-flux-text],
+.settings-shell p {
+    color: var(--text2) !important;
+}
+.settings-panel,
+.settings-avatar-card {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-sm);
+}
+.settings-avatar-card {
+    color: var(--text) !important;
+}
+.settings-avatar-actions {
+    min-width: 0;
+}
+.settings-avatar-picker {
+    width: 100%;
+    max-width: 100%;
+    background: var(--bg2) !important;
+    border-color: var(--border2) !important;
+    color: var(--text) !important;
+}
+.settings-avatar-picker:hover {
+    border-color: var(--purple) !important;
+    color: var(--purple) !important;
+}
+.settings-primary-btn,
+.settings-primary-btn button,
+button.settings-primary-btn {
+    background: var(--purple) !important;
+    border-color: var(--purple) !important;
+    color: #fff !important;
+}
+.settings-primary-btn:hover,
+.settings-primary-btn button:hover,
+button.settings-primary-btn:hover {
+    filter: brightness(1.08);
+}
+.settings-shell input[data-flux-control],
+.settings-shell textarea[data-flux-control],
+.settings-shell select[data-flux-control] {
+    background: var(--bg2) !important;
+    border-color: var(--border2) !important;
+    color: var(--text) !important;
+}
+.settings-shell input[data-flux-control]::placeholder,
+.settings-shell textarea[data-flux-control]::placeholder {
+    color: var(--text3) !important;
+}
+
+@media (max-width: 1023px) {
+    .settings-nav {
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+    .settings-content {
+        width: 100%;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════

@@ -106,9 +106,10 @@ PROMPT;
         Ai::forgetInstance($provider);
 
         $localeList = collect($locales)->filter()->values()->join(', ');
+        $htmlThemeGuidelines = $this->htmlThemeGuidelines();
 
         $formatInstruction = $contentFormat === 'html'
-            ? 'Para cada idioma agrega tambien "html" con una pieza completa de HTML semantico usando clases Tailwind. Debe verse bien en modo claro y oscuro: usa clases dark:, colores con contraste y evita depender de un solo fondo. No incluyas <html>, <head> ni <body>. Si necesitas CSS propio, agrega "css" con soporte para prefers-color-scheme o selectores .dark.'
+            ? "Para cada idioma agrega tambien \"html\" con una pieza completa de HTML semantico usando clases Tailwind.\n{$htmlThemeGuidelines}\nNo incluyas <html>, <head> ni <body>. Si necesitas CSS propio, agrega \"css\" con soporte para prefers-color-scheme o selectores .dark."
             : 'No agregues HTML completo: usa sections para contenido estructurado de Editor.js.';
 
         $instructions = <<<PROMPT
@@ -209,7 +210,9 @@ PROMPT;
         $current = Str::limit(strip_tags($currentHtml), 5000, "\n\n[HTML actual recortado]");
         $seo = json_encode($seoRows, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        $instructions = <<<'PROMPT'
+        $htmlThemeGuidelines = $this->htmlThemeGuidelines();
+
+        $instructions = <<<PROMPT
 Eres un editor experto de paginas Laravel Folio.
 Responde unicamente JSON valido, sin markdown ni bloque de codigo.
 Estructura exacta:
@@ -225,7 +228,9 @@ Estructura exacta:
     }
   }
 }
-El campo html debe ser HTML de body listo para reemplazar el contenido visual editable. Puede usar clases Tailwind si ayudan. No incluyas <html>, <head> ni <body>.
+El campo html debe ser HTML de body listo para reemplazar el contenido visual editable. Puede usar clases Tailwind si ayudan.
+{$htmlThemeGuidelines}
+No incluyas <html>, <head> ni <body>.
 Incluye SEO para todos los idiomas solicitados. Limita title a 180, description a 300, og_title a 180 y og_description a 300.
 PROMPT;
 
@@ -350,10 +355,12 @@ PROMPT;
     private function instructionsFor(string $target, string $outputFormat = 'editorjs'): string
     {
         if (in_array($target, ['content', 'memory_regenerate'], true) && $outputFormat === 'html') {
-            return <<<'PROMPT'
+            $htmlThemeGuidelines = $this->htmlThemeGuidelines();
+
+            return <<<PROMPT
 Eres un diseñador editorial para un CMS Laravel con Editor.js.
 Genera contenido visual en HTML semantico con clases Tailwind listas para renderizar en el bloque starchoHtml.
-El HTML debe funcionar en modo claro y modo oscuro: usa variantes dark:, fondos/textos con contraste y CSS propio con prefers-color-scheme o .dark solo cuando Tailwind no baste.
+{$htmlThemeGuidelines}
 Responde unicamente JSON valido, sin markdown ni bloque de codigo.
 Estructura exacta:
 {
@@ -415,6 +422,23 @@ PROMPT,
     {
         @ini_set('max_execution_time', (string) self::AI_TIMEOUT_SECONDS);
         @set_time_limit(self::AI_TIMEOUT_SECONDS);
+    }
+
+    private function htmlThemeGuidelines(): string
+    {
+        return <<<'PROMPT'
+Parametros visuales obligatorios para HTML + Tailwind en starchoHtml:
+- Debe funcionar perfecto en modo light y dark en el mismo markup.
+- Usa clases Tailwind duales en cada superficie importante: bg-*/text-*/border-* y sus variantes dark:bg-*/dark:text-*/dark:border-*.
+- No dejes ningun contenedor con bg-white sin dark:bg-* ni texto oscuro sin dark:text-*.
+- Garantiza contraste AA: texto principal, texto secundario, badges, botones, cards, tablas, listas, inputs simulados y CTAs deben leerse en ambos temas.
+- Evita depender de un fondo unico. Cada section/card debe definir su propio fondo claro y oscuro.
+- Usa paletas equilibradas: zinc/slate para base, violet/fuchsia/cyan/emerald/rose solo como acentos; no hagas todo morado ni todo oscuro.
+- Incluye estados hover/focus cuando haya botones o enlaces: hover:bg-*, hover:text-*, dark:hover:*.
+- Usa contenedores responsive: max-w-*, mx-auto, grid/flex con gap, p-* y rounded-*; no uses widths fijos que rompan mobile.
+- Si agregas CSS propio, debe incluir soporte para .dark o @media (prefers-color-scheme: dark); no sobreescribas Tailwind de forma global.
+- No uses scripts, iframes, assets externos, estilos inline excesivos ni clases inexistentes.
+PROMPT;
     }
 
     public function lastGenerationRecord(array $extra = []): array

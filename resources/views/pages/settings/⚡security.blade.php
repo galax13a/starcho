@@ -91,7 +91,7 @@ new #[Title('Security settings')] class extends Component {
     <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
 
     <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
-        <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
+        <form method="POST" wire:submit="updatePassword" class="settings-panel mt-6 space-y-6 rounded-2xl p-5">
             <flux:input
                 wire:model="current_password"
                 :label="__('Current password')"
@@ -119,7 +119,7 @@ new #[Title('Security settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-password-button">
+                    <flux:button variant="primary" type="submit" class="settings-primary-btn w-full" data-test="update-password-button">
                         {{ __('Save') }}
                     </flux:button>
                 </div>
@@ -163,6 +163,7 @@ new #[Title('Security settings')] class extends Component {
                                 <flux:button
                                     variant="primary"
                                     wire:click="$dispatch('start-two-factor-setup')"
+                                    class="settings-primary-btn"
                                 >
                                     {{ __('Enable 2FA') }}
                                 </flux:button>

@@ -60,6 +60,12 @@
     $userAvatarUrl = null;
 
     $userAvatarUrl = $authUser?->avatar_url;
+
+    try {
+        $appBrandName = \App\Models\SiteSetting::appName();
+    } catch (\Throwable) {
+        $appBrandName = config('app.name', 'Starcho');
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="starchoApp({!! json_encode($openMenuIds) !!})">
@@ -82,7 +88,7 @@
         {{-- Logo + collapse button --}}
         <div class="sb-header">
             <div class="sb-logo"><i class="fas fa-bolt"></i></div>
-            <span class="sb-title">Starcho</span>
+            <span class="sb-title">{{ $appBrandName }}</span>
             <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed"
                     :title="sidebarCollapsed ? '{{ __('app_layout.sidebar_expand') }}' : '{{ __('app_layout.sidebar_collapse') }}'">
                 <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>

@@ -125,10 +125,10 @@ new #[Title('Profile settings')] class extends Component {
             $avatarSize = \App\Models\StorageSetting::singleton()->avatarSize();
         @endphp
 
-        <form wire:submit="updateAvatar" class="my-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <form wire:submit="updateAvatar" class="settings-avatar-card my-6 overflow-hidden rounded-2xl p-5">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="grid shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-violet-600 text-2xl font-bold text-white shadow-sm" style="width: {{ $avatarSize }}px; height: {{ $avatarSize }}px; max-width: 190px; max-height: 190px;">
+                    <div class="grid shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-violet-600 text-2xl font-bold text-white shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800" style="width: {{ $avatarSize }}px; height: {{ $avatarSize }}px; max-width: 190px; max-height: 190px;">
                         @if($avatarPreview)
                             <img src="{{ $avatarPreview }}" alt="{{ $profileUser->name }}" width="{{ $avatarSize }}" height="{{ $avatarSize }}" class="block h-full w-full object-cover">
                         @else
@@ -137,7 +137,7 @@ new #[Title('Profile settings')] class extends Component {
                     </div>
 
                     <div>
-                        <p class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Avatar</p>
+                        <p class="text-sm font-bold">Avatar</p>
                         <x-action-message class="mt-2 text-sm text-emerald-600 dark:text-emerald-400" on="avatar-updated">
                             Avatar actualizado.
                         </x-action-message>
@@ -145,23 +145,23 @@ new #[Title('Profile settings')] class extends Component {
                 </div>
 
                 @if($avatarUploadEnabled)
-                    <div class="flex flex-col gap-2 sm:min-w-72">
-                        <label for="avatar-upload" class="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                    <div class="settings-avatar-actions flex w-full max-w-full flex-col gap-2 lg:w-72 lg:shrink-0">
+                        <label for="avatar-upload" class="settings-avatar-picker inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold shadow-sm transition">
                             <i class="fas fa-image text-xs"></i>
                             Seleccionar imagen
                         </label>
                         <input id="avatar-upload" wire:model="avatarUpload" type="file" accept="image/*" class="sr-only">
                         @if($avatarUpload)
-                            <p class="text-xs text-zinc-500">Imagen lista para subir.</p>
+                            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Imagen lista para subir.</p>
                         @endif
-                        @error('avatarUpload') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('avatarUpload') <p class="text-xs font-medium text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
 
-                        <flux:button variant="primary" type="submit" class="w-full" wire:loading.attr="disabled" wire:target="avatarUpload,updateAvatar">
+                        <flux:button variant="primary" type="submit" class="settings-primary-btn w-full" wire:loading.attr="disabled" wire:target="avatarUpload,updateAvatar">
                             Cambiar avatar
                         </flux:button>
                     </div>
                 @else
-                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-400">
+                    <div class="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-400 lg:w-72 lg:shrink-0">
                         La subida de avatar está desactivada desde Site.
                     </div>
                     @endif
@@ -195,7 +195,7 @@ new #[Title('Profile settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
+                    <flux:button variant="primary" type="submit" class="settings-primary-btn w-full" data-test="update-profile-button">
                         {{ __('Save') }}
                     </flux:button>
                 </div>

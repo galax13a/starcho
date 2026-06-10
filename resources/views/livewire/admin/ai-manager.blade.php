@@ -215,9 +215,9 @@
 
         @php
             $modelGroups = [
-                ['key' => 'text',  'prop' => 'textModelRows',  'label' => 'Texto',  'providers' => \App\Models\AiSetting::PROVIDERS],
-                ['key' => 'image', 'prop' => 'imageModelRows', 'label' => 'Imagen', 'providers' => \App\Models\AiSetting::IMAGE_PROVIDERS],
-                ['key' => 'video', 'prop' => 'videoModelRows', 'label' => 'Video',  'providers' => \App\Models\AiSetting::VIDEO_PROVIDERS],
+                ['key' => 'text',  'prop' => 'textModelRows',  'label' => 'Texto',  'badge' => 'Modelo de texto',  'providers' => \App\Models\AiSetting::PROVIDERS],
+                ['key' => 'image', 'prop' => 'imageModelRows', 'label' => 'Imagen', 'badge' => 'Modelo de imagen', 'providers' => \App\Models\AiSetting::IMAGE_PROVIDERS],
+                ['key' => 'video', 'prop' => 'videoModelRows', 'label' => 'Video',  'badge' => 'Modelo de video',  'providers' => \App\Models\AiSetting::VIDEO_PROVIDERS],
             ];
         @endphp
 
@@ -226,6 +226,7 @@
                 <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-2">
                     <i class="fas fa-{{ $group['key'] === 'text' ? 'font' : ($group['key'] === 'image' ? 'image' : 'film') }} mr-1"></i>
                     Modelos de {{ $group['label'] }}
+                    <span class="ml-2 inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-300">{{ $group['badge'] }}</span>
                 </h3>
                 <div class="grid lg:grid-cols-2 gap-3">
                     @foreach ($group['providers'] as $provider => $providerLabel)
@@ -246,6 +247,7 @@
                             <div class="space-y-1.5">
                                 @forelse (($this->{$group['prop']}[$provider] ?? []) as $i => $row)
                                     <div class="flex items-center gap-2" wire:key="m-{{ $group['key'] }}-{{ $provider }}-{{ $i }}">
+                                        <span class="hidden shrink-0 rounded-md border border-zinc-200 px-1.5 py-1 text-[10px] font-bold uppercase text-zinc-400 dark:border-zinc-700 sm:inline">{{ $group['key'] }}</span>
                                         <input type="text" wire:model="{{ $group['prop'] }}.{{ $provider }}.{{ $i }}.id"
                                             class="flex-1 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs px-2 focus:outline-none focus:ring-2 focus:ring-violet-400/20"
                                             placeholder="model-id">
@@ -288,25 +290,75 @@
     {{-- ════════════════════ IMAGES ════════════════════ --}}
     <div x-show="tab === 'images'" x-cloak class="space-y-5">
         <form wire:submit="generateImage" class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-5 bg-white dark:bg-zinc-900 space-y-4">
-            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                Generar imagen — {{ \App\Models\AiSetting::IMAGE_PROVIDERS[$settings->image_provider] ?? 'OpenAI' }} · {{ $settings->image_model }}
-            </h3>
-            @php $imgReady = match ($settings->image_provider) {
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                        Generar imagen — {{ \App\Models\AiSetting::IMAGE_PROVIDERS[$imageProvider] ?? 'OpenAI' }} · {{ $imageModel }}
+                    </h3>
+                    <p class="mt-1 text-xs text-zinc-400">Puedes elegir proveedor/modelo para esta generación sin salir de la pestaña.</p>
+                </div>
+                <button type="button"
+                        @click="window.Starcho?.confirm ? window.Starcho.confirm({
+                            title: 'Limpiar imágenes fallidas',
+                            message: '¿Quitar del historial todas las imágenes que no se pudieron generar?',
+                            okText: 'Sí, limpiar',
+                            cancelText: 'Cancelar',
+                            onConfirm: () => $wire.clearFailedImages()
+                        }) : $wire.clearFailedImages()"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30">
+                    <i class="fas fa-broom text-[11px]"></i>
+                    Limpiar fallidas
+                    @if($failedImagesCount > 0)
+                        <span class="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] text-rose-700 dark:bg-rose-950 dark:text-rose-200">{{ $failedImagesCount }}</span>
+                    @endif
+                </button>
+            </div>
+            @php $imgReady = match ($imageProvider) {
                 'replicate' => $settings->hasReplicateKey(),
                 'fal'       => $settings->hasFalKey(),
                 default     => $settings->hasProviderKey('openai'),
             }; @endphp
             <flux:textarea wire:model="imagePrompt" rows="3" placeholder="Describe la imagen que quieres generar..." />
+            <div class="grid gap-3 lg:grid-cols-[180px_1fr_180px_auto]">
+                <flux:field>
+                    <flux:label>Proveedor</flux:label>
+                    <flux:select wire:model.live="imageProvider">
+                        @foreach (\App\Models\AiSetting::IMAGE_PROVIDERS as $k => $l)
+                            <option value="{{ $k }}">{{ $l }}</option>
+                        @endforeach
+                    </flux:select>
+                </flux:field>
+                <flux:field>
+                    <flux:label>Modelo</flux:label>
+                    <div class="flex gap-2">
+                        <flux:select wire:model="imageModel" class="flex-1">
+                            @foreach ($imageModels as $m)<option value="{{ $m }}">{{ $m }}</option>@endforeach
+                        </flux:select>
+                        <button type="button" wire:click="randomizeImageModel"
+                                class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-violet-200 px-3 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 dark:border-violet-900/60 dark:text-violet-200 dark:hover:bg-violet-950/30"
+                                title="Escoge al azar un modelo activo de este proveedor">
+                            <i class="fas fa-shuffle text-[11px]"></i>
+                            Revolver
+                        </button>
+                    </div>
+                </flux:field>
+                <flux:field>
+                    <flux:label>Tamaño</flux:label>
+                    <flux:select wire:model.live="imageSize">
+                        <option value="tiktok">Vertical TikTok</option>
+                        <option value="800x600">800 × 600</option>
+                        <option value="480x360">480 × 360</option>
+                        <option value="custom">Personalizada…</option>
+                    </flux:select>
+                </flux:field>
+                <div class="flex items-end">
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="generateImage" class="w-full lg:w-auto">
+                        <span wire:loading.remove wire:target="generateImage"><i class="fas fa-wand-magic-sparkles mr-1"></i> Generar</span>
+                        <span wire:loading wire:target="generateImage">Generando...</span>
+                    </flux:button>
+                </div>
+            </div>
             <div class="flex items-center gap-3 flex-wrap">
-                <flux:select wire:model="imageModel" class="max-w-[240px]">
-                    @foreach ($imageModels as $m)<option value="{{ $m }}">{{ $m }}</option>@endforeach
-                </flux:select>
-                <flux:select wire:model.live="imageSize" class="max-w-[220px]">
-                    <option value="tiktok">Vertical TikTok (1080×1920)</option>
-                    <option value="800x600">Horizontal 800 × 600</option>
-                    <option value="480x360">Horizontal 480 × 360</option>
-                    <option value="custom">Personalizada…</option>
-                </flux:select>
                 @if($imageSize === 'custom')
                     <div class="flex items-center gap-1">
                         <input type="number" min="64" max="2048" wire:model="customWidth"
@@ -316,15 +368,11 @@
                                class="w-20 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm px-2" placeholder="Alto">
                     </div>
                 @endif
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="generateImage">
-                    <span wire:loading.remove wire:target="generateImage"><i class="fas fa-wand-magic-sparkles mr-1"></i> Generar</span>
-                    <span wire:loading wire:target="generateImage">Generando...</span>
-                </flux:button>
                 @unless($imgReady)
-                    <span class="text-xs text-amber-600"><i class="fas fa-triangle-exclamation"></i> Configura la API key de {{ \App\Models\AiSetting::IMAGE_PROVIDERS[$settings->image_provider] ?? 'OpenAI' }} en la pestaña Texto.</span>
+                    <span class="text-xs text-amber-600"><i class="fas fa-triangle-exclamation"></i> Configura la API key de {{ \App\Models\AiSetting::IMAGE_PROVIDERS[$imageProvider] ?? 'OpenAI' }} en la pestaña Texto.</span>
                 @endunless
             </div>
-            @if($settings->image_provider === 'openai')
+            @if($imageProvider === 'openai')
                 <p class="text-[11px] text-zinc-400">OpenAI ajusta al tamaño soportado más cercano (1024², 1024×1536, 1536×1024). fal.ai y Replicate respetan la resolución exacta.</p>
             @endif
             <label class="flex items-center gap-2 text-xs text-zinc-500">
@@ -346,6 +394,22 @@
                     <div class="p-2">
                         <p class="text-[11px] text-zinc-500 line-clamp-2">{{ $gen->prompt }}</p>
                         <p class="text-[10px] text-zinc-400 mt-1">{{ $money($gen->price_cents) }} · {{ $gen->created_at->diffForHumans() }}</p>
+                        <div class="mt-2 flex items-center justify-between gap-2">
+                            <span class="truncate text-[10px] text-zinc-400">{{ $gen->provider }} · {{ $gen->model }}</span>
+                            @if($gen->status === 'failed')
+                                <button type="button"
+                                        @click="window.Starcho?.confirm ? window.Starcho.confirm({
+                                            title: 'Quitar imagen fallida',
+                                            message: '¿Quitar esta generación fallida del historial?',
+                                            okText: 'Quitar',
+                                            cancelText: 'Cancelar',
+                                            onConfirm: () => $wire.deleteFailedImage({{ $gen->id }})
+                                        }) : $wire.deleteFailedImage({{ $gen->id }})"
+                                        class="shrink-0 text-[10px] font-semibold text-rose-500 hover:text-rose-600">
+                                    Quitar
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @empty

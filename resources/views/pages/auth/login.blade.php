@@ -1,4 +1,5 @@
 <x-layouts::auth :title="__('Log in')">
+    @php($authAppName = \App\Models\SiteSetting::appName())
     <div class="st-auth" x-data="{ isLight:false }" :class="isLight ? 'is-light' : ''">
         <div class="absolute right-4 top-4 z-20">
             <button type="button" class="st-auth-link" @click="isLight = !isLight">{{ __('Theme') }}</button>
@@ -58,8 +59,8 @@
             <aside class="st-auth-brand">
                 <div class="st-auth-brand-card">
                     <div class="st-auth-logo">
-                        <span class="st-auth-logo-mark">S</span>
-                        <span>{{ config('app.name', 'Starcho') }}</span>
+                        <span class="st-auth-logo-mark">{{ \Illuminate\Support\Str::of($authAppName)->substr(0, 1)->upper() }}</span>
+                        <span>{{ $authAppName }}</span>
                     </div>
                     <h2 class="st-auth-title">{{ __('Your CRM') }}<br><span>{{ __('ready to grow') }}</span></h2>
                     <p class="st-auth-sub">{{ __('Manage tasks, contacts and metrics with a bold TikTok-inspired interface designed for speed.') }}</p>

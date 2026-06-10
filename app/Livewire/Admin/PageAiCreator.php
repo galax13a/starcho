@@ -382,6 +382,7 @@ class PageAiCreator extends Component
     {
         $profile = self::ARTICLE_PROFILES[$this->articleSize] ?? self::ARTICLE_PROFILES['medium'];
         $format = $this->contentFormat === 'html' ? 'HTML + Tailwind renderizable en starchoHtml' : 'Editor.js estructurado';
+        $htmlParameters = $this->contentFormat === 'html' ? "\n\n" . $this->htmlThemeParameters() : '';
 
         return trim(<<<PROMPT
 Objetivo de la página:
@@ -393,6 +394,23 @@ Instrucción editorial adicional:
 Formato solicitado: {$format}.
 Extensión objetivo: {$profile['label']}, aproximadamente {$profile['words']} palabras y {$profile['reading']} minutos de lectura.
 Presupuesto de salida aproximado: {$this->maxTokens} tokens.
+{$htmlParameters}
 PROMPT);
+    }
+
+    private function htmlThemeParameters(): string
+    {
+        return <<<'PROMPT'
+Parametros obligatorios para HTML + Tailwind:
+- Generar un bloque starchoHtml semantico, responsive y editable.
+- Diseñar simultaneamente para modo light y modo dark.
+- Cada section, card, badge, CTA, lista o tabla debe tener clases para ambos temas: bg-*/text-*/border-* + dark:bg-*/dark:text-*/dark:border-*.
+- No usar bg-white sin dark:bg-* ni texto oscuro sin dark:text-*.
+- Garantizar contraste AA en titulos, parrafos, textos secundarios, botones, enlaces y metadatos.
+- Usar paleta base zinc/slate y acentos moderados violet/fuchsia/cyan/emerald/rose.
+- Incluir hover/focus en botones/enlaces con variantes dark:hover:* cuando aplique.
+- No usar scripts, iframes, assets externos ni estilos globales.
+- Si hace falta CSS propio, incluir soporte .dark o prefers-color-scheme y mantenerlo dentro del bloque.
+PROMPT;
     }
 }

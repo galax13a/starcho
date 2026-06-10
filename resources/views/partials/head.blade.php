@@ -3,25 +3,30 @@
 
 @php
     $siteSettings = \App\Models\SiteSetting::cached();
+    $appName = \App\Models\SiteSetting::appName();
     $currentPath = '/' . ltrim(request()->path(), '/');
     $currentPath = $currentPath === '//' ? '/' : $currentPath;
     $currentLocale = app()->getLocale();
     $pageMeta = \App\Models\SitePageSetting::forPathAndLocale($currentPath, $currentLocale);
-    $siteAssetUrl = function (?string $path): ?string {
+    $siteAssetUrl = function (?string $path, bool $preferWebp = false): ?string {
         if (! filled($path)) {
             return null;
         }
 
         $media = \App\Models\Media::query()->where('path', $path)->latest()->first();
 
-        return $media?->public_url ?: \App\Models\StorageSetting::singleton()->localPublicUrl($path);
+        if ($media) {
+            return $preferWebp ? $media->webp_url : $media->public_url;
+        }
+
+        return app(\App\Services\StorageService::class)->publicUrlForPath($path);
     };
     $faviconUrl = $siteAssetUrl($siteSettings?->favicon_path) ?: '/favicon.ico';
     $effectiveTitle = $pageMeta?->title;
     if (!filled($effectiveTitle)) {
         $effectiveTitle = filled($title ?? null)
-            ? $title.' - '.config('app.name', 'Laravel')
-            : ($siteSettings?->site_name ?? config('app.name', 'Laravel'));
+            ? $title.' - '.$appName
+            : ($siteSettings?->site_name ?? $appName);
     }
     $effectiveDescription = $pageMeta?->description ?: $siteSettings?->site_description;
     $effectiveKeywords = $pageMeta?->meta_keywords ?: $siteSettings?->meta_keywords;
@@ -30,7 +35,7 @@
     $effectiveRobotsIndex = $pageMeta ? (bool) $pageMeta->robots_index : ($siteSettings?->robots_index ?? true);
     $effectiveRobotsFollow = $pageMeta ? (bool) $pageMeta->robots_follow : ($siteSettings?->robots_follow ?? true);
     $canonicalUrl = $siteSettings?->canonical_url ?: url()->current();
-    $metaOgImage = $siteAssetUrl($siteSettings?->og_image_path);
+    $metaOgImage = $siteAssetUrl($siteSettings?->og_image_path, true);
 @endphp
 
 <title>{{ $effectiveTitle }}</title>

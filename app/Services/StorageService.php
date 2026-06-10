@@ -453,6 +453,32 @@ class StorageService
         return Storage::disk($this->settings->diskName());
     }
 
+    /**
+     * Resolve a public URL for a raw path using the active storage settings.
+     * Local storage uses the configured local_url/canonical domain; R2 uses
+     * its public URL when present and falls back to a temporary URL otherwise.
+     */
+    public function publicUrlForPath(string $path): string
+    {
+        $path = ltrim($path, '/');
+
+        if ($this->settings->isLocal()) {
+            return $this->settings->localPublicUrl($path);
+        }
+
+        if ($this->settings->default_driver === 'r2' && filled($this->settings->r2_public_url)) {
+            return rtrim((string) $this->settings->r2_public_url, '/') . '/' . $path;
+        }
+
+        $disk = $this->disk();
+
+        if ($this->settings->default_driver === 'r2' && method_exists($disk, 'temporaryUrl')) {
+            return $disk->temporaryUrl($path, now()->addMinutes(30));
+        }
+
+        return $disk->url($path);
+    }
+
     // ─────────────────────────────────────────────────────────────────
     // Private helpers
     // ─────────────────────────────────────────────────────────────────

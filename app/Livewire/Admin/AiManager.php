@@ -143,7 +143,9 @@ class AiManager extends Component
 
     public function updatedImageProvider(string $value): void
     {
-        $this->imageModel = AiSetting::IMAGE_MODEL_OPTIONS[$value][0] ?? $this->imageModel;
+        $this->imageModel = AiSetting::singleton()->imageModelOptions($value)[0]
+            ?? AiSetting::IMAGE_MODEL_OPTIONS[$value][0]
+            ?? $this->imageModel;
     }
 
     public function updatedVideoProvider(string $value): void
@@ -204,10 +206,12 @@ class AiManager extends Component
     public function generateImage(): void
     {
         $this->validate([
-            'imagePrompt'  => ['required', 'string', 'min:4', 'max:3000'],
-            'imageSize'    => ['required', 'in:tiktok,800x600,480x360,custom'],
-            'customWidth'  => ['required', 'integer', 'min:64', 'max:2048'],
-            'customHeight' => ['required', 'integer', 'min:64', 'max:2048'],
+            'imageProvider' => ['required', 'in:' . implode(',', array_keys(AiSetting::IMAGE_PROVIDERS))],
+            'imageModel'    => ['required', 'string', 'max:180'],
+            'imagePrompt'   => ['required', 'string', 'min:4', 'max:3000'],
+            'imageSize'     => ['required', 'in:tiktok,800x600,480x360,custom'],
+            'customWidth'   => ['required', 'integer', 'min:64', 'max:2048'],
+            'customHeight'  => ['required', 'integer', 'min:64', 'max:2048'],
         ]);
 
         [$w, $h] = $this->resolveImageSize();
@@ -241,6 +245,44 @@ class AiManager extends Component
         } catch (\Throwable $e) {
             $this->notifyFailure($e->getMessage());
         }
+    }
+
+    public function randomizeImageModel(): void
+    {
+        $models = AiSetting::singleton()->imageModelOptions($this->imageProvider);
+
+        if ($models === []) {
+            $this->notifyWarning('No hay modelos de imagen activos para este proveedor.');
+            return;
+        }
+
+        $this->imageModel = $models[array_rand($models)];
+        $this->notifyInfo('Modelo seleccionado: ' . $this->imageModel);
+    }
+
+    public function clearFailedImages(): void
+    {
+        $count = AiAssetGeneration::query()
+            ->where('type', AiAssetGeneration::TYPE_IMAGE)
+            ->where('status', AiAssetGeneration::STATUS_FAILED)
+            ->delete();
+
+        $this->notifyWarning($count > 0
+            ? "Se limpiaron {$count} imágenes fallidas."
+            : 'No había imágenes fallidas para limpiar.');
+    }
+
+    public function deleteFailedImage(int $id): void
+    {
+        $deleted = AiAssetGeneration::query()
+            ->whereKey($id)
+            ->where('type', AiAssetGeneration::TYPE_IMAGE)
+            ->where('status', AiAssetGeneration::STATUS_FAILED)
+            ->delete();
+
+        $deleted
+            ? $this->notifyWarning('Imagen fallida eliminada.')
+            : $this->notifyWarning('Esa imagen ya no está marcada como fallida.');
     }
 
     // ── Video generation ─────────────────────────────────────────────
@@ -537,6 +579,7 @@ class AiManager extends Component
             'lostTokens'     => $lostTokens,
             'hasProcessingVideo' => AiAssetGeneration::where('type', 'video')->where('status', 'processing')->exists(),
             'hasProcessingImage' => AiAssetGeneration::where('type', 'image')->where('status', 'processing')->exists(),
+            'failedImagesCount' => AiAssetGeneration::where('type', AiAssetGeneration::TYPE_IMAGE)->where('status', AiAssetGeneration::STATUS_FAILED)->count(),
         ];
     }
 
