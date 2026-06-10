@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'php_request_timeout' => (int) env('STARCHO_PHP_TIMEOUT', 120),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

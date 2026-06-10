@@ -238,6 +238,7 @@ class AiSetting extends Model
     {
         if ($provider !== null) {
             $settings = $this->model_settings ?? [];
+            $hasExplicitProviderRows = array_key_exists($provider, $settings);
             $rows = collect($settings[$provider] ?? [])
                 ->map(fn ($row) => is_array($row) ? $row : ['id' => (string) $row, 'active' => true])
                 ->map(fn (array $row) => [
@@ -248,7 +249,7 @@ class AiSetting extends Model
                 ->values()
                 ->all();
 
-            if ($rows === []) {
+            if ($rows === [] && ! $hasExplicitProviderRows) {
                 $rows = collect(self::MODEL_OPTIONS[$provider] ?? [])
                     ->map(fn (string $model) => ['id' => $model, 'active' => true])
                     ->all();
@@ -297,6 +298,7 @@ class AiSetting extends Model
 
     private function mediaModelRows(array $settings, array $catalog, string $provider): array
     {
+        $hasExplicitProviderRows = array_key_exists($provider, $settings);
         $rows = collect($settings[$provider] ?? [])
             ->map(fn ($row) => is_array($row) ? $row : ['id' => (string) $row, 'active' => true])
             ->map(fn (array $row) => [
@@ -307,7 +309,7 @@ class AiSetting extends Model
             ->values()
             ->all();
 
-        if ($rows === []) {
+        if ($rows === [] && ! $hasExplicitProviderRows) {
             $rows = collect($catalog[$provider] ?? [])
                 ->map(fn (string $model) => ['id' => $model, 'active' => true])
                 ->all();
@@ -346,12 +348,6 @@ class AiSetting extends Model
                     ->values()
                     ->all();
 
-                if ($providerRows === []) {
-                    $providerRows = collect($catalog[$provider] ?? [])
-                        ->map(fn (string $m) => ['id' => $m, 'active' => true])
-                        ->all();
-                }
-
                 return [$provider => $providerRows];
             })
             ->all();
@@ -378,10 +374,6 @@ class AiSetting extends Model
                     ->unique('id')
                     ->values()
                     ->all();
-
-                if ($providerRows === []) {
-                    $providerRows = $this->modelRows($provider);
-                }
 
                 return [$provider => $providerRows];
             })

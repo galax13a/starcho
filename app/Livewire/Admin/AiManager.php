@@ -18,10 +18,13 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AiManager extends Component
 {
     use DispatchesStarchoNotify;
+    use WithFileUploads;
 
     // ── AI settings (text/image/video providers) ─────────────────────
     public bool $enabled = false;
@@ -42,6 +45,7 @@ class AiManager extends Component
     public array $textModelRows = [];
     public array $imageModelRows = [];
     public array $videoModelRows = [];
+    public $modelImportFile;
 
     // ── Image / video generation ─────────────────────────────────────
     public string $imagePrompt = '';
@@ -139,6 +143,167 @@ class AiManager extends Component
 
         $this->loadModelRows($s->refresh());
         $this->notifySuccess('Modelos guardados.');
+    }
+
+    public function exportModels(): StreamedResponse
+    {
+        $setting = AiSetting::singleton();
+        $payload = [
+            'version' => 1,
+            'type' => 'starcho-ai-models',
+            'exported_at' => now()->toIso8601String(),
+            'selected' => [
+                'text_provider' => $setting->provider,
+                'text_model' => $setting->default_model,
+                'image_provider' => $setting->image_provider,
+                'image_model' => $setting->image_model,
+                'video_provider' => $setting->video_provider,
+                'video_model' => $setting->video_model,
+            ],
+            'providers' => [
+                'text' => AiSetting::PROVIDERS,
+                'image' => AiSetting::IMAGE_PROVIDERS,
+                'video' => AiSetting::VIDEO_PROVIDERS,
+            ],
+            'models' => [
+                'text' => $setting->normalizeModelSettings($this->textModelRows),
+                'image' => $setting->normalizeImageModelSettings($this->imageModelRows),
+                'video' => $setting->normalizeVideoModelSettings($this->videoModelRows),
+            ],
+        ];
+
+        $this->notifySuccess('Modelos exportados.');
+
+        return response()->streamDownload(function () use ($payload): void {
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }, 'starcho-ai-models-' . now()->format('Ymd-His') . '.json', [
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ]);
+    }
+
+    public function openImportModelsModal(): void
+    {
+        $this->reset('modelImportFile');
+        $this->resetValidation();
+        $this->js("document.dispatchEvent(new CustomEvent('modal-show',{detail:{name:'modal-admin-ai-models-import'}}))");
+    }
+
+    public function importModels(): void
+    {
+        $this->validate([
+            'modelImportFile' => ['required', 'file', 'max:10240', 'mimes:json,txt'],
+        ]);
+
+        $raw = file_get_contents($this->modelImportFile->getRealPath());
+        $decoded = json_decode((string) $raw, true);
+
+        if (! is_array($decoded)) {
+            $this->notifyFailure('No se pudo importar: JSON inválido.');
+            return;
+        }
+
+        $models = data_get($decoded, 'models', $decoded);
+
+        if (! is_array($models)) {
+            $this->notifyFailure('No se pudo importar: archivo sin modelos.');
+            return;
+        }
+
+        $setting = AiSetting::singleton();
+        $this->textModelRows = $this->rowsFromImport($models, 'text', array_keys(AiSetting::PROVIDERS));
+        $this->imageModelRows = $this->rowsFromImport($models, 'image', array_keys(AiSetting::IMAGE_PROVIDERS));
+        $this->videoModelRows = $this->rowsFromImport($models, 'video', array_keys(AiSetting::VIDEO_PROVIDERS));
+
+        $setting->model_settings = $setting->normalizeModelSettings($this->textModelRows);
+        $setting->image_model_settings = $setting->normalizeImageModelSettings($this->imageModelRows);
+        $setting->video_model_settings = $setting->normalizeVideoModelSettings($this->videoModelRows);
+
+        $selected = data_get($decoded, 'selected', []);
+        if (is_array($selected)) {
+            if (array_key_exists((string) data_get($selected, 'text_provider'), AiSetting::PROVIDERS)) {
+                $setting->provider = (string) data_get($selected, 'text_provider');
+            }
+            if (array_key_exists((string) data_get($selected, 'image_provider'), AiSetting::IMAGE_PROVIDERS)) {
+                $setting->image_provider = (string) data_get($selected, 'image_provider');
+            }
+            if (array_key_exists((string) data_get($selected, 'video_provider'), AiSetting::VIDEO_PROVIDERS)) {
+                $setting->video_provider = (string) data_get($selected, 'video_provider');
+            }
+            foreach ([
+                'text_model' => 'default_model',
+                'image_model' => 'image_model',
+                'video_model' => 'video_model',
+            ] as $source => $column) {
+                $value = trim((string) data_get($selected, $source, ''));
+                if ($value !== '') {
+                    $setting->{$column} = $value;
+                }
+            }
+        }
+
+        $setting->save();
+
+        $this->loadModelRows($setting->refresh());
+        $this->reset('modelImportFile');
+        $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-ai-models-import'}}))");
+        $this->notifySuccess('Modelos importados.');
+    }
+
+    public function clearAllModels(): void
+    {
+        $setting = AiSetting::singleton();
+        $emptyText = collect(array_keys(AiSetting::PROVIDERS))->mapWithKeys(fn (string $provider) => [$provider => []])->all();
+        $emptyImage = collect(array_keys(AiSetting::IMAGE_PROVIDERS))->mapWithKeys(fn (string $provider) => [$provider => []])->all();
+        $emptyVideo = collect(array_keys(AiSetting::VIDEO_PROVIDERS))->mapWithKeys(fn (string $provider) => [$provider => []])->all();
+
+        $setting->model_settings = $emptyText;
+        $setting->image_model_settings = $emptyImage;
+        $setting->video_model_settings = $emptyVideo;
+        $setting->save();
+
+        $this->loadModelRows($setting->refresh());
+        $this->notifyWarning('Todos los modelos fueron eliminados.');
+    }
+
+    private function rowsFromImport(array $models, string $group, array $providers): array
+    {
+        $source = data_get($models, $group, []);
+
+        if ($source === []) {
+            $source = match ($group) {
+                'image' => data_get($models, 'image_model_settings', []),
+                'video' => data_get($models, 'video_model_settings', []),
+                default => data_get($models, 'model_settings', []),
+            };
+        }
+
+        return collect($providers)
+            ->mapWithKeys(function (string $provider) use ($source): array {
+                $rows = collect(is_array($source) ? ($source[$provider] ?? []) : [])
+                    ->map(function ($row): ?array {
+                        if (is_string($row)) {
+                            $row = ['id' => $row, 'active' => true];
+                        }
+
+                        if (! is_array($row)) {
+                            return null;
+                        }
+
+                        $id = trim((string) ($row['id'] ?? ''));
+
+                        return $id === '' ? null : [
+                            'id' => $id,
+                            'active' => array_key_exists('active', $row) ? (bool) $row['active'] : true,
+                        ];
+                    })
+                    ->filter()
+                    ->unique('id')
+                    ->values()
+                    ->all();
+
+                return [$provider => $rows];
+            })
+            ->all();
     }
 
     public function updatedImageProvider(string $value): void

@@ -317,7 +317,7 @@
                                             <a href="{{ route('admin.media.download', $item) }}" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Descargar">
                                                 <i class="fas fa-download text-xs leading-none"></i>
                                             </a>
-                                            <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
+                                            <button type="button" data-copy-url="{{ e($item->public_url) }}" onclick="copyAlbumUrl(this.dataset.copyUrl)" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
                                                 <i class="fas fa-copy text-xs leading-none"></i>
                                             </button>
                                             <button type="button" onclick="Livewire.dispatch('openMediaTags', {id: {{ $item->id }}})" class="grid size-8 place-items-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Tags">
@@ -474,7 +474,7 @@
                                                     </a>
                                                 @endif
                                                 <a href="{{ route('admin.media.download', $item) }}" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Descargar"><i class="fas fa-download text-xs"></i></a>
-                                                <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Copiar URL"><i class="fas fa-copy text-xs"></i></button>
+                                                <button type="button" data-copy-url="{{ e($item->public_url) }}" onclick="copyAlbumUrl(this.dataset.copyUrl)" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" title="Copiar URL"><i class="fas fa-copy text-xs"></i></button>
                                                 <button type="button" onclick="Livewire.dispatch('openMediaTags', {id: {{ $item->id }}})" class="flex size-8 items-center justify-center rounded-lg border border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20" title="Tags">
                                                     <i class="fas fa-tags text-xs"></i>
                                                 </button>
@@ -536,7 +536,7 @@
                             </div>
                         </div>
                         <div class="flex shrink-0 gap-1">
-                            <button type="button" onclick="copyAlbumUrl('{{ addslashes($item->public_url) }}')" class="grid size-8 place-items-center rounded-lg border border-zinc-200 text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-800" title="Copiar URL">
+                            <button type="button" data-copy-url="{{ e($item->public_url) }}" onclick="copyAlbumUrl(this.dataset.copyUrl)" class="grid size-8 place-items-center rounded-lg border border-zinc-200 text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-800" title="Copiar URL">
                                 <i class="fas fa-copy text-xs"></i>
                             </button>
                             @if($selectedAlbum && ! $item->albums->contains($selectedAlbum->id))
@@ -597,8 +597,16 @@ function mediaAlbumsDashboard() {
     };
 }
 
-function copyAlbumUrl(url) {
-    navigator.clipboard.writeText(url).then(() => {
+async function copyAlbumUrl(url) {
+    const text = decodeAlbumCopyHtml(String(url || ''));
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            fallbackAlbumCopyText(text);
+        }
+
         const toast = document.getElementById('album-copy-toast');
         toast.classList.remove('hidden');
         toast.classList.add('flex');
@@ -606,7 +614,35 @@ function copyAlbumUrl(url) {
             toast.classList.add('hidden');
             toast.classList.remove('flex');
         }, 2200);
-    });
+    } catch (error) {
+        window.Starcho?.notify?.('error', 'No se pudo copiar la URL.');
+    }
+}
+
+function decodeAlbumCopyHtml(value) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = value;
+
+    return textarea.value;
+}
+
+function fallbackAlbumCopyText(value) {
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', 'readonly');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+
+    const copied = document.execCommand('copy');
+    textarea.remove();
+
+    if (!copied) {
+        throw new Error('copy_failed');
+    }
 }
 
 document.addEventListener('submit', event => {

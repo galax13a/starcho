@@ -346,7 +346,7 @@
                             <a href="{{ route('admin.media.download', $item) }}" class="flex size-8 items-center justify-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Descargar">
                                 <i class="fas fa-download text-xs"></i>
                             </a>
-                            <button type="button" onclick="copyUrl('{{ addslashes($item->public_url) }}')" class="flex size-8 items-center justify-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
+                            <button type="button" data-copy-url="{{ e($item->public_url) }}" onclick="copyUrl(this.dataset.copyUrl)" class="flex size-8 items-center justify-center rounded-full bg-zinc-900/75 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white hover:text-zinc-950" title="Copiar URL">
                                 <i class="fas fa-copy text-xs"></i>
                             </button>
                             @if($imageVariantsEnabled && $item->isImage())
@@ -451,7 +451,7 @@
 
     <div id="copy-toast" class="fixed bottom-6 right-6 z-50 hidden items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm text-white shadow-lg">
         <i class="fas fa-check text-xs text-emerald-400"></i>
-        URL copiada al portapapeles
+        <span>URL copiada al portapapeles</span>
     </div>
 </div>
 
@@ -508,16 +508,54 @@ document.addEventListener('submit', event => {
     });
 });
 
-function copyUrl(url) {
-    navigator.clipboard.writeText(url).then(() => {
+async function copyUrl(url) {
+    const text = decodeHtml(String(url || ''));
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            fallbackCopyText(text);
+        }
+
         const t = document.getElementById('copy-toast');
+        const label = t?.querySelector('span');
+        if (label) label.textContent = 'URL copiada al portapapeles';
         t.classList.remove('hidden');
         t.classList.add('flex');
         setTimeout(() => {
             t.classList.add('hidden');
             t.classList.remove('flex');
         }, 2200);
-    });
+    } catch (error) {
+        window.Starcho?.notify?.('error', 'No se pudo copiar la URL.');
+    }
+}
+
+function decodeHtml(value) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = value;
+
+    return textarea.value;
+}
+
+function fallbackCopyText(value) {
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', 'readonly');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+
+    const copied = document.execCommand('copy');
+    textarea.remove();
+
+    if (!copied) {
+        throw new Error('copy_failed');
+    }
 }
 
 async function bulkUpload(files) {

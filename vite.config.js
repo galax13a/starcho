@@ -29,6 +29,9 @@ export default defineConfig({
                 // JS de /admin: starcho.js + PowerGrid + adminLayout()
                 'resources/js/admin.js',
 
+                // JS estandar de Editor.js para posts y paginas CMS
+                'resources/js/starcho-editorjs.js',
+
                 // JS dedicado del editor visual aislado (sin Alpine)
                 'resources/js/starcho-editor-page.js',
             ],

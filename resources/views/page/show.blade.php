@@ -290,6 +290,36 @@
         return textarea.value;
     }
 
+    function sanitizeStarchoHtml(value) {
+        var template = document.createElement('template');
+        template.innerHTML = decodeEscapedMarkup(value || '');
+
+        template.content.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(function (node) {
+            node.remove();
+        });
+
+        template.content.querySelectorAll('*').forEach(function (node) {
+            Array.from(node.attributes).forEach(function (attr) {
+                var name = attr.name.toLowerCase();
+                var value = String(attr.value || '').trim().toLowerCase();
+
+                if (name.indexOf('on') === 0 || value.indexOf('javascript:') === 0 || value.indexOf('data:text/html') === 0) {
+                    node.removeAttribute(attr.name);
+                }
+            });
+        });
+
+        return template.innerHTML;
+    }
+
+    function sanitizeStarchoCss(value) {
+        return decodeEscapedMarkup(value || '')
+            .replace(/<\/style/gi, '<\\/style')
+            .replace(/@import[^;]+;/gi, '')
+            .replace(/expression\s*\([^)]*\)/gi, '')
+            .replace(/url\s*\(\s*(['"]?)\s*javascript:[^)]+\)/gi, 'url()');
+    }
+
     function ensureTailwindRuntime() {
         if (document.getElementById('starcho-tailwind-runtime')) return;
 
@@ -337,8 +367,8 @@
                 break;
             case 'starchoHtml':
                 hasStarchoHtml = true;
-                if (block.data.css) html += '<style data-starcho-html-css>' + decodeEscapedMarkup(block.data.css) + '</style>';
-                html += '<div class="starcho-html-render">' + decodeEscapedMarkup(block.data.html || '') + '</div>';
+                if (block.data.css) html += '<style data-starcho-html-css>' + sanitizeStarchoCss(block.data.css) + '</style>';
+                html += '<div class="starcho-html-render">' + sanitizeStarchoHtml(block.data.html || '') + '</div>';
                 break;
             default:
                 if (block.data && block.data.text) html += '<p>' + block.data.text + '</p>';

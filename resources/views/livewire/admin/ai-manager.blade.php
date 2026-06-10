@@ -209,8 +209,37 @@
     {{-- ════════════════════ MODELS ════════════════════ --}}
     <div x-show="tab === 'models'" x-cloak class="space-y-6">
         <div class="rounded-xl border border-violet-100 dark:border-violet-900/40 bg-violet-50/60 dark:bg-violet-900/10 p-4">
-            <p class="text-sm font-semibold text-violet-700 dark:text-violet-300">Modelos habilitados</p>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400">Activa, desactiva, agrega o quita modelos por proveedor. Se guardan en la base de datos. OpenRouter permite IDs como <code>openai/gpt-4o-mini</code>.</p>
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-violet-700 dark:text-violet-300">Modelos habilitados</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">Activa, desactiva, agrega o quita modelos por proveedor. Se guardan en JSON con texto, imagen y video.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" wire:click="exportModels"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-zinc-950 dark:text-emerald-300 dark:hover:bg-emerald-950/30">
+                        <i class="fas fa-file-code text-[11px]"></i>
+                        Exportar JSON
+                    </button>
+                    <button type="button" wire:click="openImportModelsModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-50 dark:border-sky-900/60 dark:bg-zinc-950 dark:text-sky-300 dark:hover:bg-sky-950/30">
+                        <i class="fas fa-file-import text-[11px]"></i>
+                        Importar JSON
+                    </button>
+                    <button type="button"
+                            @click="window.Starcho?.confirm ? window.Starcho.confirm({
+                                title: 'Eliminar modelos',
+                                message: '¿Eliminar todos los modelos de texto, imagen y video de todos los proveedores? Podrás restaurarlos importando un JSON o agregándolos manualmente.',
+                                okText: 'Sí, eliminar',
+                                cancelText: 'Cancelar',
+                                onConfirm: () => $wire.clearAllModels()
+                            }) : $wire.clearAllModels()"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 dark:border-rose-900/60 dark:bg-zinc-950 dark:text-rose-300 dark:hover:bg-rose-950/30">
+                        <i class="fas fa-trash text-[11px]"></i>
+                        Eliminar todo
+                    </button>
+                </div>
+            </div>
+            <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">OpenRouter permite IDs como <code>openai/gpt-4o-mini</code>. Si importas JSON, reemplaza el catálogo actual de modelos.</p>
         </div>
 
         @php
@@ -579,4 +608,13 @@
             </div>
         </div>
     @endif
+
+    <x-starcho-popup-admin-import
+        modal-name="modal-admin-ai-models-import"
+        submit-method="importModels"
+        loading-target="importModels"
+        title="Importar modelos AI"
+        file-model="modelImportFile"
+        accept=".json,.txt,application/json,text/plain"
+    />
 </div>

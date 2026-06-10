@@ -22,18 +22,13 @@
         return app(\App\Services\StorageService::class)->publicUrlForPath($path);
     };
     $faviconUrl = $siteAssetUrl($siteSettings?->favicon_path) ?: '/favicon.ico';
-    $effectiveTitle = $pageMeta?->title;
-    if (!filled($effectiveTitle)) {
-        $effectiveTitle = filled($title ?? null)
-            ? $title.' - '.$appName
-            : ($siteSettings?->site_name ?? $appName);
-    }
-    $effectiveDescription = $pageMeta?->description ?: $siteSettings?->site_description;
+    $effectiveTitle = $pageMeta?->title ?: (filled($title ?? null) ? $title : ($siteSettings?->site_name ?? $appName));
+    $effectiveDescription = $pageMeta?->description ?: (filled($description ?? null) ? $description : $siteSettings?->site_description);
     $effectiveKeywords = $pageMeta?->meta_keywords ?: $siteSettings?->meta_keywords;
     $effectiveOgTitle = $pageMeta?->og_title ?: ($siteSettings?->og_title ?: $effectiveTitle);
     $effectiveOgDescription = $pageMeta?->og_description ?: ($siteSettings?->og_description ?: $effectiveDescription);
-    $effectiveRobotsIndex = $pageMeta ? (bool) $pageMeta->robots_index : ($siteSettings?->robots_index ?? true);
-    $effectiveRobotsFollow = $pageMeta ? (bool) $pageMeta->robots_follow : ($siteSettings?->robots_follow ?? true);
+    $effectiveRobotsIndex = !empty($noIndex ?? false) ? false : ($pageMeta ? (bool) $pageMeta->robots_index : ($siteSettings?->robots_index ?? true));
+    $effectiveRobotsFollow = !empty($noIndex ?? false) ? false : ($pageMeta ? (bool) $pageMeta->robots_follow : ($siteSettings?->robots_follow ?? true));
     $canonicalUrl = $siteSettings?->canonical_url ?: url()->current();
     $metaOgImage = $siteAssetUrl($siteSettings?->og_image_path, true);
 @endphp

@@ -66,8 +66,14 @@
                     ?? data_get($item, 'name.en')
                     ?? ($item['label'] ?? '—');
             @endphp
-            <button wire:click="delete({{ $item['id'] }})"
-                    onclick="return confirm('{{ __('admin_ui.menu.delete_confirm', ['name' => addslashes($itemLabel)]) }}')"
+            <button type="button"
+                    @click="window.Starcho.confirm({
+                        title: @js(__('admin_ui.menu.actions.delete')),
+                        message: @js(__('admin_ui.menu.delete_confirm', ['name' => $itemLabel])),
+                        okText: @js(__('js.delete.ok')),
+                        cancelText: @js(__('js.confirm.cancel')),
+                        onConfirm: () => $wire.delete({{ $item['id'] }}),
+                    })"
                     title="{{ __('admin_ui.menu.actions.delete') }}"
                     class="inline-flex items-center justify-center size-7 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition">
                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

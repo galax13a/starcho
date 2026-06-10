@@ -116,6 +116,9 @@
                 <a href="{{ $item->resolved_url ?? '#' }}"
                    @if($item->target !== '_blank') wire:navigate @endif
                    target="{{ $item->target }}"
+                   data-sa-tooltip
+                   data-tip="{{ $item->display_name }}"
+                   title="{{ $item->display_name }}"
                    class="sa-menu-link {{ $itemActive ? 'active' : '' }} {{ $hasChildren ? 'sa-has-children' : '' }}">
                     <i class="{{ $item->icon ?? 'fas fa-circle' }}"></i>
                     <span class="sa-lbl">{{ $item->display_name }}</span>
@@ -127,6 +130,9 @@
                     <a href="{{ $child->resolved_url ?? '#' }}"
                        @if($child->target !== '_blank') wire:navigate @endif
                        target="{{ $child->target }}"
+                       data-sa-tooltip
+                       data-tip="{{ $child->display_name }}"
+                       title="{{ $child->display_name }}"
                        class="sa-submenu-link {{ $child->isCurrentRoute() ? 'active' : '' }}">
                         <i class="{{ $child->icon ?? 'fas fa-circle' }}"></i>
                         <span class="sa-lbl">{{ $child->display_name }}</span>
@@ -141,16 +147,19 @@
             <div class="sa-sb-section">
                 <div class="sa-sb-label">Acceso</div>
                 <a href="{{ route('admin.roles.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Roles" title="Roles"
                    class="sa-menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                     <i class="fas fa-shield-alt"></i>
                     <span class="sa-lbl">Roles</span>
                 </a>
                 <a href="{{ route('admin.permissions.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Permisos" title="Permisos"
                    class="sa-menu-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
                     <i class="fas fa-key"></i>
                     <span class="sa-lbl">Permisos</span>
                 </a>
                 <a href="{{ route('admin.users.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Usuarios" title="Usuarios"
                    class="sa-menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-users"></i>
                     <span class="sa-lbl">Usuarios</span>
@@ -159,16 +168,19 @@
             <div class="sa-sb-section">
                 <div class="sa-sb-label">Sistema</div>
                 <a href="{{ route('admin.modules.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Módulos" title="Módulos"
                    class="sa-menu-link {{ request()->routeIs('admin.modules.*') ? 'active' : '' }}">
                     <i class="fas fa-puzzle-piece"></i>
                     <span class="sa-lbl">Módulos</span>
                 </a>
                 <a href="{{ route('admin.site.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Sitio web" title="Sitio web"
                    class="sa-menu-link {{ request()->routeIs('admin.site.*') ? 'active' : '' }}">
                     <i class="fas fa-globe"></i>
                     <span class="sa-lbl">Sitio web</span>
                 </a>
                 <a href="{{ route('admin.cache.index') }}" wire:navigate
+                   data-sa-tooltip data-tip="Caché" title="Caché"
                    class="sa-menu-link {{ request()->routeIs('admin.cache.*') ? 'active' : '' }}">
                     <i class="fas fa-sync-alt"></i>
                     <span class="sa-lbl">Caché</span>

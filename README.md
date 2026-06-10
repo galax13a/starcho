@@ -490,7 +490,9 @@ Rutas principales:
 
 ### Herramientas cargadas
 
-El formulario carga Editor.js desde CDN y registra herramientas base:
+Editor.js se carga como bundle versionado por Vite desde `resources/js/starcho-editorjs.js`. Las dependencias oficiales viven en `package.json` y `package-lock.json`; no se debe volver a usar CDN con `@latest` para el editor.
+
+El bundle registra en `window` las herramientas que usa el formulario:
 
 - Header
 - List
@@ -506,7 +508,7 @@ El formulario carga Editor.js desde CDN y registra herramientas base:
 - Marker
 - `starchoHtml`
 
-El bloque `starchoHtml` esta implementado en `public/js/starcho-html-editor.js`. Guarda dos campos:
+El bloque `starchoHtml` esta implementado en `resources/js/starcho-html-editor.js` y se registra desde el bundle de Editor.js. Guarda dos campos:
 
 - `html`: markup renderizable.
 - `css`: estilos propios del bloque.
@@ -570,6 +572,7 @@ Reglas:
 - Mantener el estilo en `/admin` sobre Flux UI, Tailwind y componentes Starcho.
 - Usar `Starcho.confirm` para confirmaciones destructivas.
 - Persistir preferencias de UI con `localStorage` cuando sean por usuario/navegador, como panel abierto/cerrado o posicion del sidebar.
+- Cargar librerias del editor desde `resources/js/starcho-editorjs.js`; si se agrega una herramienta nueva, instalarla con npm, fijar version y registrarla ahi.
 
 ### Imagenes, galeria y storage
 
@@ -600,11 +603,13 @@ Las vistas publicas leen el JSON de Editor.js y renderizan los bloques soportado
 - No depender de assets externos.
 - Mantener clases Tailwind compatibles con el build.
 - Revisar que el HTML generado funcione en light y dark mode.
+- Sanitizar el render en `blog/show.blade.php` y `page/show.blade.php`: remover scripts, iframes, handlers `on*`, `javascript:` y CSS peligroso antes de insertar en el DOM.
 
 ### Checklist para tocar Editor.js
 
 - Revisar primero `resources/views/admin/posts/_editor-form.blade.php`.
 - Reutilizar o crear un componente `x-starcho-editorjs-*` si el cambio aplica a posts y paginas.
+- Registrar librerias nuevas en `package.json`, `package-lock.json`, `vite.config.js` y `resources/js/starcho-editorjs.js`.
 - Si hay AI, actualizar prompts en `PostAiCreator`, `PageAiCreator` y/o `PageAiContentService`.
 - Si hay archivos, usar `StorageService` y respetar local/R2/S3.
 - Si hay galeria publica, validar `blog/show.blade.php` y `page/show.blade.php`.
@@ -658,13 +663,27 @@ Cada area carga sus propios assets.
 | `resources/js/starcho.js` | Utilidades globales |
 | `resources/js/admin.js` | Bundle admin |
 | `resources/js/app.js` | Bundle app |
-| `public/js/starcho-html-editor.js` | Editor HTML del bloque `starchoHtml` |
+| `resources/js/starcho-editorjs.js` | Bundle versionado de Editor.js para posts y paginas |
+| `resources/js/starcho-html-editor.js` | Editor HTML del bloque `starchoHtml` |
 
 Reglas:
 
 - No mezclar CSS de `/app` con `/admin`.
 - No crear JS ad-hoc si Livewire/Alpine o `Starcho.*` resuelven el flujo.
 - No instanciar graficas manualmente si `x-starcho-chart` aplica.
+- No cargar librerias criticas con CDN `@latest`; agregarlas a `package.json`, versionarlas en `package-lock.json` y exponerlas desde un bundle Vite.
+
+---
+
+## Higiene del repositorio
+
+El repositorio debe mantenerse listo para trabajar sin artefactos locales:
+
+- No versionar scripts temporales de inspeccion en la raiz. Usar `/tmp_*.php` solo localmente; `.gitignore` los excluye.
+- No versionar backups de base de datos en `database/backups/`; si hace falta conservarlos, moverlos a almacenamiento privado.
+- No commitear caches, builds, logs, `.env`, `node_modules`, `vendor` ni archivos generados por pruebas locales.
+- Si un script de mantenimiento se vuelve necesario, convertirlo en comando Artisan, test o seeder documentado.
+- Antes de cerrar una tarea con cambios de frontend/admin, ejecutar `php artisan view:cache` y `npm run build`.
 
 ---
 

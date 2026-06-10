@@ -90,6 +90,8 @@
             <div class="sb-logo"><i class="fas fa-bolt"></i></div>
             <span class="sb-title">{{ $appBrandName }}</span>
             <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed"
+                    data-app-tooltip
+                    :data-tip="sidebarCollapsed ? '{{ __('app_layout.sidebar_expand') }}' : '{{ __('app_layout.sidebar_collapse') }}'"
                     :title="sidebarCollapsed ? '{{ __('app_layout.sidebar_expand') }}' : '{{ __('app_layout.sidebar_collapse') }}'">
                 <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
             </button>
@@ -113,6 +115,9 @@
                     {{-- Level 1: parent with submenu --}}
                     <button type="button"
                             class="menu-link {{ $itemActive ? 'active' : '' }}"
+                            data-app-tooltip
+                            data-tip="{{ $item->display_name }}"
+                            title="{{ $item->display_name }}"
                             @click="toggleMenu({{ $item->id }})">
                         <i class="{{ $itemIcon }}"></i>
                         <span class="lbl">{{ $item->display_name }}</span>
@@ -128,8 +133,11 @@
                             {{-- Level 2: parent with submenu --}}
                             <button type="button"
                                     class="menu-link {{ $childActive ? 'active' : '' }}"
+                                    data-app-tooltip
+                                    data-tip="{{ $child->display_name }}"
+                                    title="{{ $child->display_name }}"
                                     @click="toggleMenu({{ $child->id }})">
-                                <span class="lbl">{{ $child->name }}</span>
+                                <span class="lbl">{{ $child->display_name }}</span>
                                 <i class="fas fa-chevron-right chevron"
                                    :class="{'open': openMenus.includes({{ $child->id }})}"
                                    style="font-size:10px"></i>
@@ -139,8 +147,11 @@
                                 <a href="{{ $gc->resolved_url ?? '#' }}"
                                    @if($gc->target !== '_blank') wire:navigate @endif
                                    target="{{ $gc->target }}"
+                                   data-app-tooltip
+                                   data-tip="{{ $gc->display_name }}"
+                                   title="{{ $gc->display_name }}"
                                    class="menu-link {{ $gc->isCurrentRoute() ? 'active' : '' }}">
-                                    <span class="lbl">{{ $gc->name }}</span>
+                                    <span class="lbl">{{ $gc->display_name }}</span>
                                 </a>
                                 @endforeach
                             </div>
@@ -150,6 +161,9 @@
                             <a href="{{ $child->resolved_url ?? '#' }}"
                                @if($child->target !== '_blank') wire:navigate @endif
                                target="{{ $child->target }}"
+                               data-app-tooltip
+                               data-tip="{{ $child->display_name }}"
+                               title="{{ $child->display_name }}"
                                class="menu-link {{ $child->isCurrentRoute() ? 'active' : '' }}">
                                 <span class="lbl">{{ $child->display_name }}</span>
                             </a>
@@ -164,9 +178,12 @@
                     <a href="{{ $item->resolved_url ?? '#' }}"
                        @if($item->target !== '_blank') wire:navigate @endif
                        target="{{ $item->target }}"
+                       data-app-tooltip
+                       data-tip="{{ $item->display_name }}"
+                       title="{{ $item->display_name }}"
                        class="menu-link {{ $item->isCurrentRoute() ? 'active' : '' }}">
                         <i class="{{ $itemIcon }}"></i>
-                        <span class="lbl">{{ $item->name }}</span>
+                        <span class="lbl">{{ $item->display_name }}</span>
                     </a>
                     @endif
 
@@ -180,6 +197,9 @@
                 <div class="sb-label">{{ __('app_layout.section_system') }}</div>
                 <div class="menu-item">
                     <a href="{{ route('admin.index') }}"
+                       data-app-tooltip
+                       data-tip="{{ __('app_layout.admin_panel') }}"
+                       title="{{ __('app_layout.admin_panel') }}"
                        class="menu-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                         <i class="fas fa-shield-alt"></i>
                         <span class="lbl">{{ __('app_layout.admin_panel') }}</span>

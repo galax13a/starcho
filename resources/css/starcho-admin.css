@@ -813,10 +813,18 @@ body {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+.sa-menu-link[data-sa-tooltip]::after,
+.sa-submenu-link[data-sa-tooltip]::after {
+    display: none;
+}
 .sa-sidebar.sa-collapsed [data-sa-tooltip]::after {
     left: calc(100% + 10px);
     bottom: 50%;
     transform: translateY(50%) translateX(-4px);
+}
+.sa-sidebar.sa-collapsed .sa-menu-link[data-sa-tooltip]::after,
+.sa-sidebar.sa-collapsed .sa-submenu-link[data-sa-tooltip]::after {
+    display: block;
 }
 .sa-sidebar.sa-collapsed [data-sa-tooltip]:hover::after {
     transform: translateY(50%) translateX(0);

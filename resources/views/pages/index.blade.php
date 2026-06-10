@@ -1,15 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Starcho CRM – Starter kit para Laravel 13 con Livewire 4, PowerGrid y CRUD automático. Desarrollo rápido de aplicaciones CRM y SaaS.">
-  <meta name="keywords" content="Laravel 13, CRM Starter Kit, live4crud-tailwind, PowerGrid, Livewire, Rapid Development">
-  <meta name="author" content="Starcho Labs">
-  <meta property="og:title" content="Starcho CRM – Laravel 13 Rapid Starter Kit">
-  <meta property="og:description" content="Construye CRUDs completos en segundos con live4crud-tailwind.">
-  <meta property="og:type" content="website">
-  <title>Starcho CRM | Laravel 13 + live4crud-tailwind</title>
+  @include('partials.head')
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

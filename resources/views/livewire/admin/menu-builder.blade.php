@@ -15,27 +15,57 @@
     </div>
 
     {{-- Top actions --}}
-    <div class="mb-4 flex items-center justify-between">
-        <p class="text-sm text-zinc-500 dark:text-zinc-400">
-            {{ __('admin_ui.menu.items_in_panel', ['count' => count($items), 'panel' => __('admin_ui.menu.panels.'.$activePanel)]) }}
-        </p>
-        <div class="flex flex-wrap items-center gap-2">
-            <button
-                type="button"
-                wire:click="exportExcel"
-                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition"
-            >
-                <i class="fas fa-file-excel text-xs"></i>
-                {{ __('admin_ui.menu.actions.export_excel') }}
-            </button>
+    <div class="mb-5 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-sm font-semibold text-zinc-900 dark:text-white">
+                    {{ __('admin_ui.menu.items_in_panel', ['count' => count($items), 'panel' => __('admin_ui.menu.panels.'.$activePanel)]) }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    {{ __('admin_ui.menu.json_hint') }}
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="exportAllMenus"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+                >
+                    <i class="fas fa-file-code text-xs"></i>
+                    {{ __('admin_ui.menu.actions.export_json') }}
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="openImportModal"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300"
+                >
+                    <i class="fas fa-file-import text-xs"></i>
+                    {{ __('admin_ui.menu.actions.import_json') }}
+                </button>
+
+                <button
+                    type="button"
+                    @click="window.Starcho.confirm({
+                        title: @js(__('admin_ui.menu.actions.clear_all_menus')),
+                        message: @js(__('admin_ui.menu.clear_all_confirm')),
+                        okText: @js(__('js.delete.ok')),
+                        cancelText: @js(__('js.confirm.cancel')),
+                        onConfirm: () => $wire.clearAllMenus(),
+                    })"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+                >
+                    <i class="fas fa-broom text-xs"></i>
+                    {{ __('admin_ui.menu.actions.clear_all_menus') }}
+                </button>
 
             <button
                 type="button"
-                wire:click="openImportExcelModal"
-                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                wire:click="exportPanel"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 px-3 py-2 text-sm font-semibold text-zinc-600 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
-                <i class="fas fa-file-import text-xs"></i>
-                {{ __('admin_ui.menu.actions.import_excel') }}
+                <i class="fas fa-download text-xs"></i>
+                {{ __('admin_ui.menu.actions.export_panel_json') }}
             </button>
 
             <button
@@ -47,19 +77,20 @@
                     cancelText: @js(__('js.confirm.cancel')),
                     onConfirm: () => $wire.clearPanelItems(),
                 })"
-                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 px-3 py-2 text-sm font-semibold text-zinc-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-rose-950/20 dark:hover:text-rose-300"
             >
                 <i class="fas fa-trash-alt text-xs"></i>
-                {{ __('admin_ui.menu.actions.clear_all') }}
+                {{ __('admin_ui.menu.actions.clear_panel') }}
             </button>
 
             <button wire:click="openCreate()"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition">
+                    class="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-500/20 transition hover:bg-violet-700">
                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
                 {{ __('admin_ui.menu.new_item') }}
             </button>
+            </div>
         </div>
     </div>
 
@@ -151,11 +182,18 @@
             <form wire:submit="save" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
 
-                    <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wide">{{ __('admin_ui.menu.modal.name') }} *</label>
-                        <input wire:model="name" type="text" placeholder="{{ __('admin_ui.menu.modal.name_placeholder') }}"
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wide">{{ __('admin_ui.menu.modal.name_es') }} *</label>
+                        <input wire:model="name_es" type="text" placeholder="{{ __('admin_ui.menu.modal.name_es_placeholder') }}"
                                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('name_es') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wide">{{ __('admin_ui.menu.modal.name_en') }} *</label>
+                        <input wire:model="name_en" type="text" placeholder="{{ __('admin_ui.menu.modal.name_en_placeholder') }}"
+                               class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        @error('name_en') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
@@ -333,14 +371,6 @@
         title="{{ __('admin_ui.menu.actions.import') }}"
         file-model="importFile"
         accept=".json,.txt,application/json,text/plain"
-    />
-
-    <x-starcho-popup-admin-import
-        modal-name="modal-admin-menu-import-excel"
-        submit-method="importExcel"
-        loading-target="importExcel"
-        title="{{ __('admin_ui.menu.actions.import_excel') }}"
-        file-model="importExcelFile"
     />
 
 </div>

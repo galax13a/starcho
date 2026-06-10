@@ -374,6 +374,41 @@ button.settings-primary-btn:hover {
 .menu-link .chevron { font-size: 11px; color: var(--text4); transition: transform .3s ease; margin-left: auto; }
 .menu-link .chevron.open { transform: rotate(90deg); color: var(--primary); }
 
+[data-app-tooltip] {
+    position: relative;
+}
+
+[data-app-tooltip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    min-width: max-content;
+    max-width: 220px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: #15151d;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 14px 34px rgba(15, 15, 20, .25);
+    transition: opacity .18s, transform .18s;
+    z-index: 200;
+}
+
+.sidebar.collapsed [data-app-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+.sidebar:not(.collapsed) [data-app-tooltip]::after {
+    display: none;
+}
+
 /* Submenú (nivel 2 y 3) */
 .submenu {
     overflow  : hidden;

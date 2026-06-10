@@ -35,6 +35,8 @@ class MenuBuilder extends Component
     public bool    $showModal   = false;
     public ?int    $editingId   = null;
     public string  $name        = '';
+    public string  $name_en     = '';
+    public string  $name_es     = '';
     public string  $panel       = 'app';
     public ?string $section     = '';
     public ?string $icon        = '';
@@ -47,7 +49,8 @@ class MenuBuilder extends Component
     public ?string $module_key  = '';
 
     protected $rules = [
-        'name'       => 'required|string|max:100',
+        'name_en'    => 'required|string|max:100',
+        'name_es'    => 'required|string|max:100',
         'panel'      => 'required|in:app,admin,home',
         'section'    => 'nullable|string|max:100',
         'icon'       => 'nullable|string|max:100',
@@ -197,6 +200,8 @@ class MenuBuilder extends Component
         $item = StarchoMenuItem::findOrFail($id);
         $this->editingId   = $id;
         $this->name        = $item->display_name;
+        $this->name_en     = $item->getTranslation('name', 'en', false) ?: $item->display_name;
+        $this->name_es     = $item->getTranslation('name', 'es', false) ?: $item->display_name;
         $this->panel       = $item->panel ?? 'app';
         $this->section     = $item->section ?? '';
         $this->icon        = $item->icon ?? '';
@@ -232,7 +237,7 @@ class MenuBuilder extends Component
 
         if ($this->editingId) {
             $item = StarchoMenuItem::findOrFail($this->editingId);
-            $item->setTranslation('name', app()->getLocale(), $this->name);
+            $this->fillMenuTranslations($item);
             $item->fill([
                 'panel'      => $this->panel,
                 'section'    => $this->section ?: null,
@@ -248,7 +253,7 @@ class MenuBuilder extends Component
             $item->save();
         } else {
             $item = new StarchoMenuItem();
-            $item->setTranslation('name', app()->getLocale(), $this->name);
+            $this->fillMenuTranslations($item);
             $item->fill([
                 'panel'      => $this->panel,
                 'section'    => $this->section ?: null,
@@ -379,16 +384,42 @@ class MenuBuilder extends Component
 
     public function exportPanel(): StreamedResponse
     {
+        return $this->exportMenuJson(false);
+    }
+
+    public function exportAllMenus(): StreamedResponse
+    {
+        return $this->exportMenuJson(true);
+    }
+
+    private function exportMenuJson(bool $allPanels): StreamedResponse
+    {
         $items = StarchoMenuItem::query()
-            ->where('panel', $this->activePanel)
+            ->when(! $allPanels, fn ($query) => $query->where('panel', $this->activePanel))
+            ->orderBy('panel')
+            ->orderBy('parent_id')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
+        $sections = StarchoMenuSection::query()
+            ->when(! $allPanels, fn ($query) => $query->where('panel', $this->activePanel))
+            ->orderBy('panel')
+            ->orderBy('sort_order')
+            ->orderBy('label')
+            ->get();
+
         $payload = [
-            'version'     => 1,
-            'panel'       => $this->activePanel,
+            'version'     => 2,
+            'scope'       => $allPanels ? 'all' : 'panel',
+            'panel'       => $allPanels ? null : $this->activePanel,
+            'panels'      => $items->pluck('panel')->unique()->values()->all(),
             'exported_at' => now()->toIso8601String(),
+            'sections'    => $sections->map(fn (StarchoMenuSection $section): array => [
+                'panel'      => $section->panel,
+                'label'      => $section->label,
+                'sort_order' => (int) $section->sort_order,
+            ])->values()->all(),
             'items'       => $items->map(fn (StarchoMenuItem $item) => [
                 'legacy_id'        => $item->id,
                 'parent_legacy_id' => $item->parent_id,
@@ -405,7 +436,7 @@ class MenuBuilder extends Component
             ])->values()->all(),
         ];
 
-        $filename = 'menu-' . $this->activePanel . '-' . now()->format('Ymd-His') . '.json';
+        $filename = 'starcho-menu-' . ($allPanels ? 'full' : $this->activePanel) . '-' . now()->format('Ymd-His') . '.json';
 
         $this->notifyCrud('menu', 'exported');
 
@@ -461,7 +492,7 @@ class MenuBuilder extends Component
     public function importPanel(): void
     {
         $this->validate([
-            'importFile' => ['required', 'file', 'max:2048', 'mimes:json,txt'],
+            'importFile' => ['required', 'file', 'max:10240', 'mimes:json,txt'],
         ]);
 
         $raw = file_get_contents($this->importFile->getRealPath());
@@ -479,9 +510,18 @@ class MenuBuilder extends Component
             return;
         }
 
-        DB::transaction(function () use ($items): void {
-            StarchoMenuItem::query()->where('panel', $this->activePanel)->delete();
-            StarchoMenuSection::query()->where('panel', $this->activePanel)->delete();
+        $replaceAll = data_get($decoded, 'scope') === 'all'
+            || data_get($decoded, 'panel') === null
+            || collect($items)->contains(fn ($row) => is_array($row) && filled(data_get($row, 'panel')) && data_get($row, 'panel') !== $this->activePanel);
+
+        DB::transaction(function () use ($decoded, $items, $replaceAll): void {
+            if ($replaceAll) {
+                StarchoMenuItem::query()->delete();
+                StarchoMenuSection::query()->delete();
+            } else {
+                StarchoMenuItem::query()->where('panel', $this->activePanel)->delete();
+                StarchoMenuSection::query()->where('panel', $this->activePanel)->delete();
+            }
 
             $idMap = [];
             $created = [];
@@ -495,17 +535,32 @@ class MenuBuilder extends Component
 
                 $name = data_get($row, 'name');
                 if (is_array($name)) {
+                    $fallbackName = collect($name)->first(fn ($value) => is_string($value) && $value !== '') ?: ('Menu ' . ($index + 1));
+
                     foreach ($name as $locale => $value) {
                         if (is_string($value) && $value !== '') {
                             $item->setTranslation('name', (string) $locale, $value);
                         }
                     }
+
+                    if (! $item->getTranslation('name', 'en', false)) {
+                        $item->setTranslation('name', 'en', (string) $fallbackName);
+                    }
+
+                    if (! $item->getTranslation('name', 'es', false)) {
+                        $item->setTranslation('name', 'es', (string) $fallbackName);
+                    }
                 } else {
-                    $item->setTranslation('name', app()->getLocale(), (string) (data_get($row, 'label') ?: ('Menu ' . ($index + 1))));
+                    $fallbackName = (string) (data_get($row, 'label') ?: ('Menu ' . ($index + 1)));
+                    $item->setTranslation('name', 'en', $fallbackName);
+                    $item->setTranslation('name', 'es', $fallbackName);
                 }
 
+                $rowPanel = (string) (data_get($row, 'panel') ?: $this->activePanel);
+                $rowPanel = in_array($rowPanel, ['app', 'admin', 'home'], true) ? $rowPanel : $this->activePanel;
+
                 $item->fill([
-                    'panel'      => $this->activePanel,
+                    'panel'      => $replaceAll ? $rowPanel : $this->activePanel,
                     'section'    => data_get($row, 'section'),
                     'icon'       => data_get($row, 'icon'),
                     'route'      => data_get($row, 'route'),
@@ -537,18 +592,38 @@ class MenuBuilder extends Component
                 }
             }
 
-            $sections = StarchoMenuItem::query()
-                ->where('panel', $this->activePanel)
-                ->whereNotNull('section')
-                ->where('section', '!=', '')
-                ->distinct()
-                ->orderBy('section')
-                ->pluck('section')
+            $payloadSections = collect(data_get($decoded, 'sections', []))
+                ->filter(fn ($section) => is_array($section))
                 ->values();
 
-            foreach ($sections as $idx => $label) {
+            foreach ($payloadSections as $section) {
+                $sectionPanel = (string) (data_get($section, 'panel') ?: $this->activePanel);
+                $sectionPanel = in_array($sectionPanel, ['app', 'admin', 'home'], true) ? $sectionPanel : $this->activePanel;
+
                 StarchoMenuSection::query()->updateOrCreate(
-                    ['panel' => $this->activePanel, 'label' => (string) $label],
+                    [
+                        'panel' => $replaceAll ? $sectionPanel : $this->activePanel,
+                        'label' => (string) data_get($section, 'label'),
+                    ],
+                    [
+                        'sort_order' => (int) data_get($section, 'sort_order', 10),
+                    ]
+                );
+            }
+
+            $sections = StarchoMenuItem::query()
+                ->when(! $replaceAll, fn ($query) => $query->where('panel', $this->activePanel))
+                ->whereNotNull('section')
+                ->where('section', '!=', '')
+                ->select('panel', 'section')
+                ->distinct()
+                ->orderBy('panel')
+                ->orderBy('section')
+                ->get();
+
+            foreach ($sections as $idx => $row) {
+                StarchoMenuSection::query()->updateOrCreate(
+                    ['panel' => (string) $row->panel, 'label' => (string) $row->section],
                     ['sort_order' => ($idx + 1) * 10]
                 );
             }
@@ -558,6 +633,7 @@ class MenuBuilder extends Component
         $this->loadItems();
         $this->dispatch('menu-dnd-refresh');
         $this->reset('importFile');
+        $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-admin-menu-import'}}))");
         $this->notifyCrud('menu', 'imported');
     }
 
@@ -574,10 +650,36 @@ class MenuBuilder extends Component
         $this->notifyCrud('menu', 'cleared');
     }
 
+    public function clearAllMenus(): void
+    {
+        DB::transaction(function (): void {
+            StarchoMenuItem::query()->delete();
+            StarchoMenuSection::query()->delete();
+        });
+
+        StarchoMenuItem::clearMenuCache();
+        $this->loadItems();
+        $this->dispatch('menu-dnd-refresh');
+        $this->notifyCrud('menu', 'cleared');
+    }
+
+    private function fillMenuTranslations(StarchoMenuItem $item): void
+    {
+        $item->setTranslation('name', 'en', $this->name_en);
+        $item->setTranslation('name', 'es', $this->name_es);
+
+        $locale = app()->getLocale();
+        if (! in_array($locale, ['en', 'es'], true)) {
+            $item->setTranslation('name', $locale, $this->name ?: $this->name_en ?: $this->name_es);
+        }
+    }
+
     private function resetForm(): void
     {
         $this->editingId   = null;
         $this->name        = '';
+        $this->name_en     = '';
+        $this->name_es     = '';
         $this->panel       = $this->activePanel;
         $this->section     = '';
         $this->icon        = '';
