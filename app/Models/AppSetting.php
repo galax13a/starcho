@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -10,7 +11,9 @@ class AppSetting extends Model
 
     public static function get(string $key, mixed $default = null): mixed
     {
-        return Cache::remember("setting.{$key}", 3600, function () use ($key, $default) {
+        // Solo valores planos: si una entrada vieja guardo un objeto, SafeCache la
+        // descarta y recalcula en lugar de devolver un __PHP_Incomplete_Class.
+        return SafeCache::rememberPlain("setting.{$key}", 3600, function () use ($key, $default) {
             return static::where('key', $key)->value('value') ?? $default;
         });
     }

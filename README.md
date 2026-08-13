@@ -15,7 +15,7 @@ La regla principal del proyecto es simple: cada nueva funcionalidad debe apoyars
 
 | Capa | Tecnologia |
 | --- | --- |
-| Backend | Laravel 13, PHP 8.3+ |
+| Backend | Laravel 13, PHP 8.3–8.4 |
 | UI reactiva | Livewire 4 + Alpine.js |
 | Admin UI | Flux UI v2 |
 | Tablas | PowerGrid v6 |
@@ -24,6 +24,7 @@ La regla principal del proyecto es simple: cada nueva funcionalidad debe apoyars
 | Roles/permisos | Spatie Laravel Permission |
 | Traducciones de modelos | Spatie Laravel Translatable |
 | Storage | Local, Amazon S3, DigitalOcean Spaces, Cloudflare R2 |
+| Render publico | Cache HTML por post/pagina/locale con invalidacion automatica |
 | AI texto | Laravel AI con OpenAI, DeepSeek, Anthropic y OpenRouter |
 | AI media | OpenAI Images, fal.ai y Replicate para imagen/video |
 | AI billing | Planes, cuotas, costos y markup con `AiPlan`, `AiAssetGeneration` y `config/ai_pricing.php` |
@@ -43,6 +44,27 @@ php artisan starcho:install
 npm run dev
 ```
 
+`php artisan starcho:install` prepara `.env`, instala dependencias, ejecuta todas las migraciones pendientes, siembra la configuración base de forma aditiva y compila assets. Solicita el correo, nombre y contraseña del primer administrador; no existe una contraseña predeterminada.
+
+El instalador nunca ejecuta `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe` ni elimina tablas. Si detecta una base con datos, crea primero un backup en `database/backups/`; para MySQL requiere `mysqldump` y para PostgreSQL `pg_dump`. Si el backup no puede crearse, la instalación se detiene antes de migrar. `--no-backup` existe únicamente para operadores que ya verificaron un backup externo.
+
+La configuración existente también se conserva: el seeder instala solo filas faltantes. Para reemplazar explícitamente defaults usa `--refresh-defaults`; para cambiar la contraseña de un administrador existente usa además `--reset-admin-password`.
+
+También existe un instalador gráfico temporal:
+
+1. Define `STARCHO_INSTALL_ENABLED=true` y limpia la configuración (`php artisan config:clear`).
+2. Abre `/install`, completa las credenciales y ejecuta las comprobaciones.
+3. Después de instalar, vuelve a poner `STARCHO_INSTALL_ENABLED=false` y ejecuta `php artisan config:cache`.
+
+No dejes habilitada la ruta `/install` en producción. El seeder de instalacion deja listos:
+
+- App settings, permisos, roles y usuario admin inicial.
+- Site settings, idiomas, SEO por pagina Folio y redes sociales.
+- Content settings con opciones de sitemap, broken links y cache de articulos.
+- Storage settings, drivers, variantes de imagen y planes de storage.
+- AI settings, providers/modelos de texto/imagen/video y planes AI.
+- Modulos instalables y menus dinamicos de `/admin` y `/app`.
+
 Build de produccion:
 
 ```bash
@@ -50,13 +72,7 @@ npm run build
 php artisan optimize
 ```
 
-Credenciales iniciales:
-
-| Campo | Valor |
-| --- | --- |
-| Email | `admin@starcho.com` |
-| Password | `password` |
-| Rol | `admin` |
+Credenciales iniciales: las define el instalador. Por seguridad, Starcho no crea usuarios con contraseñas conocidas o compartidas.
 
 ---
 
@@ -466,6 +482,36 @@ Novedades principales:
 
 ---
 
+## Cache de render publico
+
+El cache de render vive en `/admin/content/settings`, tab **Cache articulo**.
+
+Archivos clave:
+
+- `app/Services/ContentRenderCache.php`
+- `app/Http/Controllers/BlogController.php`
+- `app/Http/Controllers/PageController.php`
+- `app/Livewire/Admin/ContentSettingsForm.php`
+- `app/Models/ContentSetting.php`
+- `database/migrations/2026_06_10_170000_add_render_cache_settings_to_content_settings_table.php`
+- `database/migrations/2026_06_10_180000_backfill_content_render_cache_settings.php`
+
+Opciones:
+
+- Activar/desactivar cache global.
+- Cachear posts, paginas o ambos.
+- Mantener cache solo para visitantes invitados.
+- Separar cache por locale.
+- Configurar TTL en minutos.
+- Estrategia `safe`, `balanced` o `aggressive`.
+- Limpiar cache completo o solo posts/paginas desde el panel.
+
+El cache guarda respuestas HTML publicas ya renderizadas para blog, paginas CMS y home CMS. `Post` invalida el cache cuando cambia contenido, SEO, slug, estado, fecha de publicacion, imagen destacada o galeria. Cambios operativos como `views_count` no rompen cache.
+
+Regla: cualquier render publico nuevo debe pasar por `ContentRenderCache` en vez de crear caches sueltos. Si el contenido depende del idioma, usuario, preview o permisos, debe definir una key explicita o saltar cache.
+
+---
+
 ## Editor.js en posts y paginas
 
 El editor principal de contenido vive en `/admin/posts/*` y `/admin/pages/*`. Ambos flujos comparten el formulario:
@@ -687,6 +733,33 @@ El repositorio debe mantenerse listo para trabajar sin artefactos locales:
 
 ---
 
+## Comandos Starcho
+
+| Comando | Uso |
+| --- | --- |
+| `php artisan starcho:install` | Instalacion completa interactiva. |
+| `php artisan starcho:install --force` | Instalacion sin confirmacion inicial. |
+| `php artisan starcho:install --no-backup` | Omite el backup previo; usar solo con backup externo verificado. |
+| `php artisan starcho:install --refresh-defaults` | Reaplica defaults de configuración existentes de forma explícita. |
+| `php artisan starcho:install --reset-admin-password` | Permite cambiar la contraseña del admin existente. |
+| `php artisan starcho:db-backup` | Crea un backup manual antes de una actualización. |
+| `php artisan starcho:build-install-seeder` | Regenera `StarchoInstallAppSeeder` desde la configuracion actual de base de datos. |
+| `php artisan view:cache` | Verifica y cachea vistas Blade. |
+| `php artisan view:clear` | Limpia cache de vistas. |
+| `php artisan optimize` | Optimiza config/rutas/eventos para produccion. |
+
+`starcho:build-install-seeder` exporta solo configuracion del kit: settings, idiomas, SEO, redes, storage, AI, modulos y menus. No exporta posts, paginas, comentarios, media ni datos de usuarios finales.
+
+Cuando agregues una tabla de configuracion que deba venir en una instalacion nueva:
+
+1. Agrega la migracion.
+2. Agrega defaults seguros o seeder propio si aplica.
+3. Incluye la tabla en `BuildInstallSeeder::TABLES`.
+4. Actualiza `StarchoInstallAppSeeder`.
+5. Documenta la opcion en este README.
+
+---
+
 ## Skill Starcho: construir apps con Laravel + Starcho
 
 Usa este skill como contrato operativo cuando se cree una nueva app, modulo o pantalla dentro de Starcho.
@@ -772,7 +845,8 @@ npm run dev
 npm run build
 
 php artisan starcho:install
-php artisan migrate:fresh --seed --seeder=StarchoInstallAppSeeder
+php artisan migrate --force
+php artisan db:seed --class=StarchoInstallAppSeeder --force
 php artisan route:list --path=admin
 php artisan route:list --path=app
 php artisan optimize:clear

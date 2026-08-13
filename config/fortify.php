@@ -75,6 +75,12 @@ return [
 
     'home' => '/app/dashboard',
 
+    'redirects' => [
+        // Mantiene al usuario dentro del área pública de la aplicación después
+        // de cerrar sesión, en lugar de enviarlo a la raíz del sitio.
+        'logout' => '/app',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Fortify Routes Prefix / Subdomain

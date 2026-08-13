@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Exports\AdminModulesExport;
 use App\Imports\AdminModulesImport;
+use App\Livewire\Concerns\AuthorizesAdminPanel;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\StarchoModule;
 use Illuminate\Support\Facades\Cache;
@@ -13,11 +14,14 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ModulesManager extends Component
 {
+    use AuthorizesAdminPanel;
     use DispatchesStarchoNotify;
     use WithFileUploads;
 
     public $modules = [];
+
     public $importExcelFile;
+
     public string $search = '';
 
     public function mount(): void
@@ -71,7 +75,7 @@ class ModulesManager extends Component
             $value = implode(' ', array_map(fn ($item) => is_scalar($item) ? (string) $item : '', $value));
         }
 
-        if (!is_scalar($value)) {
+        if (! is_scalar($value)) {
             return '';
         }
 
@@ -116,7 +120,7 @@ class ModulesManager extends Component
 
     public function exportExcel()
     {
-        return Excel::download(new AdminModulesExport(), 'modules-' . now()->format('Ymd-His') . '.xlsx');
+        return Excel::download(new AdminModulesExport, 'modules-'.now()->format('Ymd-His').'.xlsx');
     }
 
     public function openImportExcelModal(): void
@@ -133,7 +137,7 @@ class ModulesManager extends Component
         ]);
 
         try {
-            $import = new AdminModulesImport();
+            $import = new AdminModulesImport;
             Excel::import($import, $this->importExcelFile->getRealPath());
 
             $this->reset('importExcelFile');

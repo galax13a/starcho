@@ -270,14 +270,20 @@ class SiteController extends Controller
             }
         }
 
+        // Ojo: estos dos son updates masivos por query builder, asi que NO disparan
+        // los eventos Eloquent y el hook `saved` del modelo (que invalida la cache
+        // de codigos activos) nunca corre. Hay que limpiarla a mano o los idiomas
+        // recien activados no aparecen hasta que expire la entrada.
         if ($activeCodes === []) {
             SiteLanguage::whereIn('code', ['es', 'en'])->update(['active' => true]);
+            SiteLanguage::clearCache();
 
             return;
         }
 
         if (! in_array($defaultLocale, $activeCodes, true)) {
             SiteLanguage::where('code', $defaultLocale)->update(['active' => true]);
+            SiteLanguage::clearCache();
         }
     }
 

@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Install\DatabaseBackupService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -11,9 +13,27 @@ class StarchoInstallCommand extends Command
 {
     protected int $currentStep = 0;
 
-    protected int $totalSteps = 9;
+    protected int $totalSteps = 10;
 
-    protected $signature = 'starcho:install {--force : Ejecuta instalacion sin confirmaciones}';
+    protected ?string $backupPath = null;
+
+    protected $signature = 'starcho:install
+        {--force : Ejecuta instalacion sin confirmaciones}
+        {--db= : sqlite, mysql o pgsql}
+        {--db-host= : Host de la base de datos}
+        {--db-port= : Puerto de la base de datos}
+        {--db-database= : Nombre o ruta de la base de datos}
+        {--db-username= : Usuario de la base de datos}
+        {--db-password= : Contraseña de la base de datos}
+        {--admin-email= : Correo del administrador inicial}
+        {--admin-name= : Nombre del administrador inicial}
+        {--admin-password= : Contraseña del administrador inicial}
+        {--no-backup : Omite el backup de una base existente; úsalo solo con backup externo verificado}
+        {--backup-path= : Directorio donde se guardará el backup previo a la migración}
+        {--refresh-defaults : Actualiza filas existentes con los valores del snapshot de instalación}
+        {--reset-admin-password : Cambia la contraseña del admin existente usando --admin-password}
+        {--skip-dependencies : Omite composer install y npm install}
+        {--skip-build : Omite npm run build}';
 
     protected $description = 'Starcho Install: configura .env, instala dependencias, migra, ejecuta seeder y build';
 
@@ -39,13 +59,15 @@ class StarchoInstallCommand extends Command
 
             $this->startStep('Limpiando caches previas');
             $this->call('config:clear');
-            $this->call('cache:clear');
-            $this->call('optimize:clear');
-            $this->finishStep('Caches limpiadas');
+            $this->finishStep('Cache de configuración limpiada');
 
             $this->startStep('Verificando APP_KEY');
             $this->ensureAppKeyExists();
             $this->finishStep('APP_KEY lista');
+
+            $this->startStep('Configurando administrador inicial');
+            $this->configureAdminCredentials();
+            $this->finishStep('Administrador inicial listo');
 
             $this->startStep('Instalando dependencias');
             $this->installDependencies();
@@ -68,6 +90,9 @@ class StarchoInstallCommand extends Command
 
             $this->newLine();
             $this->components->info('Starcho instalado correctamente. Ya puedes levantar el proyecto.');
+            if ($this->backupPath !== null) {
+                $this->line('Backup preventivo: '.$this->backupPath);
+            }
             $this->line('Siguiente paso recomendado: php artisan serve');
 
             return self::SUCCESS;
@@ -75,6 +100,8 @@ class StarchoInstallCommand extends Command
             $this->components->error('Error durante la instalacion: '.$exception->getMessage());
 
             return self::FAILURE;
+        } finally {
+            $this->clearInstallConfiguration();
         }
     }
 
@@ -101,35 +128,110 @@ class StarchoInstallCommand extends Command
         $this->newLine();
         $this->components->twoColumnDetail('Paso', 'Configuracion de base de datos');
 
-        $currentConnection = $this->getEnvValue('DB_CONNECTION', 'mysql');
-        $defaultConnection = $currentConnection === 'pgsql' ? 'pgsql' : 'mysql';
+        $currentConnection = $this->getEnvValue('DB_CONNECTION', 'sqlite');
+        $defaultConnection = in_array($currentConnection, ['sqlite', 'mysql', 'pgsql'], true)
+            ? $currentConnection
+            : 'sqlite';
 
-        $dbConnection = $this->choice(
-            'Tipo de base de datos (MySQL o PostgreSQL)',
-            ['mysql', 'pgsql'],
-            $defaultConnection
-        );
+        if ($this->option('force')) {
+            $dbConnection = (string) ($this->option('db') ?: $defaultConnection);
+        } else {
+            $dbConnection = $this->choice(
+                'Tipo de base de datos',
+                ['sqlite', 'mysql', 'pgsql'],
+                $defaultConnection
+            );
+        }
 
-        $dbHost = $this->ask('DB host', $this->getEnvValue('DB_HOST', '127.0.0.1'));
-        $dbPort = $this->ask('DB port', $this->getEnvValue('DB_PORT', $dbConnection === 'pgsql' ? '5432' : '3306'));
-        $dbDatabase = $this->ask('DB database', $this->getEnvValue('DB_DATABASE', 'starcho'));
-        $dbUsername = $this->ask('DB user', $this->getEnvValue('DB_USERNAME', 'root'));
-        $dbPassword = $this->secret('DB pass');
+        if (! in_array($dbConnection, ['sqlite', 'mysql', 'pgsql'], true)) {
+            throw new \InvalidArgumentException('DB_CONNECTION debe ser sqlite, mysql o pgsql.');
+        }
 
-        if ($dbPassword === null || trim($dbPassword) === '') {
+        $dbDatabase = $this->valueOrAsk('db-database', 'DB database', $this->getEnvValue('DB_DATABASE', $dbConnection === 'sqlite' ? database_path('database.sqlite') : 'starcho'));
+
+        if ($dbConnection === 'sqlite') {
+            $this->prepareSqliteDatabase($dbDatabase);
+            $this->updateEnvValues([
+                'DB_CONNECTION' => 'sqlite',
+                'DB_URL' => '',
+                'DB_DATABASE' => $dbDatabase,
+            ]);
+            $this->applyRuntimeDatabaseConfiguration('sqlite', [
+                'url' => null,
+                'database' => $dbDatabase,
+            ]);
+
+            $this->components->info('SQLite configurado sin solicitar credenciales innecesarias.');
+
+            return;
+        }
+
+        $dbHost = $this->valueOrAsk('db-host', 'DB host', $this->getEnvValue('DB_HOST', '127.0.0.1'));
+        $dbPort = $this->valueOrAsk('db-port', 'DB port', $this->getEnvValue('DB_PORT', $dbConnection === 'pgsql' ? '5432' : '3306'));
+        $dbUsername = $this->valueOrAsk('db-username', 'DB user', $this->getEnvValue('DB_USERNAME', 'root'));
+        $dbPassword = $this->option('db-password');
+
+        if ($dbPassword === null && ! $this->option('force')) {
+            $dbPassword = $this->secret('DB pass');
+        }
+
+        if ($dbPassword === null || trim((string) $dbPassword) === '') {
             $dbPassword = $this->getEnvValue('DB_PASSWORD', '');
         }
 
         $this->updateEnvValues([
             'DB_CONNECTION' => $dbConnection,
+            'DB_URL' => '',
             'DB_HOST' => $dbHost,
             'DB_PORT' => $dbPort,
             'DB_DATABASE' => $dbDatabase,
             'DB_USERNAME' => $dbUsername,
             'DB_PASSWORD' => $dbPassword,
         ]);
+        $this->applyRuntimeDatabaseConfiguration($dbConnection, [
+            'url' => null,
+            'host' => $dbHost,
+            'port' => $dbPort,
+            'database' => $dbDatabase,
+            'username' => $dbUsername,
+            'password' => $dbPassword,
+        ]);
 
         $this->components->info('Variables de base de datos actualizadas en .env');
+    }
+
+    protected function configureAdminCredentials(): void
+    {
+        $name = (string) ($this->option('admin-name') ?: 'Administrador');
+        $email = (string) ($this->option('admin-email') ?: $this->getEnvValue('STARCHO_ADMIN_EMAIL', ''));
+        $password = $this->option('admin-password');
+
+        if (! $this->option('force')) {
+            $email = $this->ask('Correo del administrador inicial', $email ?: 'admin@example.com');
+            $password = $this->secret('Contraseña del administrador inicial');
+        }
+
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('Debes indicar un correo válido para el administrador inicial.');
+        }
+
+        if ($password === null || trim((string) $password) === '') {
+            $password = $this->getEnvValue('STARCHO_ADMIN_PASSWORD', '');
+        }
+
+        if ($password === '') {
+            throw new \InvalidArgumentException(
+                'Falta la contraseña del administrador. Usa --admin-password o STARCHO_ADMIN_PASSWORD.'
+            );
+        }
+
+        config([
+            'starcho.install.admin_name' => $name,
+            'starcho.install.admin_email' => $email,
+            'starcho.install.admin_password' => (string) $password,
+            'starcho.install.refresh_defaults' => (bool) $this->option('refresh-defaults'),
+            'starcho.install.reset_admin_password' => (bool) $this->option('reset-admin-password'),
+        ]);
     }
 
     protected function ensureAppKeyExists(): void
@@ -149,6 +251,12 @@ class StarchoInstallCommand extends Command
 
     protected function installDependencies(): void
     {
+        if ($this->option('skip-dependencies')) {
+            $this->components->warn('Dependencias omitidas por opción.');
+
+            return;
+        }
+
         $this->components->twoColumnDetail('Paso', 'Instalando dependencias PHP (composer install)');
         $this->runExternalCommand('composer install --no-interaction --prefer-dist');
 
@@ -158,6 +266,35 @@ class StarchoInstallCommand extends Command
 
     protected function runDatabaseSetup(): void
     {
+        $this->components->twoColumnDetail('Paso', 'Validando conexión a la base de datos');
+        DB::connection()->getPdo();
+
+        $backupService = app(DatabaseBackupService::class);
+        $connection = (string) config('database.default');
+
+        if ($backupService->hasExistingData($connection)) {
+            if ($this->option('no-backup')) {
+                $this->components->warn(
+                    'Se omitió el backup por --no-backup. La migración continúa bajo responsabilidad del operador.'
+                );
+            } else {
+                if (! $this->option('force') && ! $this->confirm(
+                    'La base de datos ya contiene datos. ¿Crear backup antes de migrar?',
+                    true
+                )) {
+                    throw new \RuntimeException('Instalación cancelada antes de modificar la base de datos.');
+                }
+
+                $backupDirectory = $this->option('backup-path')
+                    ? (string) $this->option('backup-path')
+                    : database_path('backups');
+                $this->backupPath = $backupService->create($connection, $backupDirectory);
+                $this->components->info('Backup preventivo creado: '.$this->backupPath);
+            }
+        } else {
+            $this->line('Base de datos nueva o vacía: no se requiere backup previo.');
+        }
+
         $this->components->twoColumnDetail('Paso', 'Ejecutando migraciones');
 
         $migrateExitCode = $this->call('migrate', ['--force' => true]);
@@ -176,6 +313,66 @@ class StarchoInstallCommand extends Command
         if ($seedExitCode !== self::SUCCESS) {
             throw new \RuntimeException('Fallo la ejecucion del seeder StarchoInstallAppSeeder.');
         }
+
+        // The database cache table only exists after migrations. Clearing it
+        // before this point breaks fresh installs when CACHE_STORE=database.
+        $this->clearApplicationCaches();
+        $this->clearInstallConfiguration();
+    }
+
+    protected function clearApplicationCaches(): void
+    {
+        $this->components->twoColumnDetail('Paso', 'Limpiando caches de la aplicacion');
+
+        foreach (['cache:clear', 'optimize:clear'] as $command) {
+            $exitCode = $this->call($command);
+
+            if ($exitCode !== self::SUCCESS) {
+                throw new \RuntimeException('Fallo la limpieza de cache con el comando '.$command.'.');
+            }
+        }
+    }
+
+    /**
+     * The command changes .env during the current PHP process. Laravel does not
+     * rebuild the already-loaded config automatically, so explicitly replace
+     * the connection and reconnect before running migrations.
+     *
+     * @param  array<string, mixed>  $values
+     */
+    protected function applyRuntimeDatabaseConfiguration(string $connection, array $values): void
+    {
+        $current = (array) config('database.connections.'.$connection, []);
+
+        config([
+            'database.default' => $connection,
+            'database.connections.'.$connection => array_replace($current, $values),
+        ]);
+
+        DB::purge($connection);
+        DB::reconnect($connection);
+    }
+
+    protected function prepareSqliteDatabase(string $database): void
+    {
+        if ($database === ':memory:' || File::exists($database)) {
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($database));
+        File::put($database, '');
+        $this->components->info('Archivo SQLite creado: '.$database);
+    }
+
+    protected function clearInstallConfiguration(): void
+    {
+        config([
+            'starcho.install.admin_name' => null,
+            'starcho.install.admin_email' => null,
+            'starcho.install.admin_password' => null,
+            'starcho.install.refresh_defaults' => false,
+            'starcho.install.reset_admin_password' => false,
+        ]);
     }
 
     protected function ensureStorageLink(): void
@@ -192,7 +389,24 @@ class StarchoInstallCommand extends Command
 
     protected function runFrontendBuild(): void
     {
+        if ($this->option('skip-build')) {
+            $this->components->warn('Build frontend omitido por opción.');
+
+            return;
+        }
+
         $this->runExternalCommand('npm run build');
+    }
+
+    protected function valueOrAsk(string $option, string $question, string $default): string
+    {
+        $value = $this->option($option);
+
+        if ($value !== null && $value !== '') {
+            return (string) $value;
+        }
+
+        return $this->option('force') ? $default : (string) $this->ask($question, $default);
     }
 
     protected function startStep(string $message): void

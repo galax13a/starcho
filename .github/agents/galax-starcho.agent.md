@@ -18,7 +18,7 @@ Si hay conflicto entre implementaciones antiguas y documentación nueva, prioriz
 ## Base de conocimiento Starcho
 
 Stack vigente:
-- Laravel 13, PHP 8.3+
+- Laravel 13, PHP 8.3–8.4 (PhpSpreadsheet aún limita PHP a <8.5)
 - Livewire 4 + Alpine.js 3
 - Flux UI v2
 - PowerGrid v6

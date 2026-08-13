@@ -1,0 +1,125 @@
+# Larastan / PHPStan - Starcho (Laravel 13, PHP 8.4)
+#
+# La extension de Larastan se registra automaticamente via phpstan/extension-installer.
+# Si algun dia quitas ese plugin, descomenta el bloque `includes` de abajo.
+#
+# includes:
+#     - vendor/larastan/larastan/extension.neon
+#
+# Comandos:
+#   composer stan              analiza el proyecto
+#   composer stan:baseline     congela los errores actuales en phpstan-baseline.neon
+#   composer stan:clear        limpia la cache de resultados
+
+includes:
+    # Deuda tecnica congelada. Se vacia por etapas al subir de nivel; ver docs/static-analysis.md
+    - phpstan-baseline.neon
+
+parameters:
+    # ------------------------------------------------------------------
+    # Nivel de analisis
+    # ------------------------------------------------------------------
+    # 0  errores de sintaxis, clases/funciones/metodos inexistentes
+    # 1  variables sin definir, propiedades y metodos magicos
+    # 2  tipos de retorno y propiedades declaradas en todas las expresiones
+    # 3  tipos de retorno y de propiedades ya validados a fondo
+    # 4  codigo muerto: condiciones siempre true/false, ramas inalcanzables
+    # 5  tipos de los ARGUMENTOS pasados a metodos y funciones  <-- nivel actual
+    # 6  exige tipado explicito: reporta cada tipo faltante (mixed implicito)
+    # 7  union types parcialmente incorrectos
+    # 8  null-safety: llamar metodos sobre valores nullable
+    # 9  uso estricto de `mixed`
+    # 10 tipado total (equivalente al antiguo `level: max`)
+    #
+    # Ventaja de subir: cada nivel elimina una familia entera de bugs de runtime
+    # (TypeError, "Call to a member function on null", ramas muertas).
+    # Desventaja: 6 y 8 son los saltos caros en Laravel. El 6 obliga a anotar
+    # generics de Collection/Builder en todo el codebase, y el 8 saca a la luz
+    # cada `find()`, `first()`, `auth()->user()` y `config()` que puede ser null.
+    # De ahi la estrategia de baseline: subes el nivel sin romper el CI y
+    # vacias la deuda por lotes.
+    level: 5
+
+    # ------------------------------------------------------------------
+    # Que se analiza
+    # ------------------------------------------------------------------
+    paths:
+        - app
+        - routes
+        - config
+        - database
+
+    excludePaths:
+        analyseAndScan:
+            - vendor
+            - storage
+            - bootstrap/cache
+            - node_modules
+            - public
+        analyse:
+            # Los stubs son plantillas de scaffolding, no codigo ejecutable.
+            - stubs
+
+    # ------------------------------------------------------------------
+    # Ajustes especificos de Laravel (Larastan)
+    # ------------------------------------------------------------------
+    # Larastan ya entiende de forma nativa: modelos Eloquent y sus atributos,
+    # relaciones (HasMany, BelongsTo...), Facades, Collections con generics,
+    # helpers globales (collect, request, config, auth...), scopes, factories
+    # y los enums nativos de PHP 8.1+.
+
+    # Verifica que $model->columna exista de verdad (segun $fillable, $casts,
+    # @property y las migraciones). Muy potente, pero es la fuente #1 de falsos
+    # positivos en un proyecto que aun no anota @property en sus modelos.
+    # Actívalo cuando llegues a nivel 7 y hayas anotado los modelos.
+    checkModelProperties: false
+
+    # Prohibe env() fuera de config/. En Laravel env() devuelve null cuando la
+    # config esta cacheada, asi que esto previene bugs reales en produccion.
+    noEnvCallsOutsideOfConfig: true
+
+    # Evita que PHPStan de por ciertos los tipos de un PHPDoc que puede mentir.
+    # Reduce mucho el ruido de "comparison is always false" en codigo Laravel.
+    treatPhpDocTypesAsCertain: false
+
+    # Reporta @param/@return/@var mal formados en lugar de ignorarlos en silencio.
+    reportUnmatchedIgnoredErrors: true
+
+    # ------------------------------------------------------------------
+    # Rendimiento
+    # ------------------------------------------------------------------
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    # Cache de resultados en el proyecto (esta en .gitignore) para poder
+    # cachearla en CI. Sin esto phpstan reanaliza todo en cada job.
+    tmpDir: .phpstan.cache
+
+    # ------------------------------------------------------------------
+    # Falsos positivos conocidos de este stack
+    # ------------------------------------------------------------------
+    # `reportUnmatched: false` en cada entrada es deliberado: estos patrones son
+    # preventivos (varios solo aparecen a partir del nivel 6), y sin esa opcion
+    # el `reportUnmatchedIgnoredErrors: true` de arriba haria fallar el analisis
+    # por un patron que todavia no coincide con nada.
+    ignoreErrors:
+        # Livewire 4 y PowerGrid resuelven propiedades y acciones de forma
+        # dinamica en runtime; no hay extension de PHPStan que las modele.
+        -
+            identifier: missingType.generics
+            path: app/Livewire/*
+            reportUnmatched: false
+
+        # Las migraciones son clases anonimas `new class extends Migration`;
+        # PHPStan no puede tiparlas mas alla de eso.
+        -
+            identifier: missingType.iterableValue
+            path: database/migrations/*
+            reportUnmatched: false
+
+        # Spatie Translatable expone `public $translatable` como array plano y
+        # genera accessors magicos por locale.
+        -
+            message: '#Property .*::\$translatable#'
+            path: app/Models/*
+            reportUnmatched: false

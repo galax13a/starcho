@@ -3,7 +3,10 @@
     "allow": [
       "Bash(Get-Item \"getAnonymousComponentNamespaces\\(\\)\\)\")",
       "Bash(Select-Object Name, Length, LastWriteTime, PSIsContainer)",
-      "Bash(Get-Item \"value\\('s3_secret'\\)\\)\")"
+      "Bash(Get-Item \"value\\('s3_secret'\\)\\)\")",
+      "Bash(git -c http.sslVerify=false push origin main)",
+      "Bash(git fetch *)",
+      "Bash(git -c http.sslVerify=false fetch origin)"
     ]
   }
 }

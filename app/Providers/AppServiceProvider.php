@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\ContentSetting;
+use App\Models\SiteLanguage;
+use App\Models\SiteSetting;
 use App\Observers\UserObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Blade;
@@ -26,10 +29,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->flushPerRequestMemos();
         $this->configureDefaults();
         $this->registerListeners();
 
         Blade::anonymousComponentPath(resource_path('views/layouts'), 'layouts');
+    }
+
+    /**
+     * Los modelos de configuracion memoizan su resultado durante el request para
+     * no repetir `Schema::hasTable()` + lectura de cache + `find()` una decena de
+     * veces por pagina.
+     *
+     * En PHP-FPM las estaticas ya mueren con el request, pero este boot corre una
+     * vez por instancia de la aplicacion, asi que tambien aisla correctamente los
+     * tests (cada test crea una app nueva) y los runtimes persistentes tipo Octane.
+     */
+    protected function flushPerRequestMemos(): void
+    {
+        ContentSetting::flushMemo();
+        SiteLanguage::flushMemo();
+        SiteSetting::flushMemo();
     }
 
     /**

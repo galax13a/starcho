@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MemoizesPerRequest;
+use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class ContentSetting extends Model
 {
+    use MemoizesPerRequest;
+
     private const CACHE_KEY = 'content_settings.singleton_id';
 
     protected $fillable = [
@@ -104,25 +108,35 @@ class ContentSetting extends Model
         return static::firstOrCreate([], static::defaults());
     }
 
+    /**
+     * ContentRenderCache::canCache() invoca esto en cada render y los Blade del
+     * blog lo consultan varias veces por pagina: se memoiza por request.
+     */
     public static function cached(): ?self
     {
-        if (!Schema::hasTable('content_settings')) {
-            return null;
-        }
+        return static::memo('singleton', function (): ?self {
+            if (! Schema::hasTable('content_settings')) {
+                return null;
+            }
 
-        $id = Cache::remember(self::CACHE_KEY, 3600, fn () => static::query()->value('id') ?? static::singleton()->id);
+            // Solo se cachea el id; el modelo se consulta en vivo. SafeCache descarta
+            // entradas antiguas que guardaran el modelo serializado.
+            $id = SafeCache::rememberPlain(self::CACHE_KEY, 3600, fn () => static::query()->value('id') ?? static::singleton()->id);
 
-        return static::find($id) ?? static::singleton();
+            return (is_int($id) || is_string($id) ? static::find($id) : null) ?? static::singleton();
+        });
     }
 
     protected static function booted(): void
     {
         static::saved(function (): void {
             Cache::forget(self::CACHE_KEY);
+            static::flushMemo();
             app(\App\Services\ContentRenderCache::class)->clearAll();
         });
         static::deleted(function (): void {
             Cache::forget(self::CACHE_KEY);
+            static::flushMemo();
             app(\App\Services\ContentRenderCache::class)->clearAll();
         });
     }

@@ -1,0 +1,161 @@
+name: ci
+
+# Pipeline unico: Pint (estilo) -> Larastan (analisis estatico) -> Pest (tests).
+# Cualquiera de los tres en rojo bloquea el merge.
+#
+# Este workflow reemplaza a lint.yml + tests.yml. Cuando lo valides, borra
+# esos dos para no ejecutar el mismo trabajo dos veces por push.
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - master
+      - workos
+  pull_request:
+    branches:
+      - develop
+      - main
+      - master
+      - workos
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --------------------------------------------------------------------
+  # 1. Estilo de codigo
+  # --------------------------------------------------------------------
+  pint:
+    name: pint
+    runs-on: ubuntu-latest
+    environment: Testing
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Add Flux Credentials Loaded From ENV
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Cache Composer Packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.4-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      # `pint --test` sale con codigo != 0 si algo esta mal formateado.
+      - name: Run Pint
+        run: composer lint:check
+
+  # --------------------------------------------------------------------
+  # 2. Analisis estatico
+  # --------------------------------------------------------------------
+  larastan:
+    name: larastan
+    runs-on: ubuntu-latest
+    environment: Testing
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+          # PHPStan necesita memoria; el limite tambien va en el comando.
+          ini-values: memory_limit=2G
+
+      - name: Add Flux Credentials Loaded From ENV
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Cache Composer Packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-8.4-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      # Larastan lee el contenedor de Laravel, asi que necesita .env y APP_KEY.
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Cache PHPStan Result Cache
+        uses: actions/cache@v4
+        with:
+          path: .phpstan.cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: phpstan-
+
+      # phpstan devuelve exit code 1 si encuentra 1 solo error,
+      # asi que este step ya hace fallar el pipeline. --no-progress mantiene
+      # el log legible y --error-format=github anota los errores en el diff del PR.
+      - name: Run Larastan
+        run: vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
+
+  # --------------------------------------------------------------------
+  # 3. Tests
+  # --------------------------------------------------------------------
+  tests:
+    name: tests (php ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    environment: Testing
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.4']
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Add Flux Credentials Loaded From ENV
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          npm ci
+
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: ./vendor/bin/pest

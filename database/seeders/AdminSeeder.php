@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -59,18 +58,31 @@ class AdminSeeder extends Seeder
         Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
 
         // ── Usuario administrador ──────────────────────────────────────────
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@starcho.com'],
-            [
-                'name'              => 'Administrador',
-                'password'          => Hash::make('password'),
-                'email_verified_at' => now(),
-            ]
-        );
+        $email = (string) (config('starcho.install.admin_email') ?: config('starcho.admin.email', 'admin@example.com'));
+        $password = (string) (config('starcho.install.admin_password') ?: config('starcho.admin.password', ''));
+        $admin = User::where('email', $email)->first();
+
+        if (! $admin && $password === '') {
+            throw new \RuntimeException(
+                'No se puede crear el administrador inicial sin contraseña. Usa STARCHO_ADMIN_PASSWORD o el instalador.'
+            );
+        }
+
+        $admin ??= new User(['email' => $email]);
+        $admin->fill([
+            'name' => (string) (config('starcho.install.admin_name') ?: 'Administrador'),
+            'email_verified_at' => now(),
+        ]);
+
+        if ($password !== '') {
+            $admin->password = $password;
+        }
+
+        $admin->save();
 
         $admin->syncRoles('admin');
 
-        $this->command->info('Admin creado: admin@starcho.com / password');
+        $this->command->info('Administrador inicial configurado: '.$email);
         $this->command->info('Roles creados: root, admin, editor, moderator, user, guest');
 
         $this->call(StarchoSeeder::class);

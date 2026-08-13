@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -35,19 +36,9 @@ class SiteSocialNetwork extends Model
             return collect();
         }
 
-        $cached = Cache::get(self::CACHE_KEY);
-
-        if (is_object($cached) && get_class($cached) === '__PHP_Incomplete_Class') {
-            Cache::forget(self::CACHE_KEY);
-            $cached = null;
-        }
-
-        if ($cached instanceof \Illuminate\Support\Collection) {
-            Cache::forget(self::CACHE_KEY);
-            $cached = null;
-        }
-
-        $ids = Cache::remember(self::CACHE_KEY, 3600, function (): array {
+        // Solo se cachean ids (escalares). SafeCache descarta cualquier entrada
+        // antigua que guardara la Collection de modelos y la recalcula.
+        $ids = SafeCache::rememberPlain(self::CACHE_KEY, 3600, function (): array {
             return static::query()
                 ->where('active', true)
                 ->whereNotNull('url')
@@ -57,7 +48,7 @@ class SiteSocialNetwork extends Model
                 ->all();
         });
 
-        if ($ids === []) {
+        if (! is_array($ids) || $ids === []) {
             return collect();
         }
 

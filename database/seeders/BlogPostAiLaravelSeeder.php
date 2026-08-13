@@ -127,7 +127,7 @@ class BlogPostAiLaravelSeeder extends Seeder
 
             $this->h2('IA + Laravel: el stack PHP más potente de la historia'),
             $this->h3('1. Generación de código con Claude y GPT-4'),
-            $this->p('Las herramientas como <b>Claude Code</b>, <b>GitHub Copilot</b> y <b>Cursor</b> entienden el contexto completo de un proyecto Laravel. Pueden generar:'),
+            $this->p('Las herramientas de asistencia de código, <b>GitHub Copilot</b> y <b>Cursor</b> entienden el contexto completo de un proyecto Laravel. Pueden generar:'),
             $this->ul([
                 'Migraciones y modelos Eloquent a partir de una descripción en lenguaje natural',
                 'Controladores REST completos con validación, autorización y manejo de errores',
@@ -223,7 +223,7 @@ class BlogPostAiLaravelSeeder extends Seeder
 
             $this->h2('Herramientas recomendadas en 2025'),
             $this->ul([
-                '<b>Claude Code</b> — el mejor asistente de terminal para proyectos Laravel complejos',
+                '<b>Asistentes de terminal</b> — útiles para proyectos Laravel complejos',
                 '<b>GitHub Copilot</b> — integración nativa en VS Code, JetBrains y Neovim',
                 '<b>Cursor</b> — editor con IA integrada, excelente para refactorizaciones grandes',
                 '<b>Laravel Prism</b> — integración de LLMs en aplicaciones Laravel',
@@ -251,7 +251,7 @@ class BlogPostAiLaravelSeeder extends Seeder
 
             $this->h2('AI + Laravel: the most powerful PHP stack in history'),
             $this->h3('1. Code generation with Claude and GPT-4'),
-            $this->p('Tools like <b>Claude Code</b>, <b>GitHub Copilot</b> and <b>Cursor</b> understand the full context of a Laravel project. They can generate:'),
+            $this->p('Code assistance tools, <b>GitHub Copilot</b> and <b>Cursor</b> understand the full context of a Laravel project. They can generate:'),
             $this->ul([
                 'Migrations and Eloquent models from a natural-language description',
                 'Complete REST controllers with validation, authorisation and error handling',
@@ -347,7 +347,7 @@ class BlogPostAiLaravelSeeder extends Seeder
 
             $this->h2('Recommended tools in 2025'),
             $this->ul([
-                '<b>Claude Code</b> — the best terminal assistant for complex Laravel projects',
+                '<b>Terminal assistants</b> — useful for complex Laravel projects',
                 '<b>GitHub Copilot</b> — native integration in VS Code, JetBrains and Neovim',
                 '<b>Cursor</b> — AI-native editor, excellent for large-scale refactors',
                 '<b>Laravel Prism</b> — LLM integration for Laravel applications',

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ContentSetting;
 use App\Models\Post;
+use App\Support\SafeCache;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 
@@ -26,7 +27,12 @@ class ContentRenderCache
 
         $this->rememberKey($key, $post->type);
 
-        return Cache::remember($key, now()->addMinutes($ttl), fn () => (string) $renderer());
+        // El payload cacheado es siempre un string de HTML. Si una entrada antigua
+        // guardo un objeto (View, Htmlable, Collection...), en Laravel 13 vuelve como
+        // __PHP_Incomplete_Class: SafeCache la descarta y se vuelve a renderizar.
+        $html = SafeCache::rememberPlain($key, now()->addMinutes($ttl), fn () => (string) $renderer());
+
+        return is_string($html) ? $html : null;
     }
 
     public function canCache(Post $post, ?ContentSetting $settings = null): bool
@@ -73,7 +79,7 @@ class ContentRenderCache
         $items = $this->index();
         $postKeys = collect($items)->where('type', Post::TYPE_POST)->count();
         $pageKeys = collect($items)->where('type', Post::TYPE_PAGE)->count();
-        $meta = Cache::get(self::META_KEY, []);
+        $meta = SafeCache::getPlainArray(self::META_KEY);
 
         return [
             'total_keys' => count($items),
@@ -118,7 +124,7 @@ class ContentRenderCache
             'stored_at' => now()->toIso8601String(),
         ];
 
-        Cache::put(self::INDEX_KEY, $items, now()->addDays(30));
+        SafeCache::putPlain(self::INDEX_KEY, $items, now()->addDays(30));
     }
 
     private function forgetWhere(?string $type = null, ?int $postId = null): int
@@ -140,8 +146,8 @@ class ContentRenderCache
             $remaining[$key] = $item;
         }
 
-        Cache::put(self::INDEX_KEY, $remaining, now()->addDays(30));
-        Cache::put(self::META_KEY, [
+        SafeCache::putPlain(self::INDEX_KEY, $remaining, now()->addDays(30));
+        SafeCache::putPlain(self::META_KEY, [
             'last_cleared_at' => now()->toIso8601String(),
             'last_cleared_scope' => $type ?: 'all',
             'last_cleared_count' => $cleared,
@@ -150,10 +156,15 @@ class ContentRenderCache
         return $cleared;
     }
 
+    /**
+     * El indice es un array plano de arrays planos. getPlainArray() valida el
+     * formato en profundidad y descarta entradas envenenadas, de modo que un
+     * indice viejo con objetos se regenera solo sin necesitar cache:clear.
+     *
+     * @return array<string, array<string, mixed>>
+     */
     private function index(): array
     {
-        $items = Cache::get(self::INDEX_KEY, []);
-
-        return is_array($items) ? $items : [];
+        return SafeCache::getPlainArray(self::INDEX_KEY);
     }
 }

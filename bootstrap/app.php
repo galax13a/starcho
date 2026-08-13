@@ -1,8 +1,22 @@
 <?php
 
+use App\Http\Middleware\CheckIfBanned;
+use App\Http\Middleware\EnsurePublicHomeIsEnabled;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetLocaleFromUrl;
+use App\Http\Middleware\SetPhpExecutionTimeout;
+use App\Models\BrokenLink;
+use App\Models\ContentSetting;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
@@ -13,36 +27,37 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
-            \Illuminate\Support\Facades\Route::middleware('web')
+            Route::middleware('web')
                 ->group(base_path('routes/app.php'));
-            \Illuminate\Support\Facades\Route::middleware('web')
+            Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->appendToGroup('web', \App\Http\Middleware\EnsurePublicHomeIsEnabled::class);
-        $middleware->appendToGroup('web', \App\Http\Middleware\SetPhpExecutionTimeout::class);
-        $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
+        $middleware->appendToGroup('web', EnsurePublicHomeIsEnabled::class);
+        $middleware->appendToGroup('web', SetPhpExecutionTimeout::class);
+        $middleware->appendToGroup('web', SetLocale::class);
+        $middleware->appendToGroup('web', SecurityHeaders::class);
         $middleware->alias([
-            'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'banned'             => \App\Http\Middleware\CheckIfBanned::class,
-            'locale.url'         => \App\Http\Middleware\SetLocaleFromUrl::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'banned' => CheckIfBanned::class,
+            'locale.url' => SetLocaleFromUrl::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request): \Symfony\Component\HttpFoundation\Response {
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request): Response {
             if ($response->getStatusCode() === 404) {
                 $path = $request->path();
                 // Only track public 404s, skip admin/app/API paths
-                if (!str_starts_with($path, 'admin') && !str_starts_with($path, 'app') && !str_starts_with($path, 'api')) {
+                if (! str_starts_with($path, 'admin') && ! str_starts_with($path, 'app') && ! str_starts_with($path, 'api')) {
                     try {
-                        $track = \App\Models\ContentSetting::cached()?->track_broken_links ?? true;
+                        $track = ContentSetting::cached()?->track_broken_links ?? true;
                         if ($track) {
-                            \App\Models\BrokenLink::record($request);
+                            BrokenLink::record($request);
                         }
-                    } catch (\Throwable) {
+                    } catch (Throwable) {
                         // never break the response
                     }
                 }

@@ -1,0 +1,17 @@
+# Deuda tecnica congelada de PHPStan / Larastan.
+#
+# Este archivo lo GENERA phpstan, no se edita a mano:
+#
+#     composer stan:baseline
+#
+# Reglas de uso:
+#   - El codigo NUEVO nunca entra aqui: si tu PR agrega entradas, arregla el error.
+#   - Al subir de nivel en phpstan.neon, regenera el baseline y ve vaciandolo por
+#     lotes (un modelo, un servicio, un directorio por PR).
+#   - Cuando quede vacio, borra el archivo y quita el `includes` de phpstan.neon.
+#
+# Ahora mismo esta vacio: ejecuta `composer stan` para ver la deuda real y
+# `composer stan:baseline` si quieres congelarla y dejar el CI en verde.
+
+parameters:
+    ignoreErrors: []

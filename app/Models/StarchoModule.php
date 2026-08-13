@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Spatie\Translatable\HasTranslations;
 
 class StarchoModule extends Model
@@ -14,8 +16,8 @@ class StarchoModule extends Model
 
     protected $casts = [
         'installed' => 'boolean',
-        'active'    => 'boolean',
-        'config'    => 'array',
+        'active' => 'boolean',
+        'config' => 'array',
     ];
 
     public $translatable = ['name', 'description'];
@@ -30,44 +32,64 @@ class StarchoModule extends Model
      */
     public function createMenuItems(): void
     {
-        $menuConfig = $this->config['menu_items'] ?? [];
+        $menuConfig = data_get($this->config, 'menu_items', []);
 
-        if (empty($menuConfig)) {
+        if (! is_array($menuConfig) || $menuConfig === []) {
             return;
         }
 
         foreach ($menuConfig as $item) {
-            if (empty($item['route']) || $item['route'] === 'app') {
+            if (! is_array($item)) {
                 continue;
             }
 
-            $panel = $item['panel'] ?? 'app';
-            $parentId = $item['parent_id'] ?? null;
+            $route = is_string($item['route'] ?? null) ? trim($item['route']) : '';
 
-            if (!$parentId && !empty($item['parent_route'])) {
+            if ($route === '' || $route === 'app') {
+                continue;
+            }
+
+            $panel = in_array($item['panel'] ?? 'app', ['app', 'admin', 'home'], true)
+                ? $item['panel']
+                : 'app';
+            $parentId = is_numeric($item['parent_id'] ?? null) ? (int) $item['parent_id'] : null;
+
+            if (! $parentId && ! empty($item['parent_route'])) {
                 $parentId = StarchoMenuItem::where('panel', $panel)
-                    ->where('route', $item['parent_route'])
+                    ->where('route', (string) $item['parent_route'])
                     ->value('id');
             }
 
+            // Never attach a menu item to another panel. This also prevents a
+            // malformed imported config from creating a cross-tree reference.
+            if ($parentId !== null && ! StarchoMenuItem::where('panel', $panel)->whereKey($parentId)->exists()) {
+                $parentId = null;
+            }
+
             $existingItem = StarchoMenuItem::where('module_key', $this->key)
-                ->where('route', $item['route'])
+                ->where('route', $route)
                 ->first();
 
-            if (!$existingItem) {
+            $url = StarchoMenuItem::sanitizeUrl($item['url'] ?? null);
+
+            $target = in_array($item['target'] ?? '_self', ['_self', '_blank'], true)
+                ? $item['target']
+                : '_self';
+
+            if (! $existingItem) {
                 $nameData = $item['name'] ?? $item['label'] ?? null;
 
                 $menuItem = new StarchoMenuItem([
-                    'panel'      => $panel,
+                    'panel' => $panel,
                     'module_key' => $this->key,
-                    'parent_id'  => $parentId,
-                    'section'    => $item['section'] ?? null,
-                    'icon'       => $item['icon'] ?? null,
-                    'route'      => $item['route'],
-                    'url'        => $item['url'] ?? null,
-                    'sort_order' => $item['sort_order'] ?? 0,
-                    'active'     => true,
-                    'target'     => $item['target'] ?? '_self',
+                    'parent_id' => $parentId,
+                    'section' => $item['section'] ?? null,
+                    'icon' => $item['icon'] ?? null,
+                    'route' => $route,
+                    'url' => $url,
+                    'sort_order' => is_numeric($item['sort_order'] ?? null) ? (int) $item['sort_order'] : 0,
+                    'active' => true,
+                    'target' => $target,
                 ]);
 
                 if (is_array($nameData)) {
@@ -81,11 +103,15 @@ class StarchoModule extends Model
                 $menuItem->save();
             } else {
                 $existingItem->update([
-                    'active'    => true,
+                    'active' => true,
                     'parent_id' => $parentId,
+                    'url' => $url,
+                    'target' => $target,
                 ]);
             }
         }
+
+        StarchoMenuItem::clearMenuCache();
     }
 
     /**
@@ -104,15 +130,19 @@ class StarchoModule extends Model
 
     public function install(): void
     {
-        $this->update(['installed' => true, 'active' => true]);
-        $this->createMenuItems();
+        DB::transaction(function (): void {
+            $this->update(['installed' => true, 'active' => true]);
+            $this->createMenuItems();
+        });
         $this->clearModuleCache();
     }
 
     public function uninstall(): void
     {
-        $this->deleteMenuItems();
-        $this->update(['installed' => false, 'active' => false]);
+        DB::transaction(function (): void {
+            $this->deleteMenuItems();
+            $this->update(['installed' => false, 'active' => false]);
+        });
         $this->clearModuleCache();
     }
 
@@ -134,8 +164,11 @@ class StarchoModule extends Model
 
     public static function isActive(string $key): bool
     {
-        return Cache::remember("starcho_module_{$key}", 3600, function () use ($key) {
-            return static::where('key', $key)->where('active', true)->exists();
+        return (bool) SafeCache::rememberPlain("starcho_module_{$key}", 3600, function () use ($key) {
+            return static::where('key', $key)
+                ->where('installed', true)
+                ->where('active', true)
+                ->exists();
         });
     }
 }

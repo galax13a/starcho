@@ -10,7 +10,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": ">=8.3 <8.5",
         "laravel-lang/common": "*",
         "laravel/ai": "*",
         "laravel/folio": "*",
@@ -29,13 +29,15 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
+        "larastan/larastan": "^3.10",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "laravel/sail": "^1.53",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.9",
         "pestphp/pest": "^4.4",
-        "pestphp/pest-plugin-laravel": "^4.1"
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "phpstan/extension-installer": "^1.4"
     },
     "autoload": {
         "psr-4": {
@@ -68,6 +70,17 @@
         "lint:check": [
             "pint --parallel --test"
         ],
+        "stan": [
+            "Composer\\Config::disableProcessTimeout",
+            "phpstan analyse --memory-limit=2G"
+        ],
+        "stan:baseline": [
+            "Composer\\Config::disableProcessTimeout",
+            "phpstan analyse --memory-limit=2G --generate-baseline=phpstan-baseline.neon"
+        ],
+        "stan:clear": [
+            "phpstan clear-result-cache"
+        ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
             "@test"
@@ -75,6 +88,7 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",
+            "@stan",
             "@php artisan test"
         ],
         "post-autoload-dump": [
@@ -98,7 +112,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "laravel/folio"
+            ]
         }
     },
     "config": {
@@ -107,7 +123,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "phpstan/extension-installer": true
         }
     },
     "minimum-stability": "stable",

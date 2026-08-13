@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\MemoizesPerRequest;
+use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class SiteSetting extends Model
 {
+    use MemoizesPerRequest;
+
     private const CACHE_KEY_ID = 'site_settings.singleton_id';
     private const CACHE_KEY_LEGACY = 'site_settings.singleton';
 
@@ -207,22 +211,27 @@ class SiteSetting extends Model
         return static::firstOrCreate([], static::defaults());
     }
 
+    /**
+     * Los Blade llaman a este metodo (directamente o via appName(),
+     * isDarkModeEnabled(), avatarStyle()...) una decena de veces por pagina.
+     * La memoizacion deja el trabajo real en una sola vez por request.
+     */
     public static function cached(): ?self
     {
-        if (!Schema::hasTable('site_settings')) {
-            return null;
-        }
+        return static::memo('singleton', function (): ?self {
+            if (! Schema::hasTable('site_settings')) {
+                return null;
+            }
 
-        // Limpia una cache legacy que pudo guardar un objeto serializado inválido
-        // y causar __PHP_Incomplete_Class al deserializar.
-        $legacy = Cache::get(self::CACHE_KEY_LEGACY);
-        if (is_object($legacy) && get_class($legacy) === '__PHP_Incomplete_Class') {
-            Cache::forget(self::CACHE_KEY_LEGACY);
-        }
+            // La cache legacy pudo guardar el modelo entero; en Laravel 13 vuelve como
+            // __PHP_Incomplete_Class. getPlain() la descarta al detectarlo.
+            SafeCache::getPlain(self::CACHE_KEY_LEGACY);
 
-        $id = Cache::remember(self::CACHE_KEY_ID, 3600, fn () => static::query()->value('id') ?? static::singleton()->id);
+            // Solo se cachea el id; el modelo se consulta en vivo en cada request.
+            $id = SafeCache::rememberPlain(self::CACHE_KEY_ID, 3600, fn () => static::query()->value('id') ?? static::singleton()->id);
 
-        return static::find($id) ?? static::singleton();
+            return (is_int($id) || is_string($id) ? static::find($id) : null) ?? static::singleton();
+        });
     }
 
     protected static function booted(): void
@@ -230,11 +239,13 @@ class SiteSetting extends Model
         static::saved(function (): void {
             Cache::forget(self::CACHE_KEY_ID);
             Cache::forget(self::CACHE_KEY_LEGACY);
+            static::flushMemo();
         });
 
         static::deleted(function (): void {
             Cache::forget(self::CACHE_KEY_ID);
             Cache::forget(self::CACHE_KEY_LEGACY);
+            static::flushMemo();
         });
     }
 }

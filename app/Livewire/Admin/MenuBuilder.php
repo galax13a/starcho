@@ -4,10 +4,12 @@ namespace App\Livewire\Admin;
 
 use App\Exports\AdminMenuExport;
 use App\Imports\AdminMenuImport;
+use App\Livewire\Concerns\AuthorizesAdminPanel;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\StarchoMenuItem;
 use App\Models\StarchoMenuSection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,50 +18,70 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MenuBuilder extends Component
 {
+    use AuthorizesAdminPanel;
     use DispatchesStarchoNotify;
     use WithFileUploads;
 
     public $items = [];
+
     public array $sectionOptions = [];
+
     public array $sectionLabels = [];
+
     public $importFile;
+
     public $importExcelFile;
 
     public ?int $editingSectionId = null;
+
     public string $sectionLabelInput = '';
 
     // Active panel tab
     public string $activePanel = 'app';
 
     // Form fields
-    public bool    $showModal   = false;
-    public ?int    $editingId   = null;
-    public string  $name        = '';
-    public string  $name_en     = '';
-    public string  $name_es     = '';
-    public string  $panel       = 'app';
-    public ?string $section     = '';
-    public ?string $icon        = '';
-    public ?string $route       = '';
-    public ?string $url         = '';
-    public ?int    $parent_id   = null;
-    public int     $sort_order  = 0;
-    public bool    $active      = true;
-    public string  $target      = '_self';
-    public ?string $module_key  = '';
+    public bool $showModal = false;
+
+    public ?int $editingId = null;
+
+    public string $name = '';
+
+    public string $name_en = '';
+
+    public string $name_es = '';
+
+    public string $panel = 'app';
+
+    public ?string $section = '';
+
+    public ?string $icon = '';
+
+    public ?string $route = '';
+
+    public ?string $url = '';
+
+    public ?int $parent_id = null;
+
+    public int $sort_order = 0;
+
+    public bool $active = true;
+
+    public string $target = '_self';
+
+    public ?string $module_key = '';
 
     protected $rules = [
-        'name_en'    => 'required|string|max:100',
-        'name_es'    => 'required|string|max:100',
-        'panel'      => 'required|in:app,admin,home',
-        'section'    => 'nullable|string|max:100',
-        'icon'       => 'nullable|string|max:100',
-        'route'      => 'nullable|string|max:200',
-        'url'        => 'nullable|string|max:500',
-        'parent_id'  => 'nullable|integer|exists:starcho_menu_items,id',
+        'name_en' => 'required|string|max:100',
+        'name_es' => 'required|string|max:100',
+        'panel' => 'required|in:app,admin,home',
+        'section' => 'nullable|string|max:100',
+        'icon' => 'nullable|string|max:100',
+        'route' => 'nullable|string|max:200',
+        'url' => 'nullable|string|max:500',
+        'parent_id' => 'nullable|integer|exists:starcho_menu_items,id',
         'sort_order' => 'integer|min:0',
-        'active'     => 'boolean',
-        'target'     => 'in:_self,_blank',
+        'active' => 'boolean',
+        'target' => 'in:_self,_blank',
         'module_key' => 'nullable|string|max:100',
     ];
 
@@ -115,6 +137,10 @@ class MenuBuilder extends Component
 
     public function switchPanel(string $panel): void
     {
+        if (! in_array($panel, ['app', 'admin', 'home'], true)) {
+            throw ValidationException::withMessages(['activePanel' => __('admin_ui.menu.notify.import_failed')]);
+        }
+
         $this->activePanel = $panel;
         $this->loadItems();
         $this->dispatch('menu-dnd-refresh');
@@ -122,10 +148,17 @@ class MenuBuilder extends Component
 
     public function openCreate(?int $parentId = null): void
     {
+        if ($parentId !== null && ! StarchoMenuItem::query()
+            ->whereKey($parentId)
+            ->where('panel', $this->activePanel)
+            ->exists()) {
+            throw ValidationException::withMessages(['parent_id' => __('validation.exists', ['attribute' => 'parent'])]);
+        }
+
         $this->resetForm();
-        $this->parent_id   = $parentId;
-        $this->panel       = $this->activePanel;
-        $this->sort_order  = StarchoMenuItem::where('parent_id', $parentId)
+        $this->parent_id = $parentId;
+        $this->panel = $this->activePanel;
+        $this->sort_order = StarchoMenuItem::where('parent_id', $parentId)
             ->where('panel', $this->activePanel)
             ->max('sort_order') + 10;
         $this->showModal = true;
@@ -197,27 +230,30 @@ class MenuBuilder extends Component
 
     public function openEdit(int $id): void
     {
-        $item = StarchoMenuItem::findOrFail($id);
-        $this->editingId   = $id;
-        $this->name        = $item->display_name;
-        $this->name_en     = $item->getTranslation('name', 'en', false) ?: $item->display_name;
-        $this->name_es     = $item->getTranslation('name', 'es', false) ?: $item->display_name;
-        $this->panel       = $item->panel ?? 'app';
-        $this->section     = $item->section ?? '';
-        $this->icon        = $item->icon ?? '';
-        $this->route       = $item->route ?? '';
-        $this->url         = $item->url ?? '';
-        $this->parent_id   = $item->parent_id;
-        $this->sort_order  = $item->sort_order;
-        $this->active      = $item->active;
-        $this->target      = $item->target;
-        $this->module_key  = $item->module_key ?? '';
-        $this->showModal   = true;
+        $item = StarchoMenuItem::query()
+            ->where('panel', $this->activePanel)
+            ->findOrFail($id);
+        $this->editingId = $id;
+        $this->name = $item->display_name;
+        $this->name_en = $item->getTranslation('name', 'en', false) ?: $item->display_name;
+        $this->name_es = $item->getTranslation('name', 'es', false) ?: $item->display_name;
+        $this->panel = $item->panel ?? 'app';
+        $this->section = $item->section ?? '';
+        $this->icon = $item->icon ?? '';
+        $this->route = $item->route ?? '';
+        $this->url = $item->url ?? '';
+        $this->parent_id = $item->parent_id;
+        $this->sort_order = $item->sort_order;
+        $this->active = $item->active;
+        $this->target = $item->target;
+        $this->module_key = $item->module_key ?? '';
+        $this->showModal = true;
     }
 
     public function save(): void
     {
         $this->validate();
+        $this->validateHierarchy();
 
         if (($this->section ?? '') !== '') {
             $maxOrder = (int) StarchoMenuSection::query()
@@ -236,34 +272,36 @@ class MenuBuilder extends Component
         }
 
         if ($this->editingId) {
-            $item = StarchoMenuItem::findOrFail($this->editingId);
+            $item = StarchoMenuItem::query()
+                ->where('panel', $this->activePanel)
+                ->findOrFail($this->editingId);
             $this->fillMenuTranslations($item);
             $item->fill([
-                'panel'      => $this->panel,
-                'section'    => $this->section ?: null,
-                'icon'       => $this->icon ?: null,
-                'route'      => $this->route ?: null,
-                'url'        => $this->url ?: null,
-                'parent_id'  => $this->parent_id,
+                'panel' => $this->panel,
+                'section' => $this->section ?: null,
+                'icon' => $this->icon ?: null,
+                'route' => $this->route ?: null,
+                'url' => StarchoMenuItem::sanitizeUrl($this->url),
+                'parent_id' => $this->parent_id,
                 'sort_order' => $this->sort_order,
-                'active'     => $this->active,
-                'target'     => $this->target,
+                'active' => $this->active,
+                'target' => $this->target,
                 'module_key' => $this->module_key ?: null,
             ]);
             $item->save();
         } else {
-            $item = new StarchoMenuItem();
+            $item = new StarchoMenuItem;
             $this->fillMenuTranslations($item);
             $item->fill([
-                'panel'      => $this->panel,
-                'section'    => $this->section ?: null,
-                'icon'       => $this->icon ?: null,
-                'route'      => $this->route ?: null,
-                'url'        => $this->url ?: null,
-                'parent_id'  => $this->parent_id,
+                'panel' => $this->panel,
+                'section' => $this->section ?: null,
+                'icon' => $this->icon ?: null,
+                'route' => $this->route ?: null,
+                'url' => StarchoMenuItem::sanitizeUrl($this->url),
+                'parent_id' => $this->parent_id,
                 'sort_order' => $this->sort_order,
-                'active'     => $this->active,
-                'target'     => $this->target,
+                'active' => $this->active,
+                'target' => $this->target,
                 'module_key' => $this->module_key ?: null,
             ]);
             $item->save();
@@ -279,7 +317,9 @@ class MenuBuilder extends Component
 
     public function delete(int $id): void
     {
-        $item = StarchoMenuItem::findOrFail($id);
+        $item = StarchoMenuItem::query()
+            ->where('panel', $this->activePanel)
+            ->findOrFail($id);
         StarchoMenuItem::where('parent_id', $id)->update(['parent_id' => $item->parent_id]);
         $item->delete();
         StarchoMenuItem::clearMenuCache();
@@ -290,8 +330,10 @@ class MenuBuilder extends Component
 
     public function toggleActive(int $id): void
     {
-        $item = StarchoMenuItem::findOrFail($id);
-        $item->update(['active' => !$item->active]);
+        $item = StarchoMenuItem::query()
+            ->where('panel', $this->activePanel)
+            ->findOrFail($id);
+        $item->update(['active' => ! $item->active]);
         StarchoMenuItem::clearMenuCache();
         $this->loadItems();
         $this->dispatch('menu-dnd-refresh');
@@ -299,7 +341,9 @@ class MenuBuilder extends Component
 
     public function moveUp(int $id): void
     {
-        $item = StarchoMenuItem::findOrFail($id);
+        $item = StarchoMenuItem::query()
+            ->where('panel', $this->activePanel)
+            ->findOrFail($id);
         $prev = StarchoMenuItem::where('parent_id', $item->parent_id)
             ->where('panel', $item->panel)
             ->where('sort_order', '<', $item->sort_order)
@@ -318,7 +362,9 @@ class MenuBuilder extends Component
 
     public function moveDown(int $id): void
     {
-        $item = StarchoMenuItem::findOrFail($id);
+        $item = StarchoMenuItem::query()
+            ->where('panel', $this->activePanel)
+            ->findOrFail($id);
         $next = StarchoMenuItem::where('parent_id', $item->parent_id)
             ->where('panel', $item->panel)
             ->where('sort_order', '>', $item->sort_order)
@@ -348,12 +394,20 @@ class MenuBuilder extends Component
         $this->dispatch('menu-dnd-refresh');
     }
 
-    private function persistTree(array $nodes, ?int $parentId): void
+    private function persistTree(array $nodes, ?int $parentId, array &$visited = [], int $depth = 0): void
     {
+        if ($depth > 100) {
+            return;
+        }
+
         foreach ($nodes as $index => $node) {
+            if (! is_array($node)) {
+                continue;
+            }
+
             $id = (int) data_get($node, 'id', 0);
 
-            if ($id <= 0) {
+            if ($id <= 0 || isset($visited[$id])) {
                 continue;
             }
 
@@ -363,15 +417,17 @@ class MenuBuilder extends Component
                 continue;
             }
 
+            $visited[$id] = true;
+
             $item->update([
-                'parent_id'  => $parentId,
+                'parent_id' => $parentId,
                 'sort_order' => ($index + 1) * 10,
             ]);
 
             $children = data_get($node, 'children', []);
 
             if (is_array($children) && ! empty($children)) {
-                $this->persistTree($children, $item->id);
+                $this->persistTree($children, $item->id, $visited, $depth + 1);
             }
         }
     }
@@ -410,33 +466,33 @@ class MenuBuilder extends Component
             ->get();
 
         $payload = [
-            'version'     => 2,
-            'scope'       => $allPanels ? 'all' : 'panel',
-            'panel'       => $allPanels ? null : $this->activePanel,
-            'panels'      => $items->pluck('panel')->unique()->values()->all(),
+            'version' => 2,
+            'scope' => $allPanels ? 'all' : 'panel',
+            'panel' => $allPanels ? null : $this->activePanel,
+            'panels' => $items->pluck('panel')->unique()->values()->all(),
             'exported_at' => now()->toIso8601String(),
-            'sections'    => $sections->map(fn (StarchoMenuSection $section): array => [
-                'panel'      => $section->panel,
-                'label'      => $section->label,
+            'sections' => $sections->map(fn (StarchoMenuSection $section): array => [
+                'panel' => $section->panel,
+                'label' => $section->label,
                 'sort_order' => (int) $section->sort_order,
             ])->values()->all(),
-            'items'       => $items->map(fn (StarchoMenuItem $item) => [
-                'legacy_id'        => $item->id,
+            'items' => $items->map(fn (StarchoMenuItem $item) => [
+                'legacy_id' => $item->id,
                 'parent_legacy_id' => $item->parent_id,
-                'panel'            => $item->panel,
-                'section'          => $item->section,
-                'name'             => $item->getTranslations('name'),
-                'icon'             => $item->icon,
-                'route'            => $item->route,
-                'url'              => $item->url,
-                'target'           => $item->target,
-                'sort_order'       => $item->sort_order,
-                'active'           => (bool) $item->active,
-                'module_key'       => $item->module_key,
+                'panel' => $item->panel,
+                'section' => $item->section,
+                'name' => $item->getTranslations('name'),
+                'icon' => $item->icon,
+                'route' => $item->route,
+                'url' => $item->url,
+                'target' => $item->target,
+                'sort_order' => $item->sort_order,
+                'active' => (bool) $item->active,
+                'module_key' => $item->module_key,
             ])->values()->all(),
         ];
 
-        $filename = 'starcho-menu-' . ($allPanels ? 'full' : $this->activePanel) . '-' . now()->format('Ymd-His') . '.json';
+        $filename = 'starcho-menu-'.($allPanels ? 'full' : $this->activePanel).'-'.now()->format('Ymd-His').'.json';
 
         $this->notifyCrud('menu', 'exported');
 
@@ -456,7 +512,7 @@ class MenuBuilder extends Component
 
     public function exportExcel()
     {
-        $filename = 'menu-' . $this->activePanel . '-' . now()->format('Ymd-His') . '.xlsx';
+        $filename = 'menu-'.$this->activePanel.'-'.now()->format('Ymd-His').'.xlsx';
 
         return Excel::download(new AdminMenuExport($this->activePanel), $filename);
     }
@@ -500,6 +556,7 @@ class MenuBuilder extends Component
 
         if (! is_array($decoded)) {
             $this->notifyFailure(__('admin_ui.menu.notify.import_failed'));
+
             return;
         }
 
@@ -507,6 +564,7 @@ class MenuBuilder extends Component
 
         if (! is_array($items)) {
             $this->notifyFailure(__('admin_ui.menu.notify.import_failed'));
+
             return;
         }
 
@@ -531,11 +589,11 @@ class MenuBuilder extends Component
                     continue;
                 }
 
-                $item = new StarchoMenuItem();
+                $item = new StarchoMenuItem;
 
                 $name = data_get($row, 'name');
                 if (is_array($name)) {
-                    $fallbackName = collect($name)->first(fn ($value) => is_string($value) && $value !== '') ?: ('Menu ' . ($index + 1));
+                    $fallbackName = collect($name)->first(fn ($value) => is_string($value) && $value !== '') ?: ('Menu '.($index + 1));
 
                     foreach ($name as $locale => $value) {
                         if (is_string($value) && $value !== '') {
@@ -551,7 +609,7 @@ class MenuBuilder extends Component
                         $item->setTranslation('name', 'es', (string) $fallbackName);
                     }
                 } else {
-                    $fallbackName = (string) (data_get($row, 'label') ?: ('Menu ' . ($index + 1)));
+                    $fallbackName = (string) (data_get($row, 'label') ?: ('Menu '.($index + 1)));
                     $item->setTranslation('name', 'en', $fallbackName);
                     $item->setTranslation('name', 'es', $fallbackName);
                 }
@@ -560,15 +618,15 @@ class MenuBuilder extends Component
                 $rowPanel = in_array($rowPanel, ['app', 'admin', 'home'], true) ? $rowPanel : $this->activePanel;
 
                 $item->fill([
-                    'panel'      => $replaceAll ? $rowPanel : $this->activePanel,
-                    'section'    => data_get($row, 'section'),
-                    'icon'       => data_get($row, 'icon'),
-                    'route'      => data_get($row, 'route'),
-                    'url'        => data_get($row, 'url'),
-                    'parent_id'  => null,
+                    'panel' => $replaceAll ? $rowPanel : $this->activePanel,
+                    'section' => data_get($row, 'section'),
+                    'icon' => data_get($row, 'icon'),
+                    'route' => data_get($row, 'route'),
+                    'url' => StarchoMenuItem::sanitizeUrl(data_get($row, 'url')),
+                    'parent_id' => null,
                     'sort_order' => (int) (data_get($row, 'sort_order', ($index + 1) * 10)),
-                    'active'     => (bool) data_get($row, 'active', true),
-                    'target'     => in_array(data_get($row, 'target'), ['_self', '_blank'], true) ? data_get($row, 'target') : '_self',
+                    'active' => (bool) data_get($row, 'active', true),
+                    'target' => in_array(data_get($row, 'target'), ['_self', '_blank'], true) ? data_get($row, 'target') : '_self',
                     'module_key' => data_get($row, 'module_key'),
                 ]);
                 $item->save();
@@ -674,22 +732,58 @@ class MenuBuilder extends Component
         }
     }
 
+    private function validateHierarchy(): void
+    {
+        if ($this->parent_id === null) {
+            return;
+        }
+
+        if ($this->editingId !== null && $this->parent_id === $this->editingId) {
+            throw ValidationException::withMessages(['parent_id' => __('validation.not_in', ['attribute' => 'parent'])]);
+        }
+
+        $parent = StarchoMenuItem::query()
+            ->where('panel', $this->panel)
+            ->find($this->parent_id);
+
+        if (! $parent) {
+            throw ValidationException::withMessages(['parent_id' => __('validation.exists', ['attribute' => 'parent'])]);
+        }
+
+        $visited = [];
+        $ancestor = $parent;
+
+        while ($ancestor) {
+            if (isset($visited[$ancestor->id])) {
+                break;
+            }
+
+            $visited[$ancestor->id] = true;
+
+            if ($this->editingId !== null && $ancestor->id === $this->editingId) {
+                throw ValidationException::withMessages(['parent_id' => __('validation.not_in', ['attribute' => 'parent'])]);
+            }
+
+            $ancestor = $ancestor->parent;
+        }
+    }
+
     private function resetForm(): void
     {
-        $this->editingId   = null;
-        $this->name        = '';
-        $this->name_en     = '';
-        $this->name_es     = '';
-        $this->panel       = $this->activePanel;
-        $this->section     = '';
-        $this->icon        = '';
-        $this->route       = '';
-        $this->url         = '';
-        $this->parent_id   = null;
-        $this->sort_order  = 0;
-        $this->active      = true;
-        $this->target      = '_self';
-        $this->module_key  = '';
+        $this->editingId = null;
+        $this->name = '';
+        $this->name_en = '';
+        $this->name_es = '';
+        $this->panel = $this->activePanel;
+        $this->section = '';
+        $this->icon = '';
+        $this->route = '';
+        $this->url = '';
+        $this->parent_id = null;
+        $this->sort_order = 0;
+        $this->active = true;
+        $this->target = '_self';
+        $this->module_key = '';
         $this->resetErrorBag();
     }
 

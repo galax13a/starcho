@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Spatie\Permission\Models\Role;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -21,7 +22,7 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        if (!SiteSetting::isPublicRegistrationEnabled()) {
+        if (! SiteSetting::isPublicRegistrationEnabled()) {
             throw ValidationException::withMessages([
                 'email' => __('admin_ui.site.notify.registration_disabled_support'),
             ]);
@@ -38,7 +39,17 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
-        $user->assignRole('user');
+        // A fresh database can accept registrations before the optional
+        // configuration seeder has created the base roles. In that case the
+        // user must remain unprivileged, but registration itself should not
+        // become a 500 response.
+        try {
+            if (Role::query()->where('name', 'user')->where('guard_name', 'web')->exists()) {
+                $user->assignRole('user');
+            }
+        } catch (\Throwable) {
+            // Permission tables may not exist during first-run provisioning.
+        }
 
         return $user;
     }
