@@ -51,6 +51,26 @@
     }
     $openMenuIds = array_values(array_unique($openMenuIds));
 
+    /* ── Search index for the command bar ───────────────────────────── */
+    $searchItems = [];
+    $indexMenuItem = function ($item) use (&$searchItems, &$indexMenuItem, $getFA): void {
+        if ($item->children->isEmpty() && filled($item->resolved_url)) {
+            $searchItems[] = [
+                'label' => $item->display_name,
+                'url' => $item->resolved_url,
+                'icon' => $getFA($item->icon),
+                'target' => $item->target,
+            ];
+        }
+
+        foreach ($item->children as $child) {
+            $indexMenuItem($child);
+        }
+    };
+    foreach ($menuItems as $menuItem) {
+        $indexMenuItem($menuItem);
+    }
+
     /* ── User info ──────────────────────────────────────────────────── */
     $authUser    = auth()->user();
     $userInitial = $authUser ? strtoupper(substr($authUser->name, 0, 1)) : '?';
@@ -61,6 +81,12 @@
 
     $userAvatarUrl = $authUser?->avatar_url;
 
+    $searchItems[] = ['label' => __('app_layout.my_profile'), 'url' => route('profile.edit'), 'icon' => 'fas fa-user-circle', 'target' => '_self'];
+    $searchItems[] = ['label' => __('app_layout.appearance'), 'url' => route('appearance.edit'), 'icon' => 'fas fa-palette', 'target' => '_self'];
+    if ($isAdmin) {
+        $searchItems[] = ['label' => __('app_layout.admin_panel'), 'url' => route('admin.index'), 'icon' => 'fas fa-shield-alt', 'target' => '_self'];
+    }
+
     try {
         $appBrandName = \App\Models\SiteSetting::appName();
     } catch (\Throwable) {
@@ -68,7 +94,7 @@
     }
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="starchoApp({!! json_encode($openMenuIds) !!})">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="starchoApp({{ \Illuminate\Support\Js::from($openMenuIds) }}, {{ \Illuminate\Support\Js::from($searchItems) }})">
 <head>
     @include('partials.head')
     {{-- Tipografía y iconos (CDN — no Vite) --}}
@@ -80,6 +106,7 @@
     @vite(['resources/css/starcho-app.css', 'resources/js/app.js'])
 </head>
 <body>
+<a href="#main-content" class="skip-link">{{ __('app_layout.skip_to_content') }}</a>
 <div class="app">
 
     {{-- ─── SIDEBAR ──────────────────────────────────────────────────── --}}
@@ -279,14 +306,50 @@
         <div class="topbar">
 
             {{-- Mobile only: hamburger --}}
-            <button id="mobBtn" class="tb-btn" @click="mobOpen = !mobOpen" style="display:none">
+            <button id="mobBtn" type="button" class="tb-btn" @click="mobOpen = !mobOpen" style="display:none"
+                    :aria-expanded="mobOpen" aria-label="{{ __('app_layout.open_menu') }}">
                 <i class="fas fa-bars"></i>
             </button>
 
             {{-- Search --}}
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="search" placeholder="{{ __('app_layout.search_placeholder') }}" x-model="search">
+            <div class="search-wrap" @click.outside="searchOpen = false">
+                <div class="search-box" :class="{'is-open': searchOpen}">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search"
+                           x-ref="globalSearch"
+                           placeholder="{{ __('app_layout.search_placeholder') }}"
+                           aria-label="{{ __('app_layout.search_placeholder') }}"
+                           role="combobox"
+                           aria-controls="app-search-results"
+                           :aria-expanded="searchOpen"
+                           x-model="search"
+                           @focus="searchOpen = true"
+                           @keydown.down.prevent="moveSearch(1)"
+                           @keydown.up.prevent="moveSearch(-1)"
+                           @keydown.enter.prevent="openActiveSearchResult()"
+                           @keydown.escape="closeSearch()">
+                    <kbd>Ctrl K</kbd>
+                </div>
+                <div id="app-search-results" class="search-results" role="listbox" x-show="searchOpen" x-transition.opacity x-cloak>
+                    <div class="search-results-label" x-text="search ? '{{ __('app_layout.search_results') }}' : '{{ __('app_layout.quick_navigation') }}'"></div>
+                    <template x-for="(item, index) in filteredSearchItems" :key="item.url">
+                        <button type="button" class="search-result"
+                                role="option"
+                                :aria-selected="searchActiveIndex === index"
+                                :class="{'is-active': searchActiveIndex === index}"
+                                @mouseenter="searchActiveIndex = index"
+                                @click="goToSearchResult(item)">
+                            <span class="search-result-icon"><i :class="item.icon"></i></span>
+                            <span x-text="item.label"></span>
+                            <i class="fas fa-arrow-right search-result-arrow" aria-hidden="true"></i>
+                        </button>
+                    </template>
+                    <div class="search-empty" x-show="filteredSearchItems.length === 0">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <span>{{ __('app_layout.no_search_results') }}</span>
+                    </div>
+                    <div class="search-hint"><span>↑↓ {{ __('app_layout.navigate') }}</span><span>↵ {{ __('app_layout.open') }}</span><span>Esc {{ __('app_layout.close') }}</span></div>
+                </div>
             </div>
 
             {{-- Right side --}}
@@ -309,9 +372,9 @@
         </div>
 
         {{-- Page content --}}
-        <div class="content page-in">
+        <main id="main-content" class="content page-in" tabindex="-1">
             {{ $slot }}
-        </div>
+        </main>
 
     </div>
 </div>

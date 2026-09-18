@@ -446,10 +446,10 @@ window.starchoDelete = function (recordId, name, livewireEvent, componentName) {
  *   - toggleMenu(id)  Abre/cierra el submenu identificado por id.
  *   - init()          Llamado automáticamente por Alpine al montar.
  *
- * @param {number[]} [initialOpenMenus=[]]  IDs de submenús que deben abrirse al cargar
- *                                          (calculados server-side por PHP).
+ * @param {number[]} [initialOpenMenus=[]] IDs de submenús abiertos.
+ * @param {Array<{label:string,url:string,icon:string,target:string}>} [navigationItems=[]]
  */
-window.starchoApp = function (initialOpenMenus) {
+window.starchoApp = function (initialOpenMenus, navigationItems = []) {
     return {
         // Usar el sistema unificado de tema de Starcho
         isDark          : window.Starcho.dark.isDark(),
@@ -457,8 +457,20 @@ window.starchoApp = function (initialOpenMenus) {
         mobOpen         : false,
         showLogout      : false,
         search          : '',
+        searchOpen      : false,
+        searchActiveIndex: 0,
+        searchItems     : Array.isArray(navigationItems) ? navigationItems : [],
         /** Submenús abiertos — pre-poblado desde PHP para resaltar la ruta activa. */
         openMenus       : Array.isArray(initialOpenMenus) ? initialOpenMenus : [],
+
+        get filteredSearchItems() {
+            const query = this.search.trim().toLocaleLowerCase();
+            const items = query
+                ? this.searchItems.filter(item => item.label.toLocaleLowerCase().includes(query))
+                : this.searchItems;
+
+            return items.slice(0, 7);
+        },
 
         /**
          * Ciclo de vida Alpine.
@@ -476,6 +488,15 @@ window.starchoApp = function (initialOpenMenus) {
                 window.Starcho.dark.set(v ? 'dark' : 'light');
             });
             this.$watch('sidebarCollapsed', v => localStorage.setItem('starcho_collapsed', v ? 'true'  : 'false'));
+            this.$watch('search', () => { this.searchActiveIndex = 0; });
+
+            this._searchShortcut = event => {
+                if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
+                    event.preventDefault();
+                    this.openSearch();
+                }
+            };
+            document.addEventListener('keydown', this._searchShortcut);
 
             /* Muestra/oculta el botón hamburger según el viewport. */
             const mobBtn   = document.getElementById('mobBtn');
@@ -529,6 +550,46 @@ window.starchoApp = function (initialOpenMenus) {
             const idx = this.openMenus.indexOf(id);
             if (idx > -1) this.openMenus.splice(idx, 1);
             else           this.openMenus.push(id);
+        },
+
+        openSearch() {
+            this.searchOpen = true;
+            this.$nextTick(() => this.$refs.globalSearch?.focus());
+        },
+
+        closeSearch() {
+            this.searchOpen = false;
+            this.search = '';
+            this.searchActiveIndex = 0;
+            this.$refs.globalSearch?.blur();
+        },
+
+        moveSearch(direction) {
+            const count = this.filteredSearchItems.length;
+            if (!count) return;
+
+            this.searchActiveIndex = (this.searchActiveIndex + direction + count) % count;
+        },
+
+        openActiveSearchResult() {
+            const item = this.filteredSearchItems[this.searchActiveIndex];
+            if (item) this.goToSearchResult(item);
+        },
+
+        goToSearchResult(item) {
+            this.closeSearch();
+
+            if (item.target === '_blank') {
+                window.open(item.url, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            if (window.Livewire?.navigate) {
+                window.Livewire.navigate(item.url);
+                return;
+            }
+
+            window.location.assign(item.url);
         },
     };
 };

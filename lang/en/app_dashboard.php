@@ -6,6 +6,12 @@ return [
     'greeting_evening' => 'Good evening',
 
     'subtitle_today' => 'Here is a summary of your activity today.',
+    'weekly_focus' => 'Overall progress',
+    'priority_summary' => 'In focus now',
+    'priority_hint' => 'What needs your attention',
+    'overdue_label' => 'Overdue',
+    'today_label' => 'Due today',
+    'in_progress_label' => 'In progress',
 
     'overdue_tasks' => '{1} :count overdue task|[2,*] :count overdue tasks',
     'due_today_tasks' => '{1} :count due today|[2,*] :count due today',

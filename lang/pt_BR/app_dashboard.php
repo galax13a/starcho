@@ -6,6 +6,12 @@ return [
     'greeting_evening' => 'Boa noite',
 
     'subtitle_today' => 'Aqui esta um resumo da sua atividade hoje.',
+    'weekly_focus' => 'Progresso geral',
+    'priority_summary' => 'Em foco agora',
+    'priority_hint' => 'O que requer sua atencao',
+    'overdue_label' => 'Vencidas',
+    'today_label' => 'Para hoje',
+    'in_progress_label' => 'Em andamento',
 
     'overdue_tasks' => '{1} :count tarefa vencida|[2,*] :count tarefas vencidas',
     'due_today_tasks' => '{1} :count vence hoje|[2,*] :count vencem hoje',

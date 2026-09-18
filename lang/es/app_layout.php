@@ -21,7 +21,14 @@ return [
     // Topbar
     'open_menu'          => 'Abrir menú',
     'search_in_panel'    => 'Buscar en el panel…',
-    'search_placeholder' => 'Buscar…',
+    'search_placeholder' => 'Buscar en el espacio de trabajo…',
+    'search_results'      => 'Resultados',
+    'quick_navigation'    => 'Navegación rápida',
+    'no_search_results'   => 'No encontramos coincidencias',
+    'navigate'            => 'Navegar',
+    'open'                => 'Abrir',
+    'close'               => 'Cerrar',
+    'skip_to_content'     => 'Saltar al contenido',
 
     // Notificaciones
     'notifications'     => 'Notificaciones',

@@ -1,32 +1,6 @@
 <x-layouts::app :title="__('app_pages.dashboard_title')">
 <div class="sa-page">
 @php
-    $uid  = auth()->id();
-    $user = auth()->user();
-
-    // Tasks (user-scoped)
-    $myTotal     = \App\Models\Task::where('user_id', $uid)->count();
-    $myPending   = \App\Models\Task::where('user_id', $uid)->where('status', 'pending')->count();
-    $myProgress  = \App\Models\Task::where('user_id', $uid)->where('status', 'in_progress')->count();
-    $myDone      = \App\Models\Task::where('user_id', $uid)->where('status', 'completed')->count();
-    $myLate      = \App\Models\Task::where('user_id', $uid)
-                    ->whereNotIn('status', ['completed','cancelled'])
-                    ->whereNotNull('due_date')->where('due_date', '<', today())->count();
-    $myToday     = \App\Models\Task::where('user_id', $uid)
-                    ->whereNotIn('status', ['completed','cancelled'])
-                    ->whereNotNull('due_date')->whereDate('due_date', today())->count();
-
-    $rate = $myTotal > 0 ? round(($myDone / $myTotal) * 100) : 0;
-
-    // Contacts (global, if module installed)
-    $contactsActive = \App\Models\StarchoModule::isActive('contacts');
-    $contacts    = $contactsActive ? \App\Models\Contact::where('user_id', $uid)->count() : null;
-    $leads       = $contactsActive ? \App\Models\Contact::where('user_id', $uid)->where('status','lead')->count() : null;
-
-    // Recent tasks
-    $recentTasks = \App\Models\Task::where('user_id', $uid)->latest()->take(5)->get();
-
-    // Status map
     $statusMap = [
         'pending'     => ['label'=>__('tasks.status_pending'), 'color'=>'#a0a0a0', 'bg'=>'rgba(160,160,160,.1)'],
         'in_progress' => ['label'=>__('tasks.status_in_progress'), 'color'=>'#25f4ee', 'bg'=>'rgba(37,244,238,.1)'],
@@ -44,17 +18,16 @@
     $greeting = $hour < 12
         ? __('app_dashboard.greeting_morning')
         : ($hour < 19 ? __('app_dashboard.greeting_afternoon') : __('app_dashboard.greeting_evening'));
-    $initials = strtoupper(substr($user->name, 0, 2));
 @endphp
 
 {{-- ═══════════ HERO ═══════════ --}}
 <div class="db-hero">
     <div class="db-hero-left">
-        <div class="db-greeting">{{ $greeting }},</div>
+        <div class="db-greeting"><span></span>{{ $greeting }}</div>
         <div class="db-username">{{ $user->name }} <span class="db-wave">👋</span></div>
         <div class="db-subtitle">{{ __('app_dashboard.subtitle_today') }}</div>
         <div class="db-hero-actions">
-            @if(\App\Models\StarchoModule::isActive('tasks'))
+            @if($tasksActive)
             <x-starcho-btn-kick
                 :label="__('tasks.new_task')"
                 icon="fas fa-plus"
@@ -70,30 +43,55 @@
         </div>
     </div>
     <div class="db-hero-right">
-        <div class="db-avatar-ring">
-            <div class="db-avatar-inner">{{ $initials }}</div>
+        <div class="db-progress-card" aria-label="{{ __('app_dashboard.kpi_completion_rate') }}: {{ $rate }}%">
+            <div class="db-progress-ring" style="--progress: {{ $rate }}">
+                <svg viewBox="0 0 44 44" aria-hidden="true">
+                    <circle class="db-progress-track" cx="22" cy="22" r="18"></circle>
+                    <circle class="db-progress-value" cx="22" cy="22" r="18"></circle>
+                </svg>
+                <div class="db-progress-number"><span>{{ $rate }}<small>%</small></span></div>
+            </div>
+            <div class="db-progress-copy">
+                <strong>{{ __('app_dashboard.weekly_focus') }}</strong>
+                <span>{{ __('app_dashboard.kpi_done_of_total', ['done' => $myDone, 'total' => $myTotal]) }}</span>
+            </div>
         </div>
         <div class="db-date-pill">
-            <i class="fas fa-calendar-day" style="font-size:11px;color:var(--tt-cyan);"></i>
-            {{ now()->isoFormat('dddd, D MMM YYYY') }}
+            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+            {{ ucfirst(now()->isoFormat('dddd, D MMM YYYY')) }}
         </div>
-        @if($myLate > 0)
-        <div class="db-alert-pill">
-            <i class="fas fa-exclamation-triangle" style="font-size:10px;"></i>
-            {{ trans_choice('app_dashboard.overdue_tasks', $myLate, ['count' => $myLate]) }}
-        </div>
-        @endif
-        @if($myToday > 0)
-        <div class="db-today-pill">
-            <i class="fas fa-clock" style="font-size:10px;"></i>
-            {{ trans_choice('app_dashboard.due_today_tasks', $myToday, ['count' => $myToday]) }}
-        </div>
-        @endif
     </div>
 </div>
 
+@if($tasksActive)
+<div class="db-focus-strip" aria-label="{{ __('app_dashboard.priority_summary') }}">
+    <div class="db-focus-heading">
+        <span class="db-live-dot"></span>
+        <div>
+            <strong>{{ __('app_dashboard.priority_summary') }}</strong>
+            <span>{{ __('app_dashboard.priority_hint') }}</span>
+        </div>
+    </div>
+    <a href="{{ route('app.tasks.index') }}" wire:navigate class="db-focus-item {{ $myLate > 0 ? 'is-danger' : '' }}">
+        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+        <span>{{ __('app_dashboard.overdue_label') }}</span>
+        <strong>{{ $myLate }}</strong>
+    </a>
+    <a href="{{ route('app.tasks.index') }}" wire:navigate class="db-focus-item {{ $myToday > 0 ? 'is-warning' : '' }}">
+        <i class="fas fa-clock" aria-hidden="true"></i>
+        <span>{{ __('app_dashboard.today_label') }}</span>
+        <strong>{{ $myToday }}</strong>
+    </a>
+    <a href="{{ route('app.tasks.index') }}" wire:navigate class="db-focus-item is-active">
+        <i class="fas fa-bolt" aria-hidden="true"></i>
+        <span>{{ __('app_dashboard.in_progress_label') }}</span>
+        <strong>{{ $myProgress }}</strong>
+    </a>
+</div>
+@endif
+
 {{-- ═══════════ KPI STATS ═══════════ --}}
-@if(\App\Models\StarchoModule::isActive('tasks'))
+@if($tasksActive)
 <div class="db-kpi-grid">
 
     <div class="sc-card sc-card-tt db-kpi">
@@ -165,7 +163,7 @@
                 <i class="fas fa-history" style="color:var(--tt-cyan);"></i>
                     {{ __('app_dashboard.recent_tasks') }}
             </div>
-            @if(\App\Models\StarchoModule::isActive('tasks'))
+            @if($tasksActive)
             <a href="{{ route('app.tasks.index') }}" class="db-panel-link">{{ __('app_dashboard.view_all') }} →</a>
             @endif
         </div>
@@ -218,7 +216,7 @@
                 </div>
             </div>
             <div class="db-actions-grid">
-                @if(\App\Models\StarchoModule::isActive('tasks'))
+                @if($tasksActive)
                 <button onclick="Livewire.dispatch('openTask',{id:0})" class="db-action-btn">
                     <div class="db-action-icon" style="background:rgba(37,244,238,.08);color:#25f4ee;">
                         <i class="fas fa-clipboard-list"></i>
@@ -259,11 +257,6 @@
                     {{ __('app_dashboard.this_month') }}
                 </div>
             </div>
-            @php
-                $monthTasks    = \App\Models\Task::where('user_id', $uid)->whereMonth('created_at', now()->month)->count();
-                $monthDone     = \App\Models\Task::where('user_id', $uid)->where('status','completed')->whereMonth('updated_at', now()->month)->count();
-                $monthContacts = $contactsActive ? \App\Models\Contact::where('user_id', $uid)->whereMonth('created_at', now()->month)->count() : 0;
-            @endphp
             <div class="db-month-grid">
                 <div class="db-month-item">
                     <div class="db-month-val" style="color:#25f4ee;">{{ $monthTasks }}</div>
@@ -285,7 +278,7 @@
     </div>
 </div>
 
-@if(\App\Models\StarchoModule::isActive('tasks'))
+@if($tasksActive)
 <livewire:app.task-modal />
 @endif
 

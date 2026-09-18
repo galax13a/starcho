@@ -21,7 +21,14 @@ return [
     // Topbar
     'open_menu'          => 'Open menu',
     'search_in_panel'    => 'Search in the panel…',
-    'search_placeholder' => 'Search…',
+    'search_placeholder' => 'Search workspace…',
+    'search_results'      => 'Results',
+    'quick_navigation'    => 'Quick navigation',
+    'no_search_results'   => 'No matching results',
+    'navigate'            => 'Navigate',
+    'open'                => 'Open',
+    'close'               => 'Close',
+    'skip_to_content'     => 'Skip to content',
 
     // Notifications
     'notifications'       => 'Notifications',

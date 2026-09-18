@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\App\DataTransferController;
+use App\Http\Controllers\App\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Alias global esperado por Fortify y por algunos componentes del starter kit.
 // Se declara fuera del prefijo de nombres para que `route('dashboard')` y
 // `route('app.dashboard')` sigan siendo compatibles sin exponer el dashboard.
-Route::view('app/dashboard', 'dashboard')
+Route::get('app/dashboard', DashboardController::class)
     ->middleware(['auth', 'verified', 'banned'])
     ->name('dashboard');
 
@@ -15,7 +16,7 @@ Route::prefix('app')
     ->middleware(['auth', 'verified', 'banned'])
     ->group(function () {
 
-        Route::view('/', 'dashboard')->name('dashboard');
+        Route::get('/', DashboardController::class)->name('dashboard');
 
         Route::view('tasks', 'tasks.index')->name('tasks.index');
         Route::get('tasks/export', [DataTransferController::class, 'exportTasks'])->name('tasks.export');
