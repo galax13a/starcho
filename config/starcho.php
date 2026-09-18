@@ -19,4 +19,13 @@ return [
         'refresh_defaults' => false,
         'reset_admin_password' => false,
     ],
+
+    'live' => [
+        // Use ws:// or wss:// for WebSocket, http(s):// for Server-Sent Events.
+        // Leave empty until the live transport is configured for the deployment.
+        'endpoint' => env('STARCHO_LIVE_ENDPOINT'),
+        'protocol' => env('STARCHO_LIVE_PROTOCOL', 'auto'),
+        'reconnect_base_ms' => (int) env('STARCHO_LIVE_RECONNECT_BASE_MS', 1000),
+        'reconnect_max_ms' => (int) env('STARCHO_LIVE_RECONNECT_MAX_MS', 30000),
+    ],
 ];

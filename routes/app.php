@@ -18,6 +18,8 @@ Route::prefix('app')
 
         Route::get('/', DashboardController::class)->name('dashboard');
 
+        Route::view('trafikcams', 'trafikcams.index')->name('trafikcams');
+
         Route::view('tasks', 'tasks.index')->name('tasks.index');
         Route::get('tasks/export', [DataTransferController::class, 'exportTasks'])->name('tasks.export');
 

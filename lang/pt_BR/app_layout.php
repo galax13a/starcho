@@ -17,6 +17,7 @@ return [
     'role_user'    => 'user',
     'admin_badge'  => 'ADMIN',
     'logout'       => 'Sair',
+    'trafikcams'   => 'Trafikcams',
 
     // Topbar
     'open_menu'          => 'Abrir menu',

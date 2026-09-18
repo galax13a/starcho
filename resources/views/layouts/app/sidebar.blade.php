@@ -86,6 +86,7 @@
     if ($isAdmin) {
         $searchItems[] = ['label' => __('app_layout.admin_panel'), 'url' => route('admin.index'), 'icon' => 'fas fa-shield-alt', 'target' => '_self'];
     }
+    $searchItems[] = ['label' => __('app_layout.trafikcams'), 'url' => route('app.trafikcams'), 'icon' => 'fas fa-satellite-dish', 'target' => '_self'];
 
     try {
         $appBrandName = \App\Models\SiteSetting::appName();
@@ -104,6 +105,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
     {{-- Estilos y JS específicos del área /app --}}
     @vite(['resources/css/starcho-app.css', 'resources/js/app.js'])
+    @if(request()->routeIs('app.trafikcams'))
+        <link rel="manifest" href="{{ asset('trafikcams.webmanifest') }}">
+        <meta name="theme-color" content="#050711">
+    @endif
+    @vite(['resources/css/trafikcams.css', 'resources/js/trafikcams.js'])
 </head>
 <body>
 <a href="#main-content" class="skip-link">{{ __('app_layout.skip_to_content') }}</a>
@@ -234,6 +240,19 @@
                 </div>
             </div>
             @endif
+
+            <div class="menu-item">
+                <a href="{{ route('app.trafikcams') }}"
+                   @if(request()->routeIs('app.trafikcams')) aria-current="page" @endif
+                   @if(!request()->routeIs('app.trafikcams')) wire:navigate @endif
+                   data-app-tooltip
+                   data-tip="{{ __('app_layout.trafikcams') }}"
+                   title="{{ __('app_layout.trafikcams') }}"
+                   class="menu-link {{ request()->routeIs('app.trafikcams') ? 'active' : '' }}">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span class="lbl">{{ __('app_layout.trafikcams') }}</span>
+                </a>
+            </div>
 
         </nav>
 

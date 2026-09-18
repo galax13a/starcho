@@ -1,0 +1,19 @@
+{
+    "name": "Trafikcams Live Console",
+    "short_name": "Trafikcams",
+    "description": "Real-time Trafikcams monitoring console.",
+    "start_url": "/app/trafikcams",
+    "scope": "/app/trafikcams",
+    "display": "standalone",
+    "background_color": "#050711",
+    "theme_color": "#050711",
+    "orientation": "landscape",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

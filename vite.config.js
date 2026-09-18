@@ -34,6 +34,10 @@ export default defineConfig({
 
                 // JS dedicado del editor visual aislado (sin Alpine)
                 'resources/js/starcho-editor-page.js',
+
+                // Trafikcams live console: real-time transport + PWA UI
+                'resources/css/trafikcams.css',
+                'resources/js/trafikcams.js',
             ],
             refresh: true,
         }),
