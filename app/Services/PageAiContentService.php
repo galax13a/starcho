@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Laravel\Ai\Ai;
 use RuntimeException;
+
 use function Laravel\Ai\agent;
 
 class PageAiContentService
@@ -557,27 +558,27 @@ PROMPT;
                 $heading = e(trim((string) ($section['heading'] ?? '')));
                 $body = nl2br(e(trim((string) ($section['body'] ?? ''))), false);
                 $bullets = collect($section['bullets'] ?? [])
-                    ->map(fn ($item) => '<li>' . e(trim((string) $item)) . '</li>')
+                    ->map(fn ($item) => '<li>'.e(trim((string) $item)).'</li>')
                     ->filter(fn ($item) => $item !== '<li></li>')
                     ->join('');
 
                 return '<article class="rounded-2xl border border-white/10 bg-white/5 p-6">'
-                    . ($heading !== '' ? '<h2 class="text-2xl font-bold text-white">' . $heading . '</h2>' : '')
-                    . ($body !== '' ? '<p class="mt-4 leading-8 text-slate-300">' . $body . '</p>' : '')
-                    . ($bullets !== '' ? '<ul class="mt-5 list-disc space-y-2 pl-5 text-slate-200">' . $bullets . '</ul>' : '')
-                    . '</article>';
+                    .($heading !== '' ? '<h2 class="text-2xl font-bold text-white">'.$heading.'</h2>' : '')
+                    .($body !== '' ? '<p class="mt-4 leading-8 text-slate-300">'.$body.'</p>' : '')
+                    .($bullets !== '' ? '<ul class="mt-5 list-disc space-y-2 pl-5 text-slate-200">'.$bullets.'</ul>' : '')
+                    .'</article>';
             })
             ->join('');
 
         return '<section class="bg-slate-950 px-6 py-16 text-white">'
-            . '<div class="mx-auto max-w-6xl">'
-            . '<div class="mb-10 text-center">'
-            . '<h1 class="text-4xl font-black tracking-tight sm:text-5xl">' . e($title) . '</h1>'
-            . '<p class="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-300">' . e($excerpt) . '</p>'
-            . '</div>'
-            . '<div class="grid gap-5 md:grid-cols-2">' . $items . '</div>'
-            . '</div>'
-            . '</section>';
+            .'<div class="mx-auto max-w-6xl">'
+            .'<div class="mb-10 text-center">'
+            .'<h1 class="text-4xl font-black tracking-tight sm:text-5xl">'.e($title).'</h1>'
+            .'<p class="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-300">'.e($excerpt).'</p>'
+            .'</div>'
+            .'<div class="grid gap-5 md:grid-cols-2">'.$items.'</div>'
+            .'</div>'
+            .'</section>';
     }
 
     private function sectionsToEditorJson(array $sections): string
@@ -656,8 +657,8 @@ PROMPT;
                     'header' => strip_tags((string) ($data['text'] ?? '')),
                     'paragraph' => strip_tags((string) ($data['text'] ?? '')),
                     'quote' => strip_tags((string) ($data['text'] ?? '')),
-                    'warning' => trim(strip_tags((string) ($data['title'] ?? '') . "\n" . (string) ($data['message'] ?? ''))),
-                    'list' => collect($data['items'] ?? [])->map(fn ($item) => '- ' . strip_tags(is_array($item) ? (string) ($item['content'] ?? '') : (string) $item))->join("\n"),
+                    'warning' => trim(strip_tags((string) ($data['title'] ?? '')."\n".(string) ($data['message'] ?? ''))),
+                    'list' => collect($data['items'] ?? [])->map(fn ($item) => '- '.strip_tags(is_array($item) ? (string) ($item['content'] ?? '') : (string) $item))->join("\n"),
                     'starchoHtml' => trim(strip_tags((string) ($data['html'] ?? ''))),
                     default => null,
                 };

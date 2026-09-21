@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\StarchoMenuItem;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -23,23 +24,23 @@ return new class extends Migration
 
         if (! $exists) {
             DB::table('starcho_menu_items')->insert([
-                'panel'      => 'admin',
+                'panel' => 'admin',
                 'module_key' => null,
-                'parent_id'  => $websiteParentId,
-                'section'    => 'Sistema',
-                'name'       => json_encode(['es' => 'IA', 'en' => 'AI', 'pt_BR' => 'IA'], JSON_UNESCAPED_UNICODE),
-                'icon'       => 'fas fa-robot',
-                'route'      => 'admin.ai.index',
-                'target'     => '_self',
+                'parent_id' => $websiteParentId,
+                'section' => 'Sistema',
+                'name' => json_encode(['es' => 'IA', 'en' => 'AI', 'pt_BR' => 'IA'], JSON_UNESCAPED_UNICODE),
+                'icon' => 'fas fa-robot',
+                'route' => 'admin.ai.index',
+                'target' => '_self',
                 'sort_order' => 64,
-                'active'     => true,
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
 
-        if (class_exists(\App\Models\StarchoMenuItem::class)) {
-            \App\Models\StarchoMenuItem::clearMenuCache();
+        if (class_exists(StarchoMenuItem::class)) {
+            StarchoMenuItem::clearMenuCache();
         }
     }
 
@@ -50,8 +51,8 @@ return new class extends Migration
             ->where('route', 'admin.ai.index')
             ->delete();
 
-        if (class_exists(\App\Models\StarchoMenuItem::class)) {
-            \App\Models\StarchoMenuItem::clearMenuCache();
+        if (class_exists(StarchoMenuItem::class)) {
+            StarchoMenuItem::clearMenuCache();
         }
     }
 };

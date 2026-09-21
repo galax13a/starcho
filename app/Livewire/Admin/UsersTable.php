@@ -9,8 +9,8 @@ use App\Models\AiPlan;
 use App\Models\StoragePlan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
 use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
@@ -27,6 +27,7 @@ final class UsersTable extends PowerGridComponent
     public string $tableName = 'users-table';
 
     private ?Collection $storagePlansCache = null;
+
     private ?Collection $aiPlansCache = null;
 
     private function storagePlans(): Collection
@@ -77,7 +78,7 @@ final class UsersTable extends PowerGridComponent
     private function selectClasses(): string
     {
         return 'h-8 min-w-[150px] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 '
-            . 'text-xs text-zinc-700 dark:text-zinc-300 px-2 pr-7 focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition';
+            .'text-xs text-zinc-700 dark:text-zinc-300 px-2 pr-7 focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition';
     }
 
     private function aiPlanSelect(User $user): string
@@ -87,26 +88,26 @@ final class UsersTable extends PowerGridComponent
 
         foreach ($this->aiPlans() as $plan) {
             $selected = $current === (int) $plan->id ? ' selected' : '';
-            $price = $plan->is_free ? 'Gratis' : '$' . number_format($plan->monthly_price, 2);
-            $options .= '<option value="' . $plan->id . '"' . $selected . '>' . e($plan->name) . ' · ' . e($price) . '</option>';
+            $price = $plan->is_free ? 'Gratis' : '$'.number_format($plan->monthly_price, 2);
+            $options .= '<option value="'.$plan->id.'"'.$selected.'>'.e($plan->name).' · '.e($price).'</option>';
         }
 
-        return '<select wire:change="changeAiPlan(' . $user->id . ', $event.target.value)" class="' . $this->selectClasses() . '">'
-            . $options . '</select>';
+        return '<select wire:change="changeAiPlan('.$user->id.', $event.target.value)" class="'.$this->selectClasses().'">'
+            .$options.'</select>';
     }
 
     private function storagePlanSelect(User $user): string
     {
         $current = (int) ($user->storage_plan_id ?? 0);
-        $options = '<option value="">' . e(__('admin_ui.users.no_plan')) . '</option>';
+        $options = '<option value="">'.e(__('admin_ui.users.no_plan')).'</option>';
 
         foreach ($this->storagePlans() as $plan) {
             $selected = $current === (int) $plan->id ? ' selected' : '';
-            $options .= '<option value="' . $plan->id . '"' . $selected . '>' . e($plan->name) . ' · ' . e($plan->limitLabel()) . '</option>';
+            $options .= '<option value="'.$plan->id.'"'.$selected.'>'.e($plan->name).' · '.e($plan->limitLabel()).'</option>';
         }
 
-        return '<select wire:change="changeStoragePlan(' . $user->id . ', $event.target.value)" class="' . $this->selectClasses() . '">'
-            . $options . '</select>';
+        return '<select wire:change="changeStoragePlan('.$user->id.', $event.target.value)" class="'.$this->selectClasses().'">'
+            .$options.'</select>';
     }
 
     public function changeStoragePlan(int $userId, string $planId): void
@@ -115,6 +116,7 @@ final class UsersTable extends PowerGridComponent
 
         if (! $user) {
             $this->notifyFailure('Usuario no encontrado.');
+
             return;
         }
 
@@ -122,13 +124,14 @@ final class UsersTable extends PowerGridComponent
 
         if ($newPlanId !== null && ! StoragePlan::whereKey($newPlanId)->exists()) {
             $this->notifyFailure('Plan de almacenamiento no válido.');
+
             return;
         }
 
         $user->update(['storage_plan_id' => $newPlanId]);
         $name = $newPlanId ? optional(StoragePlan::find($newPlanId))->name : 'Sin plan';
         $this->notifySuccess("Plan de almacenamiento de «{$user->name}» actualizado a «{$name}».");
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     public function changeAiPlan(int $userId, string $planId): void
@@ -137,6 +140,7 @@ final class UsersTable extends PowerGridComponent
 
         if (! $user) {
             $this->notifyFailure('Usuario no encontrado.');
+
             return;
         }
 
@@ -144,13 +148,14 @@ final class UsersTable extends PowerGridComponent
 
         if ($newPlanId !== null && ! AiPlan::whereKey($newPlanId)->exists()) {
             $this->notifyFailure('Plan de IA no válido.');
+
             return;
         }
 
         $user->update(['ai_plan_id' => $newPlanId]);
         $name = $newPlanId ? optional(AiPlan::find($newPlanId))->name : 'Sin plan IA';
         $this->notifySuccess("Plan de IA de «{$user->name}» actualizado a «{$name}».");
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function storageUsageBar(User $user): string
@@ -159,22 +164,22 @@ final class UsersTable extends PowerGridComponent
 
         if (! $user->storage_plan_id || ! $user->storagePlan) {
             return '<div class="text-xs text-zinc-500 dark:text-zinc-400">'
-                . e($used) . ' / <span class="text-zinc-400">' . e(__('admin_ui.users.storage_unlimited')) . '</span></div>';
+                .e($used).' / <span class="text-zinc-400">'.e(__('admin_ui.users.storage_unlimited')).'</span></div>';
         }
 
-        $pct   = $user->storagePct();
+        $pct = $user->storagePct();
         $limit = $user->storagePlan->limitLabel();
         $color = $pct >= 90 ? 'bg-rose-500' : ($pct >= 70 ? 'bg-amber-500' : 'bg-violet-600');
 
         return '<div class="min-w-[140px]">'
-            . '<div class="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300 mb-1">'
-            . '<span>' . e($used) . ' / ' . e($limit) . '</span>'
-            . '<span class="text-zinc-400">' . $pct . '%</span>'
-            . '</div>'
-            . '<span class="block w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">'
-            . '<span class="block h-full rounded-full ' . $color . '" style="width:' . $pct . '%"></span>'
-            . '</span>'
-            . '</div>';
+            .'<div class="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300 mb-1">'
+            .'<span>'.e($used).' / '.e($limit).'</span>'
+            .'<span class="text-zinc-400">'.$pct.'%</span>'
+            .'</div>'
+            .'<span class="block w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">'
+            .'<span class="block h-full rounded-full '.$color.'" style="width:'.$pct.'%"></span>'
+            .'</span>'
+            .'</div>';
     }
 
     public function columns(): array
@@ -215,12 +220,13 @@ final class UsersTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedUserIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.users.notify.no_selection'));
+
             return null;
         }
 
@@ -228,7 +234,7 @@ final class UsersTable extends PowerGridComponent
 
         return Excel::download(
             new AdminUsersExport($selectedIds),
-            'admin-users-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-users-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -238,6 +244,7 @@ final class UsersTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.users.notify.no_selection'));
+
             return;
         }
 
@@ -248,6 +255,7 @@ final class UsersTable extends PowerGridComponent
         if ($users->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.users.notify.no_selection'));
+
             return;
         }
 
@@ -260,7 +268,7 @@ final class UsersTable extends PowerGridComponent
 
         $this->clearSelection();
         $this->notifyWarning(__('admin_ui.users.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deleteUser')]
@@ -270,12 +278,13 @@ final class UsersTable extends PowerGridComponent
 
         if (! $user) {
             $this->notifyCrud('users', 'not_found');
+
             return;
         }
 
         $user->delete();
         $this->notifyCrud('users', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedUserIds(): array

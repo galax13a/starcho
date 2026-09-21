@@ -7,6 +7,7 @@ use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiAssetGeneration;
 use App\Models\AiSetting;
 use App\Models\Post;
+use App\Models\PostAiGeneration;
 use App\Models\PostAiMemory;
 use App\Models\SiteLanguage;
 use App\Models\User;
@@ -26,6 +27,7 @@ use Livewire\Attributes\Session;
 use Livewire\Component;
 use Throwable;
 
+/** @property-read list<string> $languages */
 class PostAiCreator extends Component
 {
     use DispatchesStarchoNotify;
@@ -40,39 +42,56 @@ class PostAiCreator extends Component
     private const DEFAULT_EDITORIAL_PROMPT = 'Actúa como redactor profesional senior, estratega SEO y editor técnico. Crea contenido publicable, claro, persuasivo y bien investigado. Si el formato elegido es HTML + Tailwind, entrega una pieza visual premium, responsive, semántica y moderna con secciones, cards, llamados a la acción y clases Tailwind limpias; no uses scripts, iframes ni assets externos. Si el formato elegido es Editor.js, estructura el contenido en secciones editables con títulos, párrafos y listas útiles.';
 
     public string $description = '';
+
     #[Session(key: 'starcho.post_ai_creator.provider')]
     public string $provider = 'openai';
+
     #[Session(key: 'starcho.post_ai_creator.model')]
     public string $model = '';
+
     #[Session(key: 'starcho.post_ai_creator.content_format')]
     public string $contentFormat = 'editorjs';
+
     #[Session(key: 'starcho.post_ai_creator.language_mode')]
     public string $languageMode = 'multi';
+
     #[Session(key: 'starcho.post_ai_creator.selected_locale')]
     public string $selectedLocale = '';
+
     #[Session(key: 'starcho.post_ai_creator.editorial_prompt')]
     public string $editorialPrompt = self::DEFAULT_EDITORIAL_PROMPT;
+
     #[Session(key: 'starcho.post_ai_creator.article_size')]
     public string $articleSize = 'medium';
+
     #[Session(key: 'starcho.post_ai_creator.max_tokens')]
     public int $maxTokens = 2200;
+
     public string $status = Post::STATUS_DRAFT;
+
     #[Session(key: 'starcho.post_ai_creator.author_id')]
     public int $authorId = 0;
+
     #[Session(key: 'starcho.post_ai_creator.allow_comments')]
     public bool $allowComments = true;
+
     public ?string $errorMessage = null;
 
     // ── AI featured image ─────────────────────────────────────────────
     #[Session(key: 'starcho.post_ai_creator.gen_image')]
     public bool $genImage = false;
+
     #[Session(key: 'starcho.post_ai_creator.image_mode')]
     public string $imageMode = 'article';   // article | prompt
+
     public string $imagePrompt = '';
+
     #[Session(key: 'starcho.post_ai_creator.image_size_preset')]
     public string $imageSizePreset = '800x600'; // 800x600 | 480x360 | custom
+
     #[Session(key: 'starcho.post_ai_creator.img_custom_w')]
     public int $imgCustomW = 800;
+
     #[Session(key: 'starcho.post_ai_creator.img_custom_h')]
     public int $imgCustomH = 600;
 
@@ -175,14 +194,14 @@ class PostAiCreator extends Component
                 $this->maxTokens,
             );
             $post = Post::create($this->postDataFromBlueprint($blueprint));
-            $generation = $post->aiGenerations()->create($service->lastGenerationRecord([
+            $generation = PostAiGeneration::query()->create(array_merge($service->lastGenerationRecord([
                 'user_id' => auth()->id(),
                 'action' => 'create_post',
-            ]));
+            ]), ['post_id' => $post->id]));
             $post->aiMemories()->create([
                 'post_ai_generation_id' => $generation->id,
                 'user_id' => auth()->id(),
-                'title' => 'Borrador inicial AI - ' . now()->format('d/m/Y H:i'),
+                'title' => 'Borrador inicial AI - '.now()->format('d/m/Y H:i'),
                 'source' => 'create_post',
                 'status' => PostAiMemory::STATUS_DRAFT,
                 'active' => true,
@@ -245,27 +264,27 @@ class PostAiCreator extends Component
 
             [$w, $h] = match ($this->imageSizePreset) {
                 '480x360' => [480, 360],
-                'custom'  => [max(64, min(2048, $this->imgCustomW)), max(64, min(2048, $this->imgCustomH))],
-                default   => [800, 600],
+                'custom' => [max(64, min(2048, $this->imgCustomW)), max(64, min(2048, $this->imgCustomH))],
+                default => [800, 600],
             };
 
             $params = match ($provider) {
                 'replicate' => ['width' => $w, 'height' => $h],
-                'fal'       => ['image_size' => ['width' => $w, 'height' => $h]],
-                default     => ['size' => $h > $w ? '1024x1536' : ($w > $h ? '1536x1024' : '1024x1024')],
+                'fal' => ['image_size' => ['width' => $w, 'height' => $h]],
+                default => ['size' => $h > $w ? '1024x1536' : ($w > $h ? '1536x1024' : '1024x1024')],
             };
 
             $generation = match ($provider) {
                 'replicate' => app(AiReplicateService::class)->generateImage($prompt, $model, auth()->user(), $params),
-                'fal'       => app(AiVideoService::class)->generateImage($prompt, $model, auth()->user(), $params),
-                default     => app(AiImageService::class)->generate($prompt, $model, auth()->user(), $params['size']),
+                'fal' => app(AiVideoService::class)->generateImage($prompt, $model, auth()->user(), $params),
+                default => app(AiImageService::class)->generate($prompt, $model, auth()->user(), $params['size']),
             };
 
             if ($generation->media && $generation->media->path) {
                 $post->update(['featured_image' => $generation->media->path]);
             }
-        } catch (\Throwable $e) {
-            $this->notifyWarning('El post se creó, pero la imagen IA falló: ' . $e->getMessage());
+        } catch (Throwable $e) {
+            $this->notifyWarning('El post se creó, pero la imagen IA falló: '.$e->getMessage());
         }
     }
 
@@ -392,23 +411,23 @@ class PostAiCreator extends Component
     }
 
     /** Logs a failed text generation so lost tokens/cost show up in /admin/ai stats. */
-    private function recordFailedGeneration(\Throwable $exception, string $context): void
+    private function recordFailedGeneration(Throwable $exception, string $context): void
     {
         try {
             $cost = app(AiPricing::class)->textCostCents($this->model, $this->maxTokens);
 
             AiAssetGeneration::create([
-                'user_id'    => auth()->id(),
-                'type'       => AiAssetGeneration::TYPE_TEXT,
-                'provider'   => $this->provider,
-                'model'      => $this->model,
-                'status'     => AiAssetGeneration::STATUS_FAILED,
-                'prompt'     => mb_substr($this->description, 0, 2000),
-                'error'      => mb_substr($exception->getMessage(), 0, 1000),
-                'params'     => ['estimated_tokens' => $this->maxTokens, 'context' => $context],
+                'user_id' => auth()->id(),
+                'type' => AiAssetGeneration::TYPE_TEXT,
+                'provider' => $this->provider,
+                'model' => $this->model,
+                'status' => AiAssetGeneration::STATUS_FAILED,
+                'prompt' => mb_substr($this->description, 0, 2000),
+                'error' => mb_substr($exception->getMessage(), 0, 1000),
+                'params' => ['estimated_tokens' => $this->maxTokens, 'context' => $context],
                 'cost_cents' => $cost,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // never let logging break the UX
         }
     }
@@ -417,10 +436,10 @@ class PostAiCreator extends Component
     {
         $profile = self::ARTICLE_PROFILES[$this->articleSize] ?? self::ARTICLE_PROFILES['medium'];
         $format = $this->contentFormat === 'html' ? 'HTML + Tailwind renderizable en starchoHtml' : 'Editor.js estructurado';
-        $htmlParameters = $this->contentFormat === 'html' ? "\n\n" . $this->htmlThemeParameters() : '';
+        $htmlParameters = $this->contentFormat === 'html' ? "\n\n".$this->htmlThemeParameters() : '';
         $localeLine = $this->languageMode === 'single'
-            ? 'Generar únicamente el idioma: ' . ($this->targetLocales()[0] ?? 'es') . '.'
-            : 'Generar todos los idiomas activos: ' . implode(', ', $this->targetLocales()) . '.';
+            ? 'Generar únicamente el idioma: '.($this->targetLocales()[0] ?? 'es').'.'
+            : 'Generar todos los idiomas activos: '.implode(', ', $this->targetLocales()).'.';
 
         return trim(<<<PROMPT
 Tema base:

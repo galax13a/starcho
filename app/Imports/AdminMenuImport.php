@@ -12,11 +12,10 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class AdminMenuImport implements ToCollection, WithHeadingRow
 {
     public int $created = 0;
+
     public int $updated = 0;
 
-    public function __construct(private readonly string $panel)
-    {
-    }
+    public function __construct(private readonly string $panel) {}
 
     public function collection(Collection $rows): void
     {
@@ -38,9 +37,9 @@ class AdminMenuImport implements ToCollection, WithHeadingRow
                 $nameEs = $this->toString($row['name_es'] ?? null);
                 $nameEn = $this->toString($row['name_en'] ?? null);
                 $namePtBr = $this->toString($row['name_pt_br'] ?? null);
-                $fallback = $this->toString($row['section'] ?? null) ?: ('Menu ' . ($index + 1));
+                $fallback = $this->toString($row['section'] ?? null) ?: ('Menu '.($index + 1));
 
-                $item = new StarchoMenuItem();
+                $item = new StarchoMenuItem;
                 $item->setTranslation('name', 'es', $nameEs ?: $fallback);
                 $item->setTranslation('name', 'en', $nameEn ?: ($nameEs ?: $fallback));
                 $item->setTranslation('name', 'pt_BR', $namePtBr ?: ($nameEs ?: $fallback));

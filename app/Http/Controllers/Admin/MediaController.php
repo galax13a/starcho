@@ -13,9 +13,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\View\View;
 
 class MediaController extends Controller
 {
@@ -26,7 +27,7 @@ class MediaController extends Controller
         $query = Media::with(['user', 'mediable', 'albums', 'tags', 'comments.user', 'ratings', 'favorites'])->latest();
 
         if ($request->filled('type')) {
-            $query->where('mime_type', 'like', $request->type . '/%');
+            $query->where('mime_type', 'like', $request->type.'/%');
         }
 
         if ($request->filled('context')) {
@@ -35,8 +36,8 @@ class MediaController extends Controller
 
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
-                $q->where('original_name', 'like', '%' . $request->q . '%')
-                    ->orWhere('display_name', 'like', '%' . $request->q . '%');
+                $q->where('original_name', 'like', '%'.$request->q.'%')
+                    ->orWhere('display_name', 'like', '%'.$request->q.'%');
             });
         }
 
@@ -55,24 +56,24 @@ class MediaController extends Controller
         $variantBytes = (int) Media::sum('variants_size');
 
         $totals = [
-            'count'     => Media::count(),
-            'size'      => $originalBytes + $variantBytes,
+            'count' => Media::count(),
+            'size' => $originalBytes + $variantBytes,
             'original_size' => $originalBytes,
             'variants_size' => $variantBytes,
-            'images'    => Media::where('mime_type', 'like', 'image/%')->count(),
-            'videos'    => Media::where('mime_type', 'like', 'video/%')->count(),
+            'images' => Media::where('mime_type', 'like', 'image/%')->count(),
+            'videos' => Media::where('mime_type', 'like', 'video/%')->count(),
             'documents' => Media::where('mime_type', 'not like', 'image/%')
-                                ->where('mime_type', 'not like', 'video/%')
-                                ->count(),
+                ->where('mime_type', 'not like', 'video/%')
+                ->count(),
         ];
 
         // ── Current user's storage plan ───────────────────────────────
-        $user        = auth()->user();
+        $user = auth()->user();
         $storagePlan = $user->storagePlan ?? StoragePlan::free();
-        $usedBytes   = $user->storage_used_bytes ?? 0;
-        $limitBytes  = $storagePlan?->storage_limit_bytes ?? 0;
+        $usedBytes = $user->storage_used_bytes ?? 0;
+        $limitBytes = $storagePlan->storage_limit_bytes ?? 0;
         $remainingBytes = $limitBytes > 0 ? max(0, $limitBytes - $usedBytes) : null;
-        $pct         = ($limitBytes > 0) ? min(100, round($usedBytes / $limitBytes * 100)) : 0;
+        $pct = ($limitBytes > 0) ? min(100, round($usedBytes / $limitBytes * 100)) : 0;
 
         // Next paid plan (cheapest plan more expensive than current)
         $upgradePlan = StoragePlan::where('is_active', true)
@@ -104,16 +105,16 @@ class MediaController extends Controller
         $images = Media::query()
             ->where('mime_type', 'like', 'image/%')
             ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
-                $w->where('original_name', 'like', '%' . $request->q . '%')
-                  ->orWhere('display_name', 'like', '%' . $request->q . '%');
+                $w->where('original_name', 'like', '%'.$request->q.'%')
+                    ->orWhere('display_name', 'like', '%'.$request->q.'%');
             }))
             ->latest()
             ->limit(80)
             ->get()
             ->map(fn (Media $m) => [
-                'id'   => $m->id,
+                'id' => $m->id,
                 'path' => $m->path,
-                'url'  => $m->preview_url ?? $m->public_url,
+                'url' => $m->preview_url ?? $m->public_url,
                 'full' => $m->public_url,
                 'name' => $m->display_name ?: $m->original_name,
             ]);
@@ -135,19 +136,19 @@ class MediaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'media'   => [
-                    'id'            => $media->id,
-                    'url'           => $media->public_url,
-                    'preview_url'   => $media->preview_url,
-                    'variants'      => $media->variants,
+                'media' => [
+                    'id' => $media->id,
+                    'url' => $media->public_url,
+                    'preview_url' => $media->preview_url,
+                    'variants' => $media->variants,
                     'original_name' => $media->original_name,
-                    'name'          => $media->name,
-                    'size_label'    => $media->sizeLabel(),
-                    'is_image'      => $media->isImage(),
-                    'is_video'      => $media->isVideo(),
-                    'file_type'     => $media->fileType(),
-                    'width'         => $media->width,
-                    'height'        => $media->height,
+                    'name' => $media->name,
+                    'size_label' => $media->sizeLabel(),
+                    'is_image' => $media->isImage(),
+                    'is_video' => $media->isVideo(),
+                    'file_type' => $media->fileType(),
+                    'width' => $media->width,
+                    'height' => $media->height,
                 ],
             ]);
         } catch (\RuntimeException $e) {
@@ -167,12 +168,12 @@ class MediaController extends Controller
         $variant = $request->query('variant');
         $path = $variant ? $media->variantPath((string) $variant) : $media->path;
 
-        abort_unless($path, 404);
+        abort_unless(is_string($path) && $path !== '', 404);
 
-        $suffix = $variant ? '-' . $variant . 'px' : '';
+        $suffix = $variant ? '-'.$variant.'px' : '';
         $extension = pathinfo($path, PATHINFO_EXTENSION) ?: pathinfo($media->path, PATHINFO_EXTENSION);
-        $baseName = pathinfo($media->name ?: $media->original_name, PATHINFO_FILENAME) ?: 'media-' . $media->id;
-        $name = Str::slug($baseName) . $suffix . ($extension ? '.' . $extension : '');
+        $baseName = pathinfo($media->name ?: $media->original_name, PATHINFO_FILENAME) ?: 'media-'.$media->id;
+        $name = Str::slug($baseName).$suffix.($extension ? '.'.$extension : '');
 
         return $this->storage->diskFor($media)->download($path, $name);
     }
@@ -261,7 +262,7 @@ class MediaController extends Controller
                     $this->storage->generateImageVariants($media, true);
                     $generated++;
                 } catch (\RuntimeException $exception) {
-                    $failed[] = $media->name . ': ' . $exception->getMessage();
+                    $failed[] = $media->name.': '.$exception->getMessage();
                 }
             });
 
@@ -299,7 +300,25 @@ class MediaController extends Controller
             'media_ids.*' => ['integer', 'exists:media,id'],
         ]);
 
-        MediaAlbum::findOrFail($data['album_id'])->media()->syncWithoutDetaching($data['media_ids']);
+        $album = MediaAlbum::findOrFail($data['album_id']);
+        $mediaItems = Media::whereIn('id', $data['media_ids'])->get();
+        $baseVisibilities = [];
+
+        if ($album->effectiveVisibility() !== 'public') {
+            foreach ($mediaItems as $media) {
+                $baseVisibilities[$media->id] = $media->visibility ?: 'public';
+                $media->enforceMinimumVisibility($album->effectiveVisibility());
+                $this->storage->moveToPrivate($media);
+            }
+        }
+
+        $album->media()->syncWithoutDetaching($data['media_ids']);
+
+        foreach ($mediaItems as $media) {
+            if (isset($baseVisibilities[$media->id])) {
+                $media->forceFill(['visibility' => $baseVisibilities[$media->id]])->save();
+            }
+        }
 
         return back()->with('success', 'Archivos agregados al álbum.');
     }
@@ -310,19 +329,45 @@ class MediaController extends Controller
             'display_name' => ['nullable', 'string', 'max:255'],
             'alt' => ['nullable', 'string', 'max:255'],
             'caption' => ['nullable', 'string', 'max:500'],
+            'visibility' => ['nullable', Rule::in(Media::VISIBILITIES)],
             'tags' => ['nullable', 'string', 'max:500'],
             'album_ids' => ['nullable', 'array'],
             'album_ids.*' => ['integer', 'exists:media_albums,id'],
         ]);
 
+        $visibility = $data['visibility'] ?? $media->visibility ?? 'public';
+        $targetAlbumIds = $request->has('album_ids')
+            ? ($data['album_ids'] ?? [])
+            : $media->albums()->pluck('media_albums.id')->all();
+        $targetAlbums = MediaAlbum::whereIn('id', $targetAlbumIds)->get();
+        $hasProtectedAlbum = $targetAlbums->contains(fn (MediaAlbum $album) => $album->effectiveVisibility() === 'protected');
+
+        if ($visibility === 'protected' && ! $hasProtectedAlbum) {
+            return back()->withErrors(['visibility' => 'Asigna este archivo a un álbum protegido con contraseña.']);
+        }
+
+        $requiredVisibility = $targetAlbums->reduce(
+            fn (string $required, MediaAlbum $album) => Media::stricterVisibility($required, $album->effectiveVisibility()),
+            $visibility
+        );
+
         $media->update([
             'display_name' => $data['display_name'] ?? null,
             'alt' => $data['alt'] ?? null,
             'caption' => $data['caption'] ?? null,
+            'visibility' => $requiredVisibility,
         ]);
+
+        if ($requiredVisibility !== 'public') {
+            $this->storage->moveToPrivate($media);
+        }
 
         if ($request->has('album_ids')) {
             $media->albums()->sync($data['album_ids'] ?? []);
+        }
+
+        if ($requiredVisibility !== $visibility) {
+            $media->forceFill(['visibility' => $visibility])->save();
         }
 
         $this->syncTags($media, $data['tags'] ?? '');
@@ -352,5 +397,4 @@ class MediaController extends Controller
 
         $target->tags()->sync($tagIds);
     }
-
 }

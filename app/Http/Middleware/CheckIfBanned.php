@@ -30,8 +30,8 @@ class CheckIfBanned
             }
 
             return response()->view('admin.users-ban.banned', [
-                'user'      => $user,
-                'reason'    => $user->ban_reason,
+                'user' => $user,
+                'reason' => $user->ban_reason,
                 'expiresAt' => $user->banned_until,
             ], 403);
         }

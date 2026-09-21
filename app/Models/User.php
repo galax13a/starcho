@@ -3,8 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Observers\UserObserver;
 use App\Models\Concerns\HasBan;
+use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -24,7 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles, HasBan;
+    use HasBan, HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
 
     protected static function boot()
     {
@@ -156,6 +157,7 @@ class User extends Authenticatable
     /**
      * Relación con geolocations
      */
+    /** @return HasMany<UserGeoLocation, $this> */
     public function geolocations(): HasMany
     {
         return $this->hasMany(UserGeoLocation::class);
@@ -164,6 +166,12 @@ class User extends Authenticatable
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    /** @return HasMany<UserBan, $this> */
+    public function bans(): HasMany
+    {
+        return $this->hasMany(UserBan::class);
     }
 
     public function activeSubscription(): HasOne
@@ -178,6 +186,7 @@ class User extends Authenticatable
 
     // ── Storage plan ─────────────────────────────────────────────────
 
+    /** @return BelongsTo<StoragePlan, $this> */
     public function storagePlan(): BelongsTo
     {
         return $this->belongsTo(StoragePlan::class, 'storage_plan_id');
@@ -205,7 +214,7 @@ class User extends Authenticatable
         }
 
         $limit = $this->storagePlan->storage_limit_bytes ?? 0;
-        $used  = ($this->storage_used_bytes ?? 0) + $extraBytes;
+        $used = ($this->storage_used_bytes ?? 0) + $extraBytes;
 
         return $used > $limit;
     }
@@ -227,18 +236,18 @@ class User extends Authenticatable
         $bytes = (int) $bytes;
 
         if ($bytes >= 1_073_741_824) {
-            return rtrim(rtrim(number_format($bytes / 1_073_741_824, 2), '0'), '.') . ' GB';
+            return rtrim(rtrim(number_format($bytes / 1_073_741_824, 2), '0'), '.').' GB';
         }
 
         if ($bytes >= 1_048_576) {
-            return rtrim(rtrim(number_format($bytes / 1_048_576, 2), '0'), '.') . ' MB';
+            return rtrim(rtrim(number_format($bytes / 1_048_576, 2), '0'), '.').' MB';
         }
 
         if ($bytes >= 1024) {
-            return rtrim(rtrim(number_format($bytes / 1024, 1), '0'), '.') . ' KB';
+            return rtrim(rtrim(number_format($bytes / 1024, 1), '0'), '.').' KB';
         }
 
-        return $bytes . ' B';
+        return $bytes.' B';
     }
 
     /** Human-readable used storage label. */
@@ -249,6 +258,7 @@ class User extends Authenticatable
 
     // ── AI plan ──────────────────────────────────────────────────────
 
+    /** @return BelongsTo<AiPlan, $this> */
     public function aiPlan(): BelongsTo
     {
         return $this->belongsTo(AiPlan::class, 'ai_plan_id');
@@ -267,7 +277,7 @@ class User extends Authenticatable
         }
 
         [$quota, $used] = match ($type) {
-            'text'  => [$this->aiPlan->text_token_quota, $this->ai_text_tokens_used],
+            'text' => [$this->aiPlan->text_token_quota, $this->ai_text_tokens_used],
             'image' => [$this->aiPlan->image_quota, $this->ai_images_used],
             'video' => [$this->aiPlan->video_quota, $this->ai_videos_used],
             default => [null, 0],
@@ -311,7 +321,7 @@ class User extends Authenticatable
         $this->resetAiPeriodIfNeeded();
 
         $column = match ($type) {
-            'text'  => 'ai_text_tokens_used',
+            'text' => 'ai_text_tokens_used',
             'image' => 'ai_images_used',
             'video' => 'ai_videos_used',
             default => null,
@@ -331,12 +341,12 @@ class User extends Authenticatable
     {
         $start = $this->ai_usage_period_start;
 
-        if ($start === null || now()->startOfMonth()->greaterThan(\Illuminate\Support\Carbon::parse($start))) {
+        if ($start === null || now()->startOfMonth()->greaterThan(Carbon::parse($start))) {
             $this->forceFill([
-                'ai_text_tokens_used'   => 0,
-                'ai_images_used'        => 0,
-                'ai_videos_used'        => 0,
-                'ai_spend_cents'        => 0,
+                'ai_text_tokens_used' => 0,
+                'ai_images_used' => 0,
+                'ai_videos_used' => 0,
+                'ai_spend_cents' => 0,
                 'ai_usage_period_start' => now()->startOfMonth()->toDateString(),
             ])->save();
         }

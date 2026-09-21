@@ -39,8 +39,8 @@ class GenerateAiImageJob implements ShouldQueue
 
         match ($this->provider) {
             'replicate' => app(AiReplicateService::class)->generateImage($this->prompt, $this->model, $user, $this->params),
-            'fal'       => app(AiVideoService::class)->generateImage($this->prompt, $this->model, $user, $this->params),
-            default     => app(AiImageService::class)->generate($this->prompt, $this->model, $user, $this->params['size'] ?? '1024x1024'),
+            'fal' => app(AiVideoService::class)->generateImage($this->prompt, $this->model, $user, $this->params),
+            default => app(AiImageService::class)->generate($this->prompt, $this->model, $user, $this->params['size'] ?? '1024x1024'),
         };
     }
 }

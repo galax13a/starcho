@@ -24,8 +24,8 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'          => 'required|string|max:125|unique:roles,name',
-            'permissions'   => 'nullable|array',
+            'name' => 'required|string|max:125|unique:roles,name',
+            'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
@@ -38,7 +38,7 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
-        $permissions     = Permission::orderBy('name')->get();
+        $permissions = Permission::orderBy('name')->get();
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 
         return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
@@ -47,8 +47,8 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name'          => 'required|string|max:125|unique:roles,name,' . $role->id,
-            'permissions'   => 'nullable|array',
+            'name' => 'required|string|max:125|unique:roles,name,'.$role->id,
+            'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
@@ -88,7 +88,7 @@ class RoleController extends Controller
         ]);
 
         $contents = file_get_contents($request->file('json_file')->getRealPath());
-        $data     = json_decode($contents, true);
+        $data = json_decode($contents, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
             return back()->with('error', 'Archivo JSON inválido.');
@@ -125,14 +125,14 @@ class RoleController extends Controller
     public function exportJson()
     {
         $roles = Role::with('permissions')->get()->map(fn (Role $role) => [
-            'name'        => $role->name,
-            'guard_name'  => $role->guard_name,
+            'name' => $role->name,
+            'guard_name' => $role->guard_name,
             'permissions' => $role->permissions->pluck('name')->toArray(),
         ]);
 
         return response()->json($roles, 200, [
-            'Content-Disposition' => 'attachment; filename="roles-' . now()->format('Ymd-His') . '.json"',
-            'Content-Type'        => 'application/json',
+            'Content-Disposition' => 'attachment; filename="roles-'.now()->format('Ymd-His').'.json"',
+            'Content-Type' => 'application/json',
         ]);
     }
 }

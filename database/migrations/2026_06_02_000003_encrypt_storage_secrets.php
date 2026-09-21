@@ -37,8 +37,9 @@ return new class extends Migration
                 // Skip values that are already encrypted.
                 try {
                     Crypt::decryptString($value);
+
                     continue;
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Not encrypted yet → encrypt it.
                     $updates[$column] = Crypt::encryptString($value);
                 }
@@ -65,7 +66,7 @@ return new class extends Migration
 
                 try {
                     $updates[$column] = Crypt::decryptString($value);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Already plaintext — leave as-is.
                 }
             }

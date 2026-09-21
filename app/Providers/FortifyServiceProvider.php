@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
-use App\Models\SiteSetting;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\SiteSetting;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;

@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MediaAlbumController extends Controller
@@ -36,13 +37,13 @@ class MediaAlbumController extends Controller
 
         if ($request->filled('q')) {
             $mediaQuery->where(function ($q) use ($request) {
-                $q->where('original_name', 'like', '%' . $request->q . '%')
-                    ->orWhere('display_name', 'like', '%' . $request->q . '%');
+                $q->where('original_name', 'like', '%'.$request->q.'%')
+                    ->orWhere('display_name', 'like', '%'.$request->q.'%');
             });
         }
 
         if ($request->filled('type')) {
-            $mediaQuery->where('mime_type', 'like', $request->type . '/%');
+            $mediaQuery->where('mime_type', 'like', $request->type.'/%');
         }
 
         $media = $mediaQuery->paginate(18)->withQueryString();
@@ -74,7 +75,8 @@ class MediaAlbumController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
             'tags' => ['nullable', 'string', 'max:500'],
-            'password' => ['nullable', 'string', 'max:120'],
+            'visibility' => ['nullable', Rule::in(MediaAlbum::VISIBILITIES)],
+            'password' => [Rule::requiredIf($request->input('visibility', 'public') === 'protected'), 'nullable', 'string', 'max:120'],
         ]);
 
         $baseSlug = Str::slug($data['name']) ?: 'album';
@@ -82,7 +84,7 @@ class MediaAlbumController extends Controller
         $i = 2;
 
         while (MediaAlbum::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $i++;
+            $slug = $baseSlug.'-'.$i++;
         }
 
         $album = new MediaAlbum([
@@ -90,6 +92,7 @@ class MediaAlbumController extends Controller
             'name' => $data['name'],
             'slug' => $slug,
             'description' => $data['description'] ?? null,
+            'visibility' => $data['visibility'] ?? 'public',
         ]);
         $album->setPlainPassword($data['password'] ?? null);
         $album->save();
@@ -107,14 +110,25 @@ class MediaAlbumController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
             'tags' => ['nullable', 'string', 'max:500'],
+            'visibility' => ['required', Rule::in(MediaAlbum::VISIBILITIES)],
             'password_enabled' => ['nullable', 'boolean'],
-            'password' => ['nullable', 'string', 'max:120'],
+            'password' => [Rule::requiredIf(
+                ($request->input('visibility') === 'protected' || $request->boolean('password_enabled'))
+                && blank($album->password)
+            ), 'nullable', 'string', 'max:120'],
         ]);
+
+        $visibility = $data['visibility'];
+
+        if ($request->boolean('password_enabled') || filled($data['password'] ?? null)) {
+            $visibility = Media::stricterVisibility($visibility, 'protected');
+        }
 
         $album->fill([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'password_enabled' => $request->boolean('password_enabled'),
+            'visibility' => $visibility,
+            'password_enabled' => $visibility === 'protected',
         ]);
 
         if (filled($data['password'] ?? null)) {
@@ -125,6 +139,11 @@ class MediaAlbumController extends Controller
         }
 
         $album->save();
+
+        if ($visibility !== 'public') {
+            $this->moveAlbumMediaToPrivate($album);
+        }
+
         $this->syncTags($album, $data['tags'] ?? '');
 
         return back()->with('success', 'Álbum actualizado.');
@@ -147,7 +166,15 @@ class MediaAlbumController extends Controller
         ]);
 
         foreach ($request->file('files', []) as $file) {
-            $media = $this->storage->upload($file, auth()->user(), null, 'album');
+            $media = $this->storage->upload(
+                $file,
+                auth()->user(),
+                null,
+                'album',
+                [],
+                $album->effectiveVisibility()
+            );
+
             $album->media()->syncWithoutDetaching([$media->id]);
         }
 
@@ -161,7 +188,24 @@ class MediaAlbumController extends Controller
             'media_ids.*' => ['integer', 'exists:media,id'],
         ]);
 
+        $mediaItems = Media::whereIn('id', $data['media_ids'])->get();
+        $baseVisibilities = [];
+
+        if ($album->effectiveVisibility() !== 'public') {
+            foreach ($mediaItems as $media) {
+                $baseVisibilities[$media->id] = $media->visibility ?: 'public';
+                $media->enforceMinimumVisibility($album->effectiveVisibility());
+                $this->storage->moveToPrivate($media);
+            }
+        }
+
         $album->media()->syncWithoutDetaching($data['media_ids']);
+
+        foreach ($mediaItems as $media) {
+            if (isset($baseVisibilities[$media->id])) {
+                $media->forceFill(['visibility' => $baseVisibilities[$media->id]])->save();
+            }
+        }
 
         return back()->with('success', 'Archivos agregados al álbum.');
     }
@@ -191,8 +235,21 @@ class MediaAlbumController extends Controller
             'target_album_id' => ['required', 'integer', 'exists:media_albums,id'],
         ]);
 
+        $targetAlbum = MediaAlbum::findOrFail($data['target_album_id']);
+
+        $baseVisibility = $media->visibility ?: 'public';
+
+        if ($targetAlbum->effectiveVisibility() !== 'public') {
+            $media->enforceMinimumVisibility($targetAlbum->effectiveVisibility());
+            $this->storage->moveToPrivate($media);
+        }
+
+        $targetAlbum->media()->syncWithoutDetaching([$media->id]);
         $album->media()->detach($media->id);
-        MediaAlbum::findOrFail($data['target_album_id'])->media()->syncWithoutDetaching([$media->id]);
+
+        if ($targetAlbum->effectiveVisibility() !== 'public' && $baseVisibility !== $media->visibility) {
+            $media->forceFill(['visibility' => $baseVisibility])->save();
+        }
 
         return back()->with('success', 'Archivo movido de álbum.');
     }
@@ -204,13 +261,23 @@ class MediaAlbumController extends Controller
             'alt' => ['nullable', 'string', 'max:255'],
             'caption' => ['nullable', 'string', 'max:500'],
             'tags' => ['nullable', 'string', 'max:500'],
+            'visibility' => ['required', Rule::in(Media::VISIBILITIES)],
         ]);
+
+        if ($data['visibility'] === 'protected' && $media->protectedAlbumIds() === []) {
+            return back()->withErrors(['visibility' => 'Asigna el archivo a un álbum protegido con contraseña.']);
+        }
 
         $media->update([
             'display_name' => $data['display_name'] ?? null,
             'alt' => $data['alt'] ?? null,
             'caption' => $data['caption'] ?? null,
+            'visibility' => $data['visibility'],
         ]);
+
+        if ($media->effectiveVisibility() !== 'public') {
+            $this->storage->moveToPrivate($media);
+        }
         $this->syncTags($media, $data['tags'] ?? '');
 
         return back()->with('success', 'Archivo actualizado.');
@@ -310,5 +377,14 @@ class MediaAlbumController extends Controller
         return $type === 'media'
             ? Media::findOrFail($id)
             : MediaAlbum::findOrFail($id);
+    }
+
+    private function moveAlbumMediaToPrivate(MediaAlbum $album): void
+    {
+        $album->load('media');
+
+        foreach ($album->media as $media) {
+            $this->storage->moveToPrivate($media);
+        }
     }
 }

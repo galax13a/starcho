@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ContentRenderCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,43 +14,51 @@ use Spatie\Translatable\HasTranslations;
 
 class Post extends Model
 {
-    use SoftDeletes, HasTranslations;
+    use HasTranslations, SoftDeletes;
 
     const TYPE_POST = 'post';
+
     const TYPE_PAGE = 'page';
 
-    const STATUS_DRAFT     = 'draft';
+    const STATUS_DRAFT = 'draft';
+
     const STATUS_PUBLISHED = 'published';
+
     const STATUS_SCHEDULED = 'scheduled';
-    const STATUS_PRIVATE   = 'private';
-    const STATUS_PASSWORD  = 'password_protected';
+
+    const STATUS_PRIVATE = 'private';
+
+    const STATUS_PASSWORD = 'password_protected';
 
     const STATUS_LABELS = [
-        'draft'              => 'Borrador',
-        'published'          => 'Publicado',
-        'scheduled'          => 'Programado',
-        'private'            => 'Privado',
+        'draft' => 'Borrador',
+        'published' => 'Publicado',
+        'scheduled' => 'Programado',
+        'private' => 'Privado',
         'password_protected' => 'Con contraseña',
     ];
 
     const STATUS_COLORS = [
-        'draft'              => 'zinc',
-        'published'          => 'emerald',
-        'scheduled'          => 'blue',
-        'private'            => 'orange',
+        'draft' => 'zinc',
+        'published' => 'emerald',
+        'scheduled' => 'blue',
+        'private' => 'orange',
         'password_protected' => 'violet',
     ];
 
-    const NAV_NONE   = 'none';
+    const NAV_NONE = 'none';
+
     const NAV_HEADER = 'header';
+
     const NAV_FOOTER = 'footer';
-    const NAV_BOTH   = 'both';
+
+    const NAV_BOTH = 'both';
 
     const NAV_LABELS = [
-        'none'   => 'No mostrar',
+        'none' => 'No mostrar',
         'header' => 'Header',
         'footer' => 'Footer',
-        'both'   => 'Header y Footer',
+        'both' => 'Header y Footer',
     ];
 
     public $translatable = [
@@ -78,11 +87,11 @@ class Post extends Model
     ];
 
     protected $casts = [
-        'published_at'   => 'datetime',
+        'published_at' => 'datetime',
         'allow_comments' => 'boolean',
         'views_count' => 'integer',
-        'no_index'       => 'boolean',
-        'no_follow'      => 'boolean',
+        'no_index' => 'boolean',
+        'no_follow' => 'boolean',
     ];
 
     public function author(): BelongsTo
@@ -162,8 +171,8 @@ class Post extends Model
             ?: $this->getRawOriginal('slug');
 
         return $this->type === self::TYPE_PAGE
-            ? url('/' . $locale . '/' . $slug)
-            : url('/' . $locale . '/blog/' . $slug);
+            ? url('/'.$locale.'/'.$slug)
+            : url('/'.$locale.'/blog/'.$slug);
     }
 
     public function isPublished(): bool
@@ -174,12 +183,12 @@ class Post extends Model
 
     public static function generateSlug(string $title, ?int $ignoreId = null): string
     {
-        $slug     = Str::slug($title);
+        $slug = Str::slug($title);
         $original = $slug;
-        $count    = 1;
+        $count = 1;
 
         while (static::slugExists($slug, $ignoreId)) {
-            $slug = $original . '-' . $count++;
+            $slug = $original.'-'.$count++;
         }
 
         return $slug;
@@ -187,7 +196,13 @@ class Post extends Model
 
     public static function slugExists(string $slug, ?int $ignoreId = null): bool
     {
-        return static::whereRaw("JSON_SEARCH(slug, 'one', ?) IS NOT NULL", [$slug])
+        $codes = self::slugLocaleCodes();
+
+        return static::where(function ($query) use ($codes, $slug): void {
+            foreach ($codes as $code) {
+                $query->orWhere("slug->{$code}", $slug);
+            }
+        })
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists();
     }
@@ -195,15 +210,37 @@ class Post extends Model
     /**
      * Match a post by its translated slug across any locale.
      *
-     * Uses a fully parameter-bound JSON_SEARCH so no locale code is ever
-     * interpolated into the SQL string. The `%`/`_` LIKE wildcards are escaped
-     * because JSON_SEARCH treats the needle as a LIKE pattern.
+     * Use Laravel's JSON selector syntax so the query is compiled for the
+     * active database driver (including SQLite and MySQL).
      */
     public function scopeWhereSlug($query, string $slug)
     {
-        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $slug);
+        $codes = self::slugLocaleCodes();
 
-        return $query->whereRaw("JSON_SEARCH(slug, 'one', ?, '\\\\') IS NOT NULL", [$escaped]);
+        return $query->where(function ($query) use ($codes, $slug): void {
+            foreach ($codes as $code) {
+                $query->orWhere("slug->{$code}", $slug);
+            }
+        });
+    }
+
+    /**
+     * Include inactive locales too: their translations remain stored and may
+     * become public again when a locale is reactivated. SiteLanguage provides
+     * the default locale fallback when its table is not installed yet.
+     *
+     * @return list<string>
+     */
+    private static function slugLocaleCodes(): array
+    {
+        $codes = SiteLanguage::allOrdered()
+            ->pluck('code')
+            ->filter(fn ($code) => is_string($code) && $code !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        return $codes !== [] ? $codes : SiteLanguage::activeCodes();
     }
 
     protected static function booted(): void
@@ -215,11 +252,11 @@ class Post extends Model
                 ->isNotEmpty();
 
             if ($changed) {
-                app(\App\Services\ContentRenderCache::class)->clearForPost($post);
+                app(ContentRenderCache::class)->clearForPost($post);
             }
         });
 
-        static::deleted(fn (self $post) => app(\App\Services\ContentRenderCache::class)->clearForPost($post));
-        static::restored(fn (self $post) => app(\App\Services\ContentRenderCache::class)->clearForPost($post));
+        static::deleted(fn (self $post) => app(ContentRenderCache::class)->clearForPost($post));
+        static::restored(fn (self $post) => app(ContentRenderCache::class)->clearForPost($post));
     }
 }

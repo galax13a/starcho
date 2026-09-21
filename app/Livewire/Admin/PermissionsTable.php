@@ -88,12 +88,13 @@ final class PermissionsTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedPermissionIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+
             return null;
         }
 
@@ -101,7 +102,7 @@ final class PermissionsTable extends PowerGridComponent
 
         return Excel::download(
             new AdminPermissionsExport($selectedIds),
-            'admin-permissions-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-permissions-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -111,6 +112,7 @@ final class PermissionsTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+
             return;
         }
 
@@ -121,6 +123,7 @@ final class PermissionsTable extends PowerGridComponent
         if ($permissions->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.permissions.notify.no_selection'));
+
             return;
         }
 
@@ -133,7 +136,7 @@ final class PermissionsTable extends PowerGridComponent
 
         $this->clearSelection();
         $this->notifyWarning(__('admin_ui.permissions.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deletePermission')]
@@ -143,12 +146,13 @@ final class PermissionsTable extends PowerGridComponent
 
         if (! $permission) {
             $this->notifyCrud('permissions', 'not_found');
+
             return;
         }
 
         $permission->delete();
         $this->notifyCrud('permissions', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedPermissionIds(): array

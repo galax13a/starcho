@@ -29,6 +29,7 @@ class UserGeoLocation extends Model
         'captured_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -4,20 +4,20 @@ return [
     'toasts' => [
         'success' => 'Success',
         'warning' => 'Warning',
-        'error'   => 'Error',
+        'error' => 'Error',
         'default' => 'Operation completed.',
     ],
 
     'confirm' => [
-        'title'   => 'Confirm action',
+        'title' => 'Confirm action',
         'message' => 'Are you sure? This action cannot be undone.',
-        'ok'      => 'Yes, continue',
-        'cancel'  => 'Cancel',
+        'ok' => 'Yes, continue',
+        'cancel' => 'Cancel',
     ],
 
     'delete' => [
-        'title'   => 'Confirm deletion',
+        'title' => 'Confirm deletion',
         'message' => 'Delete ":name"? This action cannot be undone.',
-        'ok'      => 'Yes, delete',
+        'ok' => 'Yes, delete',
     ],
 ];

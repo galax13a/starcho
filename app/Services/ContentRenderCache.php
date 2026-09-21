@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Cache;
 class ContentRenderCache
 {
     private const INDEX_KEY = 'starcho.content_render_cache.index';
+
     private const META_KEY = 'starcho.content_render_cache.meta';
+
     private const PREFIX = 'starcho.content_render_cache.v1';
 
     public function remember(Post $post, string $locale, Closure $renderer): ?string
@@ -105,9 +107,9 @@ class ContentRenderCache
 
     private function ttlMinutes(?ContentSetting $settings): int
     {
-        $ttl = max(1, min(10080, (int) ($settings?->render_cache_ttl_minutes ?? 60)));
+        $ttl = max(1, min(10080, (int) ($settings->render_cache_ttl_minutes ?? 60)));
 
-        return match ($settings?->render_cache_strategy ?? 'balanced') {
+        return match ($settings->render_cache_strategy ?? 'balanced') {
             'safe' => min($ttl, 30),
             'aggressive' => max($ttl, 360),
             default => $ttl,
@@ -140,6 +142,7 @@ class ContentRenderCache
             if ($matchesType && $matchesPost) {
                 Cache::forget($key);
                 $cleared++;
+
                 continue;
             }
 

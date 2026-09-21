@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!DB::getSchemaBuilder()->hasTable('permissions') || !DB::getSchemaBuilder()->hasTable('roles')) {
+        if (! DB::getSchemaBuilder()->hasTable('permissions') || ! DB::getSchemaBuilder()->hasTable('roles')) {
             return;
         }
 
@@ -28,24 +28,24 @@ return new class extends Migration
             'guard_name' => 'web',
         ]);
 
-        if (!$rootRole->hasPermissionTo($permission)) {
+        if (! $rootRole->hasPermissionTo($permission)) {
             $rootRole->givePermissionTo($permission);
         }
 
-        if (!$adminRole->hasPermissionTo($permission)) {
+        if (! $adminRole->hasPermissionTo($permission)) {
             $adminRole->givePermissionTo($permission);
         }
     }
 
     public function down(): void
     {
-        if (!DB::getSchemaBuilder()->hasTable('permissions') || !DB::getSchemaBuilder()->hasTable('roles')) {
+        if (! DB::getSchemaBuilder()->hasTable('permissions') || ! DB::getSchemaBuilder()->hasTable('roles')) {
             return;
         }
 
         $permission = Permission::where('name', 'view-admin')->where('guard_name', 'web')->first();
 
-        if (!$permission) {
+        if (! $permission) {
             return;
         }
 

@@ -8,6 +8,8 @@ use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Models\SiteLanguage;
 use App\Services\ContentRenderCache;
+use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class ContentSettingsForm extends Component
@@ -15,6 +17,7 @@ class ContentSettingsForm extends Component
     use DispatchesStarchoNotify;
 
     public array $form = [];
+
     public array $excludedUrls = [];
 
     public function mount(): void
@@ -57,6 +60,12 @@ class ContentSettingsForm extends Component
             'form.render_cache_per_locale' => ['boolean'],
             'form.render_cache_ttl_minutes' => ['required', 'integer', 'min:1', 'max:10080'],
             'form.render_cache_strategy' => ['required', 'in:safe,balanced,aggressive'],
+            // Keep Livewire updates aligned with the cadence choices shown in the admin form.
+            'form.scheduled_publish_interval_minutes' => [
+                'required',
+                'integer',
+                Rule::in(ContentSetting::SCHEDULED_PUBLISH_INTERVALS),
+            ],
             'excludedUrls' => ['array'],
             'excludedUrls.*' => ['string', 'max:2000'],
         ]);
@@ -90,6 +99,7 @@ class ContentSettingsForm extends Component
     {
         if (in_array($url, $this->excludedUrls, true)) {
             $this->excludedUrls = array_values(array_diff($this->excludedUrls, [$url]));
+
             return;
         }
 
@@ -106,12 +116,12 @@ class ContentSettingsForm extends Component
         ]);
 
         $urls = $this->sitemapUrls($settings);
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
         foreach ($urls as $entry) {
             $xml .= "  <url>\n";
-            $xml .= '    <loc>' . e($entry['loc']) . "</loc>\n";
+            $xml .= '    <loc>'.e($entry['loc'])."</loc>\n";
             if ($entry['lastmod']) {
                 $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
             }
@@ -137,7 +147,7 @@ class ContentSettingsForm extends Component
             'brokenCount' => BrokenLink::active()->count(),
             'sitemapData' => $this->buildSitemapData($settings),
             'sitemapExists' => file_exists($sitemapFile),
-            'sitemapDate' => file_exists($sitemapFile) ? \Carbon\Carbon::createFromTimestamp(filemtime($sitemapFile)) : null,
+            'sitemapDate' => file_exists($sitemapFile) ? Carbon::createFromTimestamp(filemtime($sitemapFile)) : null,
             'sitemapSize' => file_exists($sitemapFile) ? round(filesize($sitemapFile) / 1024, 1) : null,
             'renderCacheStats' => app(ContentRenderCache::class)->stats(),
         ]);
@@ -156,7 +166,7 @@ class ContentSettingsForm extends Component
                 if (! $slug) {
                     continue;
                 }
-                $url = url('/' . $locale . '/' . $slug);
+                $url = url('/'.$locale.'/'.$slug);
                 $pages[] = ['url' => $url, 'title' => $page->getTranslation('title', $locale, false) ?: $page->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded, true)];
             }
         }
@@ -167,7 +177,7 @@ class ContentSettingsForm extends Component
                 if (! $slug) {
                     continue;
                 }
-                $url = url('/' . $locale . '/blog/' . $slug);
+                $url = url('/'.$locale.'/blog/'.$slug);
                 $posts[] = ['url' => $url, 'title' => $post->getTranslation('title', $locale, false) ?: $post->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded, true), 'date' => $post->updated_at?->toDateString()];
             }
         }

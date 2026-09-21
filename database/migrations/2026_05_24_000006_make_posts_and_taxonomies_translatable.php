@@ -28,10 +28,10 @@ return new class extends Migration
         DB::table('posts')->get()->each(function ($row) {
             $updates = [];
             foreach (['title', 'excerpt', 'content', 'featured_image_alt',
-                      'seo_title', 'seo_description', 'seo_keywords',
-                      'og_title', 'og_description'] as $field) {
+                'seo_title', 'seo_description', 'seo_keywords',
+                'og_title', 'og_description'] as $field) {
                 $raw = $row->$field;
-                if ($raw !== null && !$this->looksLikeJson($raw)) {
+                if ($raw !== null && ! $this->looksLikeJson($raw)) {
                     $updates[$field] = json_encode([$this->primaryLocale => $raw]);
                 }
             }
@@ -51,7 +51,7 @@ return new class extends Migration
             $updates = [];
             foreach (['name', 'description'] as $field) {
                 $raw = $row->$field;
-                if ($raw !== null && !$this->looksLikeJson($raw)) {
+                if ($raw !== null && ! $this->looksLikeJson($raw)) {
                     $updates[$field] = json_encode([$this->primaryLocale => $raw]);
                 }
             }
@@ -67,7 +67,7 @@ return new class extends Migration
 
         DB::table('post_tags')->get()->each(function ($row) {
             $raw = $row->name;
-            if ($raw !== null && !$this->looksLikeJson($raw)) {
+            if ($raw !== null && ! $this->looksLikeJson($raw)) {
                 DB::table('post_tags')->where('id', $row->id)
                     ->update(['name' => json_encode([$this->primaryLocale => $raw])]);
             }
@@ -101,6 +101,7 @@ return new class extends Migration
     private function looksLikeJson(string $value): bool
     {
         $trimmed = trim($value);
+
         return str_starts_with($trimmed, '{') || str_starts_with($trimmed, '[');
     }
 };

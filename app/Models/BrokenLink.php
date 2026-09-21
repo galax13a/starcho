@@ -14,9 +14,9 @@ class BrokenLink extends Model
     ];
 
     protected $casts = [
-        'ignored'       => 'boolean',
+        'ignored' => 'boolean',
         'first_seen_at' => 'datetime',
-        'last_seen_at'  => 'datetime',
+        'last_seen_at' => 'datetime',
     ];
 
     public static function record(Request $request): void
@@ -29,17 +29,18 @@ class BrokenLink extends Model
             if ($existing) {
                 $existing->increment('hit_count');
                 $existing->touch('last_seen_at');
+
                 return;
             }
 
             static::create([
-                'url'          => $url,
-                'referrer'     => $request->header('referer'),
-                'locale'       => app()->getLocale(),
-                'method'       => $request->method(),
-                'user_agent'   => $request->userAgent(),
-                'ip'           => $request->ip(),
-                'first_seen_at'=> now(),
+                'url' => $url,
+                'referrer' => $request->header('referer'),
+                'locale' => app()->getLocale(),
+                'method' => $request->method(),
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip(),
+                'first_seen_at' => now(),
                 'last_seen_at' => now(),
             ]);
         } catch (\Throwable) {

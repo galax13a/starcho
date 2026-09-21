@@ -22,8 +22,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('site_settings', function (Blueprint $table): void {
-            $table->dropColumnIfExists('hide_language_switcher');
-            $table->dropColumnIfExists('default_site_locale');
+            foreach (['hide_language_switcher', 'default_site_locale'] as $column) {
+                if (Schema::hasColumn('site_settings', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };

@@ -43,23 +43,23 @@ class AiImageService
         @set_time_limit($timeout + (int) config('starcho_ai.time_limit_buffer', 15));
 
         $generation = AiAssetGeneration::create([
-            'user_id'  => $user?->id,
-            'type'     => AiAssetGeneration::TYPE_IMAGE,
+            'user_id' => $user?->id,
+            'type' => AiAssetGeneration::TYPE_IMAGE,
             'provider' => 'openai',
-            'model'    => $model,
-            'status'   => AiAssetGeneration::STATUS_PROCESSING,
-            'prompt'   => $prompt,
-            'params'   => ['size' => $size],
+            'model' => $model,
+            'status' => AiAssetGeneration::STATUS_PROCESSING,
+            'prompt' => $prompt,
+            'params' => ['size' => $size],
         ]);
 
         $startedAt = microtime(true);
 
         try {
             $payload = [
-                'model'  => $model,
+                'model' => $model,
                 'prompt' => $prompt,
-                'n'      => 1,
-                'size'   => $size,
+                'n' => 1,
+                'size' => $size,
             ];
 
             // Only DALL·E accepts response_format; gpt-image-1 rejects it (returns b64 by default).
@@ -79,13 +79,13 @@ class AiImageService
             $bytes = $this->extractImageBytes($response->json('data.0') ?? []);
             $media = $this->storeBytes($bytes, 'png', 'image/png', $user, 'ai_image', $prompt);
 
-            $cost  = $this->quota->pricing()->imageCostCents($model, 1);
+            $cost = $this->quota->pricing()->imageCostCents($model, 1);
             $price = $this->quota->pricing()->priceCents($cost);
 
             $generation->update([
-                'status'      => AiAssetGeneration::STATUS_COMPLETED,
-                'media_id'    => $media->id,
-                'cost_cents'  => $cost,
+                'status' => AiAssetGeneration::STATUS_COMPLETED,
+                'media_id' => $media->id,
+                'cost_cents' => $cost,
                 'price_cents' => $price,
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ]);
@@ -94,7 +94,7 @@ class AiImageService
         } catch (\Throwable $e) {
             $generation->update([
                 'status' => AiAssetGeneration::STATUS_FAILED,
-                'error'  => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -127,11 +127,11 @@ class AiImageService
     /** Stores raw bytes as a Media record by wrapping them in a temp UploadedFile. */
     private function storeBytes(string $bytes, string $ext, string $mime, ?User $user, string $context, string $caption): Media
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'aigen_') . '.' . $ext;
+        $tmp = tempnam(sys_get_temp_dir(), 'aigen_').'.'.$ext;
         file_put_contents($tmp, $bytes);
 
         try {
-            $file = new UploadedFile($tmp, 'ai-' . $context . '-' . now()->timestamp . '.' . $ext, $mime, null, true);
+            $file = new UploadedFile($tmp, 'ai-'.$context.'-'.now()->timestamp.'.'.$ext, $mime, null, true);
 
             return $this->storage->upload($file, $user, null, $context, [
                 'caption' => mb_substr($caption, 0, 480),

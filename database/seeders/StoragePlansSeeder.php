@@ -12,58 +12,58 @@ class StoragePlansSeeder extends Seeder
     {
         $plans = [
             [
-                'name'                => 'Free',
-                'slug'                => 'free',
+                'name' => 'Free',
+                'slug' => 'free',
                 'storage_limit_bytes' => 5 * 1024 * 1024,           // 5 MB
-                'monthly_price'       => 0.00,
-                'is_free'             => true,
-                'is_active'           => true,
-                'sort_order'          => 1,
+                'monthly_price' => 0.00,
+                'is_free' => true,
+                'is_active' => true,
+                'sort_order' => 1,
             ],
             [
-                'name'                => 'Básico',
-                'slug'                => 'basic',
+                'name' => 'Básico',
+                'slug' => 'basic',
                 'storage_limit_bytes' => 50 * 1024 * 1024,          // 50 MB
-                'monthly_price'       => 4.99,
-                'is_free'             => false,
-                'is_active'           => true,
-                'sort_order'          => 2,
+                'monthly_price' => 4.99,
+                'is_free' => false,
+                'is_active' => true,
+                'sort_order' => 2,
             ],
             [
-                'name'                => 'Starter',
-                'slug'                => 'starter',
+                'name' => 'Starter',
+                'slug' => 'starter',
                 'storage_limit_bytes' => 1 * 1024 * 1024 * 1024,    // 1 GB
-                'monthly_price'       => 9.99,
-                'is_free'             => false,
-                'is_active'           => true,
-                'sort_order'          => 3,
+                'monthly_price' => 9.99,
+                'is_free' => false,
+                'is_active' => true,
+                'sort_order' => 3,
             ],
             [
-                'name'                => 'Pro',
-                'slug'                => 'pro',
+                'name' => 'Pro',
+                'slug' => 'pro',
                 'storage_limit_bytes' => 3 * 1024 * 1024 * 1024,    // 3 GB
-                'monthly_price'       => 19.99,
-                'is_free'             => false,
-                'is_active'           => true,
-                'sort_order'          => 4,
+                'monthly_price' => 19.99,
+                'is_free' => false,
+                'is_active' => true,
+                'sort_order' => 4,
             ],
             [
-                'name'                => 'Business',
-                'slug'                => 'business',
+                'name' => 'Business',
+                'slug' => 'business',
                 'storage_limit_bytes' => 10 * 1024 * 1024 * 1024,   // 10 GB
-                'monthly_price'       => 49.99,
-                'is_free'             => false,
-                'is_active'           => true,
-                'sort_order'          => 5,
+                'monthly_price' => 49.99,
+                'is_free' => false,
+                'is_active' => true,
+                'sort_order' => 5,
             ],
             [
-                'name'                => 'Agency',
-                'slug'                => 'agency',
+                'name' => 'Agency',
+                'slug' => 'agency',
                 'storage_limit_bytes' => 25 * 1024 * 1024 * 1024,   // 25 GB
-                'monthly_price'       => 99.99,
-                'is_free'             => false,
-                'is_active'           => true,
-                'sort_order'          => 6,
+                'monthly_price' => 99.99,
+                'is_free' => false,
+                'is_active' => true,
+                'sort_order' => 6,
             ],
         ];
 
@@ -77,6 +77,6 @@ class StoragePlansSeeder extends Seeder
             User::whereNull('storage_plan_id')->update(['storage_plan_id' => $freePlan->id]);
         }
 
-        $this->command->info('Storage plans seeded: ' . StoragePlan::count() . ' plans');
+        $this->command->info('Storage plans seeded: '.StoragePlan::count().' plans');
     }
 }

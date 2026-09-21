@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TaskController extends Controller
 {
@@ -14,19 +15,19 @@ class TaskController extends Controller
     {
         // Stats
         $stats = [
-            'total'           => Task::withoutTrashed()->count(),
-            'pending'         => Task::where('status', 'pending')->count(),
-            'in_progress'     => Task::where('status', 'in_progress')->count(),
-            'completed'       => Task::where('status', 'completed')->count(),
-            'cancelled'       => Task::where('status', 'cancelled')->count(),
-            'overdue'         => Task::whereNotIn('status', ['completed', 'cancelled'])
-                                     ->whereNotNull('due_date')
-                                     ->where('due_date', '<', today())
-                                     ->count(),
-            'due_today'       => Task::whereNotIn('status', ['completed', 'cancelled'])
-                                     ->whereNotNull('due_date')
-                                     ->whereDate('due_date', today())
-                                     ->count(),
+            'total' => Task::withoutTrashed()->count(),
+            'pending' => Task::where('status', 'pending')->count(),
+            'in_progress' => Task::where('status', 'in_progress')->count(),
+            'completed' => Task::where('status', 'completed')->count(),
+            'cancelled' => Task::where('status', 'cancelled')->count(),
+            'overdue' => Task::whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('due_date')
+                ->where('due_date', '<', today())
+                ->count(),
+            'due_today' => Task::whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('due_date')
+                ->whereDate('due_date', today())
+                ->count(),
         ];
 
         // Daily tasks last 7 days
@@ -45,8 +46,8 @@ class TaskController extends Controller
             $month = now()->subMonths($i);
             $monthlyLabels[] = $month->locale('es')->isoFormat('MMM YY');
             $monthlyCounts[] = Task::whereYear('created_at', $month->year)
-                                   ->whereMonth('created_at', $month->month)
-                                   ->count();
+                ->whereMonth('created_at', $month->month)
+                ->count();
         }
 
         // By status
@@ -60,8 +61,8 @@ class TaskController extends Controller
         ));
     }
 
-    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function export(): BinaryFileResponse
     {
-        return Excel::download(new TasksExport, 'tareas-' . now()->format('Ymd-His') . '.xlsx');
+        return Excel::download(new TasksExport, 'tareas-'.now()->format('Ymd-His').'.xlsx');
     }
 }

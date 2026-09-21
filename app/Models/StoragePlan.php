@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
@@ -18,8 +19,8 @@ class StoragePlan extends Model
     ];
 
     protected $casts = [
-        'is_free'    => 'boolean',
-        'is_active'  => 'boolean',
+        'is_free' => 'boolean',
+        'is_active' => 'boolean',
         'monthly_price' => 'decimal:2',
     ];
 
@@ -28,12 +29,12 @@ class StoragePlan extends Model
         return $this->hasMany(User::class, 'storage_plan_id');
     }
 
-    public static function free(): ?static
+    public static function free(): ?self
     {
         return static::where('is_free', true)->orderBy('sort_order')->first();
     }
 
-    public static function active(): \Illuminate\Database\Eloquent\Collection
+    public static function active(): Collection
     {
         return static::where('is_active', true)->orderBy('sort_order')->get();
     }
@@ -44,13 +45,13 @@ class StoragePlan extends Model
         $bytes = $this->storage_limit_bytes;
 
         if ($bytes >= 1_073_741_824) {
-            return round($bytes / 1_073_741_824, 0) . ' GB';
+            return round($bytes / 1_073_741_824, 0).' GB';
         }
 
         if ($bytes >= 1_048_576) {
-            return round($bytes / 1_048_576, 0) . ' MB';
+            return round($bytes / 1_048_576, 0).' MB';
         }
 
-        return round($bytes / 1024, 0) . ' KB';
+        return round($bytes / 1024, 0).' KB';
     }
 }

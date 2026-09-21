@@ -11,7 +11,12 @@ class MediaFileController extends Controller
 {
     public function show(Request $request, Media $media): StreamedResponse
     {
-        $this->authorizeInlineAccess($request, $media);
+        abort_unless($media->isAccessibleBy($request->user()), 403);
+
+        if ($media->effectiveVisibility() !== 'public' && $media->disk !== 'starcho_private') {
+            app(StorageService::class)->moveToPrivate($media);
+            $media->refresh();
+        }
 
         $disk = $this->disk($media);
         $variant = $request->query('variant');
@@ -35,7 +40,7 @@ class MediaFileController extends Controller
             || str_starts_with($mime, 'audio/')
             || $mime === 'application/pdf';
         $inlineSafe = $inlineSafe && $mime !== 'image/svg+xml';
-        $disposition = ($inlineSafe ? 'inline' : 'attachment') . '; filename="' . $name . '"';
+        $disposition = ($inlineSafe ? 'inline' : 'attachment').'; filename="'.$name.'"';
 
         return response()->stream(function () use ($stream): void {
             fpassthru($stream);
@@ -45,33 +50,12 @@ class MediaFileController extends Controller
             'Content-Length' => (string) $disk->size($path),
             'Content-Disposition' => $disposition,
             'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => $variant ? 'public, max-age=604800' : 'private, max-age=300',
+            'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
         ]);
     }
 
     private function disk(Media $media)
     {
         return app(StorageService::class)->diskFor($media);
-    }
-
-    private function authorizeInlineAccess(Request $request, Media $media): void
-    {
-        $user = $request->user();
-
-        if ($user && ($user->hasRole('root') || $user->hasRole('admin') || $user->can('view-admin'))) {
-            return;
-        }
-
-        $albums = $media->albums()->get(['media_albums.id', 'password_enabled']);
-
-        if ($albums->isEmpty() || $albums->contains(fn ($album) => ! $album->password_enabled)) {
-            return;
-        }
-
-        $unlocked = $albums->contains(
-            fn ($album) => (bool) session('media_album_unlocked_' . $album->id)
-        );
-
-        abort_unless($unlocked, 403);
     }
 }

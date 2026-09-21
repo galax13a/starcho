@@ -3,18 +3,17 @@
 namespace App\Exports;
 
 use App\Models\Note;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AppNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AppNotesExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
-    public function __construct(private readonly int $userId, private readonly ?array $noteIds = null)
-    {
-    }
+    public function __construct(private readonly int $userId, private readonly ?array $noteIds = null) {}
 
-    public function query()
+    public function query(): Builder
     {
         return Note::query()
             ->where('user_id', $this->userId)

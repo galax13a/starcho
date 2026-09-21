@@ -28,16 +28,16 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Password::min(8)],
-            'roles'    => 'nullable|array',
-            'roles.*'  => 'exists:roles,id',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,id',
         ]);
 
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
+            'name' => $request->name,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
@@ -58,10 +58,10 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles         = Role::orderBy('name')->get();
-        $userRoles     = $user->roles->pluck('id')->toArray();
-        $storagePlans  = StoragePlan::orderBy('sort_order')->get();
-        $aiPlans       = AiPlan::orderBy('sort_order')->get();
+        $roles = Role::orderBy('name')->get();
+        $userRoles = $user->roles->pluck('id')->toArray();
+        $storagePlans = StoragePlan::orderBy('sort_order')->get();
+        $aiPlans = AiPlan::orderBy('sort_order')->get();
 
         return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'storagePlans', 'aiPlans'));
     }
@@ -69,7 +69,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'roles'   => 'nullable|array',
+            'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
         ]);
 

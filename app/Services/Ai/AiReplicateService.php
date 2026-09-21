@@ -36,7 +36,7 @@ class AiReplicateService
             throw new RuntimeException('Falta el API token de Replicate.');
         }
 
-        $headers = ['Authorization' => 'Bearer ' . $key];
+        $headers = ['Authorization' => 'Bearer '.$key];
 
         if ($wait) {
             $headers['Prefer'] = 'wait';
@@ -54,13 +54,13 @@ class AiReplicateService
         $this->quota->ensureCanGenerate($user, 'image', 1, $this->quota->pricing()->imageCostCents($model, 1));
 
         $generation = AiAssetGeneration::create([
-            'user_id'  => $user?->id,
-            'type'     => AiAssetGeneration::TYPE_IMAGE,
+            'user_id' => $user?->id,
+            'type' => AiAssetGeneration::TYPE_IMAGE,
             'provider' => 'replicate',
-            'model'    => $model,
-            'status'   => AiAssetGeneration::STATUS_PROCESSING,
-            'prompt'   => $prompt,
-            'params'   => $input,
+            'model' => $model,
+            'status' => AiAssetGeneration::STATUS_PROCESSING,
+            'prompt' => $prompt,
+            'params' => $input,
         ]);
 
         $startedAt = microtime(true);
@@ -76,13 +76,13 @@ class AiReplicateService
             }
 
             $media = $this->storeBytes($download->body(), 'png', 'image/png', $user, 'ai_image', $prompt);
-            $cost  = $this->quota->pricing()->imageCostCents($model, 1);
+            $cost = $this->quota->pricing()->imageCostCents($model, 1);
 
             $generation->update([
-                'status'      => AiAssetGeneration::STATUS_COMPLETED,
-                'media_id'    => $media->id,
+                'status' => AiAssetGeneration::STATUS_COMPLETED,
+                'media_id' => $media->id,
                 'external_id' => $prediction['id'] ?? null,
-                'cost_cents'  => $cost,
+                'cost_cents' => $cost,
                 'price_cents' => $this->quota->pricing()->priceCents($cost),
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ]);
@@ -104,13 +104,13 @@ class AiReplicateService
         $this->quota->ensureCanGenerate($user, 'video', 1, $this->quota->pricing()->videoCostCents($model, 1));
 
         $generation = AiAssetGeneration::create([
-            'user_id'  => $user?->id,
-            'type'     => AiAssetGeneration::TYPE_VIDEO,
+            'user_id' => $user?->id,
+            'type' => AiAssetGeneration::TYPE_VIDEO,
             'provider' => 'replicate',
-            'model'    => $model,
-            'status'   => AiAssetGeneration::STATUS_PROCESSING,
-            'prompt'   => $prompt,
-            'params'   => $input,
+            'model' => $model,
+            'status' => AiAssetGeneration::STATUS_PROCESSING,
+            'prompt' => $prompt,
+            'params' => $input,
         ]);
 
         try {
@@ -141,7 +141,7 @@ class AiReplicateService
         if ($status !== 'succeeded') {
             $generation->update([
                 'status' => AiAssetGeneration::STATUS_FAILED,
-                'error'  => $prediction['error'] ?? 'La predicción de Replicate falló.',
+                'error' => $prediction['error'] ?? 'La predicción de Replicate falló.',
             ]);
 
             return $generation->refresh();
@@ -155,12 +155,12 @@ class AiReplicateService
             }
 
             $media = $this->storeBytes($download->body(), 'mp4', 'video/mp4', $generation->user, 'ai_video', $generation->prompt);
-            $cost  = $this->quota->pricing()->videoCostCents($generation->model, 1);
+            $cost = $this->quota->pricing()->videoCostCents($generation->model, 1);
 
             $generation->update([
-                'status'      => AiAssetGeneration::STATUS_COMPLETED,
-                'media_id'    => $media->id,
-                'cost_cents'  => $cost,
+                'status' => AiAssetGeneration::STATUS_COMPLETED,
+                'media_id' => $media->id,
+                'cost_cents' => $cost,
                 'price_cents' => $this->quota->pricing()->priceCents($cost),
             ]);
 
@@ -175,7 +175,7 @@ class AiReplicateService
     // ── Replicate API helpers ────────────────────────────────────────
     private function createPrediction(string $model, array $input, bool $wait): array
     {
-        $response = $this->client($wait)->post(self::BASE . '/models/' . $model . '/predictions', [
+        $response = $this->client($wait)->post(self::BASE.'/models/'.$model.'/predictions', [
             'input' => $input,
         ]);
 
@@ -188,7 +188,7 @@ class AiReplicateService
 
     private function getPrediction(string $id): array
     {
-        return $this->client()->get(self::BASE . '/predictions/' . $id)->json() ?? [];
+        return $this->client()->get(self::BASE.'/predictions/'.$id)->json() ?? [];
     }
 
     /** Polls a few times in case `Prefer: wait` returned before completion. */
@@ -223,11 +223,11 @@ class AiReplicateService
 
     private function storeBytes(string $bytes, string $ext, string $mime, ?User $user, string $context, string $caption): Media
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'aigen_') . '.' . $ext;
+        $tmp = tempnam(sys_get_temp_dir(), 'aigen_').'.'.$ext;
         file_put_contents($tmp, $bytes);
 
         try {
-            $file = new UploadedFile($tmp, 'ai-' . $context . '-' . now()->timestamp . '.' . $ext, $mime, null, true);
+            $file = new UploadedFile($tmp, 'ai-'.$context.'-'.now()->timestamp.'.'.$ext, $mime, null, true);
 
             return $this->storage->upload($file, $user, null, $context, ['caption' => mb_substr($caption, 0, 480)]);
         } finally {

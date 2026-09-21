@@ -7,11 +7,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class AdminMenuExport implements FromCollection, WithHeadings, ShouldAutoSize
+class AdminMenuExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
-    public function __construct(private readonly string $panel)
-    {
-    }
+    public function __construct(private readonly string $panel) {}
 
     public function headings(): array
     {

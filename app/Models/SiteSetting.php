@@ -13,6 +13,7 @@ class SiteSetting extends Model
     use MemoizesPerRequest;
 
     private const CACHE_KEY_ID = 'site_settings.singleton_id';
+
     private const CACHE_KEY_LEGACY = 'site_settings.singleton';
 
     protected $fillable = [
@@ -143,68 +144,70 @@ class SiteSetting extends Model
     {
         $settings = static::cached();
 
-        return $settings?->home_page_enabled ?? true;
+        return $settings === null ? true : ($settings->home_page_enabled ?? true);
     }
 
     public static function isPublicRegistrationEnabled(): bool
     {
         $settings = static::cached();
 
-        return $settings?->public_registration_enabled ?? true;
+        return $settings === null ? true : ($settings->public_registration_enabled ?? true);
     }
 
     /**
      * Nombre de la aplicación desde la BD, con fallback a "Starcho".
      */
-        public static function appName(): string
-        {
-            $settings = static::cached();
-            $name = $settings?->app_name;
+    public static function appName(): string
+    {
+        $settings = static::cached();
+        $name = $settings?->app_name;
 
-            return filled($name) ? $name : config('app.name', 'Starcho');
-        }
+        return filled($name) ? $name : config('app.name', 'Starcho');
+    }
 
-        /**
-         * ¿Está habilitado el modo oscuro en el home público?
-         */
-        public static function isDarkModeEnabled(): bool
-        {
-            $settings = static::cached();
+    /**
+     * ¿Está habilitado el modo oscuro en el home público?
+     */
+    public static function isDarkModeEnabled(): bool
+    {
+        $settings = static::cached();
 
-            return $settings?->dark_mode_enabled ?? false;
-        }
+        return $settings === null ? false : ($settings->dark_mode_enabled ?? false);
+    }
 
-        public static function isLanguageSwitcherHidden(): bool
-        {
-            $settings = static::cached();
+    public static function isLanguageSwitcherHidden(): bool
+    {
+        $settings = static::cached();
 
-            return $settings?->hide_language_switcher ?? false;
-        }
+        return $settings === null ? false : ($settings->hide_language_switcher ?? false);
+    }
 
-        public static function defaultSiteLocale(): string
-        {
-            $settings = static::cached();
-            $locale = $settings?->default_site_locale;
+    public static function defaultSiteLocale(): string
+    {
+        $settings = static::cached();
+        $locale = $settings?->default_site_locale;
 
-            return filled($locale) ? (string) $locale : 'es';
-        }
+        return filled($locale) ? (string) $locale : 'es';
+    }
 
-        public static function avatarStyle(): string
-        {
-            $style = static::cached()?->avatar_style;
+    public static function avatarStyle(): string
+    {
+        $style = static::cached()?->avatar_style;
 
-            return in_array($style, ['initials', 'image', 'service'], true) ? $style : 'image';
-        }
+        return in_array($style, ['initials', 'image', 'service'], true) ? $style : 'image';
+    }
 
-        public static function profileAvatarUploadEnabled(): bool
-        {
-            return static::cached()?->profile_avatar_upload_enabled ?? true;
-        }
+    public static function profileAvatarUploadEnabled(): bool
+    {
+        $settings = static::cached();
 
-        public static function avatarServiceUrl(): ?string
-        {
-            return static::cached()?->avatar_service_url;
-        }
+        return $settings === null ? true : ($settings->profile_avatar_upload_enabled ?? true);
+    }
+
+    public static function avatarServiceUrl(): ?string
+    {
+        return static::cached()?->avatar_service_url;
+    }
 
     public static function singleton(): self
     {

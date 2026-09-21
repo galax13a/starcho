@@ -3,18 +3,17 @@
 namespace App\Exports;
 
 use App\Models\Contact;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AppContactsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AppContactsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
-    public function __construct(private readonly int $userId, private readonly ?array $contactIds = null)
-    {
-    }
+    public function __construct(private readonly int $userId, private readonly ?array $contactIds = null) {}
 
-    public function query()
+    public function query(): Builder
     {
         return Contact::query()
             ->where('user_id', $this->userId)

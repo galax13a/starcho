@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphedByMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
 
 class MediaTag extends Model
@@ -19,12 +19,12 @@ class MediaTag extends Model
         });
     }
 
-    public function media(): MorphedByMany
+    public function media(): MorphToMany
     {
         return $this->morphedByMany(Media::class, 'taggable', 'media_taggables');
     }
 
-    public function albums(): MorphedByMany
+    public function albums(): MorphToMany
     {
         return $this->morphedByMany(MediaAlbum::class, 'taggable', 'media_taggables');
     }

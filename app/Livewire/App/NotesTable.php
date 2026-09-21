@@ -98,12 +98,13 @@ final class NotesTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedNoteIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('notes.notify.no_selection'));
+
             return null;
         }
 
@@ -111,7 +112,7 @@ final class NotesTable extends PowerGridComponent
 
         return Excel::download(
             new AppNotesExport((int) Auth::id(), $selectedIds),
-            'notes-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'notes-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -121,6 +122,7 @@ final class NotesTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('notes.notify.no_selection'));
+
             return;
         }
 
@@ -132,6 +134,7 @@ final class NotesTable extends PowerGridComponent
         if ($notes->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('notes.notify.no_selection'));
+
             return;
         }
 
@@ -144,7 +147,7 @@ final class NotesTable extends PowerGridComponent
 
         $this->clearSelection();
         $this->notifyWarning(__('notes.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
         $this->dispatch('notes-updated');
     }
 
@@ -155,13 +158,14 @@ final class NotesTable extends PowerGridComponent
 
         if (! $note) {
             $this->notifyFailure(__('notes.notify.not_found'));
+
             return;
         }
 
         $note->delete();
 
         $this->notifyWarning(__('notes.notify.deleted'));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
         $this->dispatch('notes-updated');
     }
 

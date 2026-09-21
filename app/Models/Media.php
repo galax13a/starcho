@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\StorageService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,6 +14,34 @@ use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
 {
+    public const VISIBILITIES = ['public', 'authenticated', 'protected', 'private'];
+
+    private const VISIBILITY_LEVELS = [
+        'public' => 0,
+        'authenticated' => 1,
+        'protected' => 2,
+        'private' => 3,
+    ];
+
+    public static function stricterVisibility(string $first, string $second): string
+    {
+        $first = array_key_exists($first, self::VISIBILITY_LEVELS) ? $first : 'private';
+        $second = array_key_exists($second, self::VISIBILITY_LEVELS) ? $second : 'private';
+
+        return self::VISIBILITY_LEVELS[$first] >= self::VISIBILITY_LEVELS[$second] ? $first : $second;
+    }
+
+    /** Persist a temporary minimum policy before a restricted association. */
+    public function enforceMinimumVisibility(string $visibility): void
+    {
+        $current = in_array($this->visibility, self::VISIBILITIES, true) ? $this->visibility : 'public';
+        $stricter = self::stricterVisibility($current, $visibility);
+
+        if ($stricter !== $current) {
+            $this->forceFill(['visibility' => $stricter])->save();
+        }
+    }
+
     public const VARIANT_SIZES = [240, 480, 960, 1440];
 
     /**
@@ -21,34 +50,44 @@ class Media extends Model
      * when served from the same origin.
      */
     public const ALLOWED_UPLOAD_EXTENSIONS = 'jpg,jpeg,png,gif,webp,bmp,'
-        . 'mp4,webm,ogg,mov,m4v,'
-        . 'mp3,wav,m4a,'
-        . 'pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip';
+        .'mp4,webm,ogg,mov,m4v,'
+        .'mp3,wav,m4a,'
+        .'pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip';
 
     /** Validation rules for a single uploaded file (20 MB cap + safe types). */
     public static function uploadFileRules(): array
     {
-        return ['file', 'max:20480', 'mimes:' . self::ALLOWED_UPLOAD_EXTENSIONS];
+        return ['file', 'max:20480', 'mimes:'.self::ALLOWED_UPLOAD_EXTENSIONS];
     }
 
     protected $fillable = [
         'user_id', 'driver', 'disk', 'path', 'webp_path', 'url',
         'variants', 'variants_size',
         'original_name', 'display_name', 'mime_type', 'size', 'width', 'height',
-        'mediable_type', 'mediable_id', 'context',
+        'mediable_type', 'mediable_id', 'context', 'visibility',
         'alt', 'caption',
     ];
 
     protected $casts = [
-        'size'   => 'integer',
+        'size' => 'integer',
         'variants' => 'array',
         'variants_size' => 'integer',
-        'width'  => 'integer',
+        'width' => 'integer',
         'height' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Media $media): void {
+            if ($media->visibility && $media->visibility !== 'public') {
+                $media->url = null;
+            }
+        });
+    }
+
     // ── Relationships ──────────────────────────────────────────────────
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -59,6 +98,7 @@ class Media extends Model
         return $this->morphTo();
     }
 
+    /** @return BelongsToMany<MediaAlbum, $this> */
     public function albums(): BelongsToMany
     {
         return $this->belongsToMany(MediaAlbum::class, 'media_album_media')
@@ -76,6 +116,7 @@ class Media extends Model
         return $this->morphMany(MediaComment::class, 'commentable')->latest();
     }
 
+    /** @return MorphMany<MediaRating, $this> */
     public function ratings(): MorphMany
     {
         return $this->morphMany(MediaRating::class, 'ratable');
@@ -88,6 +129,13 @@ class Media extends Model
 
     // ── Accessors ─────────────────────────────────────────────────────
 
+    public function getUrlAttribute(?string $value): ?string
+    {
+        return $this->requiresAuthorizedDelivery() || $this->disk === 'starcho_private'
+            ? null
+            : $value;
+    }
+
     /**
      * Public URL for the media file.
      *
@@ -99,10 +147,16 @@ class Media extends Model
      */
     public function getPublicUrlAttribute(): string
     {
+        // Non-public assets must never expose a storage/CDN URL. The proxy route
+        // applies the same access rules to originals and variants.
+        if ($this->requiresAuthorizedDelivery() || $this->disk === 'starcho_private') {
+            return route('media.files.show', ['media' => $this]);
+        }
+
         // Local files must always respect the configured site/storage URL.
         // Some older rows stored APP_URL/localhost in url, so rebuild instead.
         if ($this->disk === 'public' || $this->driver === 'local') {
-            $settings = \App\Models\StorageSetting::singleton();
+            $settings = StorageSetting::singleton();
 
             return $settings->localPublicUrl($this->path);
         }
@@ -135,9 +189,13 @@ class Media extends Model
      */
     public function getWebpUrlAttribute(): string
     {
+        if ($this->requiresAuthorizedDelivery() || $this->disk === 'starcho_private') {
+            return route('media.files.show', ['media' => $this]);
+        }
+
         if (filled($this->webp_path)) {
             if ($this->disk === 'public' || $this->driver === 'local') {
-                return \App\Models\StorageSetting::singleton()->localPublicUrl($this->webp_path);
+                return StorageSetting::singleton()->localPublicUrl($this->webp_path);
             }
 
             if ($this->isR2()) {
@@ -170,6 +228,90 @@ class Media extends Model
         }
 
         return route('media.files.show', ['media' => $this, 'variant' => $variant['key']]);
+    }
+
+    /**
+     * Resolve the strictest policy imposed by the file and every album it is
+     * attached to. Membership in a public album never weakens a stricter rule.
+     */
+    public function effectiveVisibility(): string
+    {
+        $visibility = in_array($this->visibility, self::VISIBILITIES, true)
+            ? $this->visibility
+            : 'private';
+        $level = self::VISIBILITY_LEVELS[$visibility];
+
+        $albums = $this->relationLoaded('albums') ? $this->albums : $this->albums()->get();
+
+        foreach ($albums as $album) {
+            $albumVisibility = $album->effectiveVisibility();
+            $level = max($level, self::VISIBILITY_LEVELS[$albumVisibility]);
+        }
+
+        return array_search($level, self::VISIBILITY_LEVELS, true) ?: 'public';
+    }
+
+    public function requiresAuthorizedDelivery(): bool
+    {
+        return $this->effectiveVisibility() !== 'public';
+    }
+
+    /** Album passwords that must all be unlocked to view this file. */
+    public function protectedAlbumIds(): array
+    {
+        $albums = $this->relationLoaded('albums') ? $this->albums : $this->albums()->get();
+
+        return $albums
+            ->filter(fn (MediaAlbum $album) => $album->effectiveVisibility() === 'protected')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    public function isAccessibleBy(?User $user): bool
+    {
+        if ($user && ($user->hasRole('root') || $user->hasRole('admin') || $user->can('view-admin'))) {
+            return true;
+        }
+
+        if ($user && (int) $this->user_id === (int) $user->id) {
+            return true;
+        }
+
+        $visibility = $this->effectiveVisibility();
+
+        if ($visibility === 'public') {
+            return true;
+        }
+
+        if ($visibility === 'authenticated') {
+            return $user !== null;
+        }
+
+        $albums = $this->relationLoaded('albums') ? $this->albums : $this->albums()->get();
+
+        if ($visibility === 'private') {
+            return $user !== null && $albums->contains(
+                fn (MediaAlbum $album) => $album->effectiveVisibility() === 'private'
+                    && (int) $album->user_id === (int) $user->id
+            );
+        }
+
+        $protectedAlbums = $albums->filter(fn (MediaAlbum $album) => $album->effectiveVisibility() === 'protected');
+
+        if ($protectedAlbums->isEmpty()) {
+            return false;
+        }
+
+        foreach ($protectedAlbums as $album) {
+            $albumOwner = $user && (int) $album->user_id === (int) $user->id;
+
+            if (! $albumOwner && (! $album->password || ! session('media_album_unlocked_'.$album->id))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function variant(int|string|null $size = 240): ?array
@@ -227,13 +369,13 @@ class Media extends Model
 
     private function r2Url(string $path): string
     {
-        $settings = \App\Models\StorageSetting::singleton();
+        $settings = StorageSetting::singleton();
 
         if (filled($settings->r2_public_url)) {
-            return rtrim((string) $settings->r2_public_url, '/') . '/' . ltrim($path, '/');
+            return rtrim((string) $settings->r2_public_url, '/').'/'.ltrim($path, '/');
         }
 
-        return app(\App\Services\StorageService::class)
+        return app(StorageService::class)
             ->diskFor($this)
             ->temporaryUrl($path, now()->addMinutes(30));
     }
@@ -258,8 +400,12 @@ class Media extends Model
      */
     public function fileType(): string
     {
-        if ($this->isImage()) return 'image';
-        if ($this->isVideo()) return 'video';
+        if ($this->isImage()) {
+            return 'image';
+        }
+        if ($this->isVideo()) {
+            return 'video';
+        }
 
         return 'document';
     }
@@ -270,14 +416,14 @@ class Media extends Model
         $bytes = $this->size;
 
         if ($bytes >= 1_048_576) {
-            return number_format($bytes / 1_048_576, 2) . ' MB';
+            return number_format($bytes / 1_048_576, 2).' MB';
         }
 
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 1) . ' KB';
+            return number_format($bytes / 1024, 1).' KB';
         }
 
-        return $bytes . ' B';
+        return $bytes.' B';
     }
 
     public function variantsSizeLabel(): string
@@ -285,13 +431,13 @@ class Media extends Model
         $bytes = (int) $this->variants_size;
 
         if ($bytes >= 1_048_576) {
-            return number_format($bytes / 1_048_576, 2) . ' MB';
+            return number_format($bytes / 1_048_576, 2).' MB';
         }
 
         if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 1) . ' KB';
+            return number_format($bytes / 1024, 1).' KB';
         }
 
-        return $bytes . ' B';
+        return $bytes.' B';
     }
 }

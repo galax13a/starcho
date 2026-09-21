@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\MemoizesPerRequest;
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
@@ -26,7 +27,7 @@ class SiteLanguage extends Model
         'active' => 'boolean',
     ];
 
-    public static function allOrdered(): \Illuminate\Support\Collection
+    public static function allOrdered(): Collection
     {
         if (! Schema::hasTable('site_languages')) {
             return collect();
@@ -66,12 +67,12 @@ class SiteLanguage extends Model
         });
     }
 
-    public static function active(): \Illuminate\Support\Collection
+    public static function active(): Collection
     {
         if (! Schema::hasTable('site_languages')) {
             return collect([
-                (object)['code' => 'es', 'name' => 'Español'],
-                (object)['code' => 'en', 'name' => 'English'],
+                (object) ['code' => 'es', 'name' => 'Español'],
+                (object) ['code' => 'en', 'name' => 'English'],
             ]);
         }
 

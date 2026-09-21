@@ -24,9 +24,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('site_settings', function (Blueprint $table): void {
-            $table->dropColumnIfExists('address');
-            $table->dropColumnIfExists('founding_year');
-            $table->dropColumnIfExists('google_maps_url');
+            foreach (['address', 'founding_year', 'google_maps_url'] as $column) {
+                if (Schema::hasColumn('site_settings', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };

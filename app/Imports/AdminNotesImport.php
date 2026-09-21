@@ -14,6 +14,7 @@ class AdminNotesImport implements ToCollection, WithHeadingRow
     use NormalizesSpreadsheetValues;
 
     public int $created = 0;
+
     public int $updated = 0;
 
     public function collection(Collection $rows): void
@@ -56,7 +57,7 @@ class AdminNotesImport implements ToCollection, WithHeadingRow
         return $recordId !== null ? Note::find($recordId) : null;
     }
 
-    private function resolveUser(string|null $email): ?User
+    private function resolveUser(?string $email): ?User
     {
         if ($email === null) {
             return null;

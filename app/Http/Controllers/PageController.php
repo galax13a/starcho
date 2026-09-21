@@ -6,7 +6,6 @@ use App\Models\Post;
 use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
 use App\Services\ContentRenderCache;
-use Illuminate\View\View;
 
 class PageController extends Controller
 {
@@ -14,7 +13,7 @@ class PageController extends Controller
     {
         $settings = SiteSetting::cached();
 
-        if (($settings?->home_source ?? 'folio') !== 'dynamic' || ! $settings?->home_page_id) {
+        if (($settings->home_source ?? 'folio') !== 'dynamic' || ! $settings->home_page_id) {
             return view('pages.index');
         }
 
@@ -63,23 +62,23 @@ class PageController extends Controller
             ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             abort(404);
         }
 
         $page->increment('views_count');
 
-        $activeCodes    = SiteLanguage::activeCodes();
+        $activeCodes = SiteLanguage::activeCodes();
         $fallbackLocale = null;
-        $usingFallback  = false;
+        $usingFallback = false;
 
         $hasContentInLocale = filled($page->getTranslation('content', $locale, false));
 
-        if (!$hasContentInLocale) {
+        if (! $hasContentInLocale) {
             foreach ($activeCodes as $code) {
                 if ($code !== $locale && filled($page->getTranslation('content', $code, false))) {
                     $fallbackLocale = $code;
-                    $usingFallback  = true;
+                    $usingFallback = true;
                     app()->setLocale($code);
                     break;
                 }

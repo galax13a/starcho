@@ -14,12 +14,13 @@ class IPQueryProvider extends GeoIPProvider
         $url = "https://api.ipquery.io/?ip={$ip}";
         $response = $this->makeRequest($url);
 
-        if (!$response) {
+        if (! $response) {
             return null;
         }
 
         if (isset($response['status']) && $response['status'] === 'fail') {
-            Log::warning("IPQuery failed for IP {$ip}: " . ($response['message'] ?? 'Unknown error'));
+            Log::warning("IPQuery failed for IP {$ip}: ".($response['message'] ?? 'Unknown error'));
+
             return null;
         }
 

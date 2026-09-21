@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Jobs\GenerateAiImageJob;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiAssetGeneration;
 use App\Models\AiPlan;
@@ -9,7 +10,6 @@ use App\Models\AiSetting;
 use App\Models\PostAiGeneration;
 use App\Models\SiteLanguage;
 use App\Models\User;
-use App\Jobs\GenerateAiImageJob;
 use App\Services\Ai\AiImageService;
 use App\Services\Ai\AiReplicateService;
 use App\Services\Ai\AiVideoService;
@@ -28,31 +28,51 @@ class AiManager extends Component
 
     // ── AI settings (text/image/video providers) ─────────────────────
     public bool $enabled = false;
+
     public string $provider = 'openai';
+
     public string $defaultModel = '';
+
     public string $openaiKey = '';
+
     public string $deepseekKey = '';
+
     public string $anthropicKey = '';
+
     public string $openrouterKey = '';
+
     public string $falKey = '';
+
     public string $replicateKey = '';
+
     public string $imageProvider = 'openai';
+
     public string $imageModel = 'gpt-image-1';
+
     public string $videoProvider = 'fal';
+
     public string $videoModel = 'fal-ai/kling-video/v1/standard/text-to-video';
 
     // ── Model catalogs (DB-managed, per provider) ────────────────────
     public array $textModelRows = [];
+
     public array $imageModelRows = [];
+
     public array $videoModelRows = [];
+
     public $modelImportFile;
 
     // ── Image / video generation ─────────────────────────────────────
     public string $imagePrompt = '';
+
     public string $imageSize = 'tiktok';
+
     public int $customWidth = 1024;
+
     public int $customHeight = 1024;
+
     public bool $imageBackground = false;
+
     public string $videoPrompt = '';
 
     /** Highest completed asset id already seen, to notify only on new completions. */
@@ -60,16 +80,27 @@ class AiManager extends Component
 
     // ── Plan modal ───────────────────────────────────────────────────
     public bool $showPlanModal = false;
+
     public ?int $planId = null;
+
     public array $planName = [];
+
     public array $planDescription = [];
+
     public string $planSlug = '';
+
     public string $planPrice = '0.00';
+
     public bool $planIsFree = false;
+
     public bool $planIsActive = true;
+
     public ?string $planTextQuota = null;
+
     public ?string $planImageQuota = null;
+
     public ?string $planVideoQuota = null;
+
     public ?string $planBudget = null; // dollars
 
     public function mount(): void
@@ -176,7 +207,7 @@ class AiManager extends Component
 
         return response()->streamDownload(function () use ($payload): void {
             echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        }, 'starcho-ai-models-' . now()->format('Ymd-His') . '.json', [
+        }, 'starcho-ai-models-'.now()->format('Ymd-His').'.json', [
             'Content-Type' => 'application/json; charset=UTF-8',
         ]);
     }
@@ -199,6 +230,7 @@ class AiManager extends Component
 
         if (! is_array($decoded)) {
             $this->notifyFailure('No se pudo importar: JSON inválido.');
+
             return;
         }
 
@@ -206,6 +238,7 @@ class AiManager extends Component
 
         if (! is_array($models)) {
             $this->notifyFailure('No se pudo importar: archivo sin modelos.');
+
             return;
         }
 
@@ -333,23 +366,23 @@ class AiManager extends Component
     public function saveSettings(): void
     {
         $this->validate([
-            'provider'      => ['required', 'in:' . implode(',', array_keys(AiSetting::PROVIDERS))],
-            'defaultModel'  => ['required', 'string', 'max:120'],
-            'imageProvider' => ['required', 'in:' . implode(',', array_keys(AiSetting::IMAGE_PROVIDERS))],
-            'imageModel'    => ['required', 'string', 'max:180'],
-            'videoProvider' => ['required', 'in:' . implode(',', array_keys(AiSetting::VIDEO_PROVIDERS))],
-            'videoModel'    => ['required', 'string', 'max:180'],
+            'provider' => ['required', 'in:'.implode(',', array_keys(AiSetting::PROVIDERS))],
+            'defaultModel' => ['required', 'string', 'max:120'],
+            'imageProvider' => ['required', 'in:'.implode(',', array_keys(AiSetting::IMAGE_PROVIDERS))],
+            'imageModel' => ['required', 'string', 'max:180'],
+            'videoProvider' => ['required', 'in:'.implode(',', array_keys(AiSetting::VIDEO_PROVIDERS))],
+            'videoModel' => ['required', 'string', 'max:180'],
         ]);
 
         $s = AiSetting::singleton();
         $payload = [
-            'enabled'        => $this->enabled,
-            'provider'       => $this->provider,
-            'default_model'  => trim($this->defaultModel),
+            'enabled' => $this->enabled,
+            'provider' => $this->provider,
+            'default_model' => trim($this->defaultModel),
             'image_provider' => $this->imageProvider,
-            'image_model'    => $this->imageModel,
+            'image_model' => $this->imageModel,
             'video_provider' => $this->videoProvider,
-            'video_model'    => $this->videoModel,
+            'video_model' => $this->videoModel,
         ];
 
         foreach ([
@@ -371,20 +404,20 @@ class AiManager extends Component
     public function generateImage(): void
     {
         $this->validate([
-            'imageProvider' => ['required', 'in:' . implode(',', array_keys(AiSetting::IMAGE_PROVIDERS))],
-            'imageModel'    => ['required', 'string', 'max:180'],
-            'imagePrompt'   => ['required', 'string', 'min:4', 'max:3000'],
-            'imageSize'     => ['required', 'in:tiktok,800x600,480x360,custom'],
-            'customWidth'   => ['required', 'integer', 'min:64', 'max:2048'],
-            'customHeight'  => ['required', 'integer', 'min:64', 'max:2048'],
+            'imageProvider' => ['required', 'in:'.implode(',', array_keys(AiSetting::IMAGE_PROVIDERS))],
+            'imageModel' => ['required', 'string', 'max:180'],
+            'imagePrompt' => ['required', 'string', 'min:4', 'max:3000'],
+            'imageSize' => ['required', 'in:tiktok,800x600,480x360,custom'],
+            'customWidth' => ['required', 'integer', 'min:64', 'max:2048'],
+            'customHeight' => ['required', 'integer', 'min:64', 'max:2048'],
         ]);
 
         [$w, $h] = $this->resolveImageSize();
 
         $params = match ($this->imageProvider) {
             'replicate' => ['width' => $w, 'height' => $h],
-            'fal'       => ['image_size' => ['width' => $w, 'height' => $h]],
-            default     => ['size' => $this->openAiSize($w, $h)],
+            'fal' => ['image_size' => ['width' => $w, 'height' => $h]],
+            default => ['size' => $this->openAiSize($w, $h)],
         };
 
         // Background mode: push to a queued job and let the panel poll for the result.
@@ -418,11 +451,12 @@ class AiManager extends Component
 
         if ($models === []) {
             $this->notifyWarning('No hay modelos de imagen activos para este proveedor.');
+
             return;
         }
 
         $this->imageModel = $models[array_rand($models)];
-        $this->notifyInfo('Modelo seleccionado: ' . $this->imageModel);
+        $this->notifyInfo('Modelo seleccionado: '.$this->imageModel);
     }
 
     public function clearFailedImages(): void
@@ -472,11 +506,11 @@ class AiManager extends Component
     private function resolveImageSize(): array
     {
         return match ($this->imageSize) {
-            'tiktok'  => [1080, 1920],
+            'tiktok' => [1080, 1920],
             '800x600' => [800, 600],
             '480x360' => [480, 360],
-            'custom'  => [max(64, min(2048, $this->customWidth)), max(64, min(2048, $this->customHeight))],
-            default   => [1024, 1024],
+            'custom' => [max(64, min(2048, $this->customWidth)), max(64, min(2048, $this->customHeight))],
+            default => [1024, 1024],
         };
     }
 
@@ -519,13 +553,13 @@ class AiManager extends Component
             $videos = $newlyDone->where('type', AiAssetGeneration::TYPE_VIDEO)->count();
             $parts = [];
             if ($images) {
-                $parts[] = $images . ' imagen' . ($images > 1 ? 'es' : '');
+                $parts[] = $images.' imagen'.($images > 1 ? 'es' : '');
             }
             if ($videos) {
-                $parts[] = $videos . ' video' . ($videos > 1 ? 's' : '');
+                $parts[] = $videos.' video'.($videos > 1 ? 's' : '');
             }
             if ($parts) {
-                $this->notifySuccess('Listo: ' . implode(' y ', $parts) . ' en tu galería.');
+                $this->notifySuccess('Listo: '.implode(' y ', $parts).' en tu galería.');
             }
             $this->assetWatermark = (int) $newlyDone->max('id');
         }
@@ -565,7 +599,7 @@ class AiManager extends Component
 
     public function updated(string $name, $value): void
     {
-        if (! $this->planId && $name === 'planName.' . $this->primaryLocale()) {
+        if (! $this->planId && $name === 'planName.'.$this->primaryLocale()) {
             $this->planSlug = Str::slug((string) $value);
         }
     }
@@ -576,15 +610,15 @@ class AiManager extends Component
         $primary = $this->primaryLocale();
 
         $this->validate([
-            'planName.' . $primary => 'required|string|max:80',
-            'planName.*'           => 'nullable|string|max:80',
-            'planDescription.*'    => 'nullable|string|max:255',
-            'planSlug'             => ['required', 'string', 'max:80', Rule::unique('ai_plans', 'slug')->ignore($this->planId)],
-            'planPrice'            => 'required|numeric|min:0',
-            'planTextQuota'        => 'nullable|integer|min:0',
-            'planImageQuota'       => 'nullable|integer|min:0',
-            'planVideoQuota'       => 'nullable|integer|min:0',
-            'planBudget'           => 'nullable|numeric|min:0',
+            'planName.'.$primary => 'required|string|max:80',
+            'planName.*' => 'nullable|string|max:80',
+            'planDescription.*' => 'nullable|string|max:255',
+            'planSlug' => ['required', 'string', 'max:80', Rule::unique('ai_plans', 'slug')->ignore($this->planId)],
+            'planPrice' => 'required|numeric|min:0',
+            'planTextQuota' => 'nullable|integer|min:0',
+            'planImageQuota' => 'nullable|integer|min:0',
+            'planVideoQuota' => 'nullable|integer|min:0',
+            'planBudget' => 'nullable|numeric|min:0',
         ]);
 
         $name = [];
@@ -601,7 +635,7 @@ class AiManager extends Component
             }
         }
 
-        $plan = $this->planId ? AiPlan::findOrFail($this->planId) : new AiPlan();
+        $plan = $this->planId ? AiPlan::findOrFail($this->planId) : new AiPlan;
         $plan->setTranslations('name', $name);
         $plan->setTranslations('description', $description);
         $plan->slug = $this->planSlug;
@@ -630,6 +664,7 @@ class AiManager extends Component
 
         if ($plan->users()->exists()) {
             $this->notifyWarning("No se puede eliminar «{$plan->name}»: tiene usuarios asignados.");
+
             return;
         }
 
@@ -657,7 +692,7 @@ class AiManager extends Component
             ->first();
 
         $assetAgg = fn ($q) => $q->selectRaw(
-            "type, COUNT(*) as runs, COALESCE(SUM(cost_cents),0) as cost, COALESCE(SUM(price_cents),0) as price"
+            'type, COUNT(*) as runs, COALESCE(SUM(cost_cents),0) as cost, COALESCE(SUM(price_cents),0) as price'
         )->groupBy('type')->get()->keyBy('type');
 
         $assetsGlobal = $assetAgg(AiAssetGeneration::query()->where('status', 'completed'));
@@ -674,6 +709,7 @@ class AiManager extends Component
         $topSpenders = AiAssetGeneration::query()
             ->where('status', 'completed')
             ->whereNotNull('user_id')
+            ->toBase()
             ->selectRaw('user_id, COALESCE(SUM(cost_cents),0) as cost, COUNT(*) as runs')
             ->groupBy('user_id')
             ->orderByDesc('cost')
@@ -703,45 +739,45 @@ class AiManager extends Component
         $plans = AiPlan::orderBy('sort_order')->get();
         $planRows = $plans->map(function (AiPlan $plan): array {
             return [
-                'id'    => $plan->id,
-                'name'  => $plan->name,
+                'id' => $plan->id,
+                'name' => $plan->name,
                 'price' => $plan->monthly_price,
-                'free'  => (bool) $plan->is_free,
+                'free' => (bool) $plan->is_free,
                 'active' => (bool) $plan->is_active,
                 'users' => $plan->users()->count(),
-                'text'  => $plan->quotaLabel('text'),
+                'text' => $plan->quotaLabel('text'),
                 'image' => $plan->quotaLabel('image'),
                 'video' => $plan->quotaLabel('video'),
             ];
         });
 
         return [
-            'settings'       => AiSetting::singleton(),
-            'textGlobal'     => $textGlobal,
-            'textMine'       => $textMine,
-            'assetsGlobal'   => $assetsGlobal,
-            'assetsMine'     => $assetsMine,
-            'byProvider'     => $byProvider,
-            'providerCats'   => $byProvider->pluck('provider')->values()->all(),
+            'settings' => AiSetting::singleton(),
+            'textGlobal' => $textGlobal,
+            'textMine' => $textMine,
+            'assetsGlobal' => $assetsGlobal,
+            'assetsMine' => $assetsMine,
+            'byProvider' => $byProvider,
+            'providerCats' => $byProvider->pluck('provider')->values()->all(),
             'providerTokens' => $byProvider->pluck('tokens')->map(fn ($t) => (int) $t)->values()->all(),
-            'topSpenders'    => $topSpenders->map(fn ($r) => [
-                'name' => $spenderUsers->get($r->user_id)?->name ?? ('#' . $r->user_id),
+            'topSpenders' => $topSpenders->map(fn ($r) => [
+                'name' => $spenderUsers->get($r->user_id)->name ?? ('#'.$r->user_id),
                 'cost' => (int) $r->cost,
                 'runs' => (int) $r->runs,
             ]),
-            'recentImages'   => $recentImages,
-            'recentVideos'   => $recentVideos,
-            'plans'          => $plans,
-            'planRows'       => $planRows,
-            'imageModels'    => AiSetting::singleton()->imageModelOptions($this->imageProvider),
-            'videoModels'    => AiSetting::singleton()->videoModelOptions($this->videoProvider),
-            'textModels'     => AiSetting::singleton()->modelOptions($this->provider),
-            'markup'         => (float) config('ai_pricing.markup', 1.8),
-            'aiTimeout'      => (int) config('starcho_ai.request_timeout', 120),
+            'recentImages' => $recentImages,
+            'recentVideos' => $recentVideos,
+            'plans' => $plans,
+            'planRows' => $planRows,
+            'imageModels' => AiSetting::singleton()->imageModelOptions($this->imageProvider),
+            'videoModels' => AiSetting::singleton()->videoModelOptions($this->videoProvider),
+            'textModels' => AiSetting::singleton()->modelOptions($this->provider),
+            'markup' => (float) config('ai_pricing.markup', 1.8),
+            'aiTimeout' => (int) config('starcho_ai.request_timeout', 120),
             'asyncThreshold' => (int) config('starcho_ai.async_threshold', 60),
-            'lostTextRuns'   => (int) ($lostText->runs ?? 0),
-            'lostTextCost'   => (int) ($lostText->cost ?? 0),
-            'lostTokens'     => $lostTokens,
+            'lostTextRuns' => (int) ($lostText->runs ?? 0),
+            'lostTextCost' => (int) ($lostText->cost ?? 0),
+            'lostTokens' => $lostTokens,
             'hasProcessingVideo' => AiAssetGeneration::where('type', 'video')->where('status', 'processing')->exists(),
             'hasProcessingImage' => AiAssetGeneration::where('type', 'image')->where('status', 'processing')->exists(),
             'failedImagesCount' => AiAssetGeneration::where('type', AiAssetGeneration::TYPE_IMAGE)->where('status', AiAssetGeneration::STATUS_FAILED)->count(),

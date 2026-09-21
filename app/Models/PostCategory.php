@@ -9,7 +9,7 @@ use Spatie\Translatable\HasTranslations;
 
 class PostCategory extends Model
 {
-    use SoftDeletes, HasTranslations;
+    use HasTranslations, SoftDeletes;
 
     public $translatable = ['name', 'description'];
 

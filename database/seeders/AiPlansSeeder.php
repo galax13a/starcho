@@ -58,7 +58,7 @@ class AiPlansSeeder extends Seeder
         foreach ($plans as $p) {
             $plan = AiPlan::firstOrNew(['slug' => $p['slug']]);
             $plan->setTranslations('name', $p['name']);
-            $plan->setTranslations('description', $p['desc'] ?? []);
+            $plan->setTranslations('description', $p['desc']);
             $plan->monthly_price = $p['price'];
             $plan->is_free = $p['free'];
             $plan->is_active = true;
@@ -70,6 +70,6 @@ class AiPlansSeeder extends Seeder
             $plan->save();
         }
 
-        $this->command?->info('AI plans seeded: ' . AiPlan::count());
+        $this->command?->info('AI plans seeded: '.AiPlan::count());
     }
 }

@@ -3,23 +3,27 @@
         <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $album->name }}</h1>
-                @if($album->description)
-                    <p class="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{{ $album->description }}</p>
-                @endif
-                @if($album->tags->isNotEmpty())
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        @foreach($album->tags as $tag)
-                            <span class="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">#{{ $tag->name }}</span>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-            <div class="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700">
-                {{ $album->media->count() }} archivos
-                @if($album->average_rating)
-                    · {{ $album->average_rating }}/10
+                @if($unlocked)
+                    @if($album->description)
+                        <p class="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{{ $album->description }}</p>
+                    @endif
+                    @if($album->tags->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($album->tags as $tag)
+                                <span class="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">#{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 @endif
             </div>
+            @if($unlocked)
+                <div class="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700">
+                    {{ $album->media->count() }} archivos
+                    @if($album->average_rating)
+                        · {{ $album->average_rating }}/10
+                    @endif
+                </div>
+            @endif
         </div>
 
         @unless($unlocked)

@@ -13,7 +13,7 @@ trait DispatchesStarchoNotify
             default => 'success',
         };
 
-        $this->notify($type, __('admin_ui.' . $resource . '.notify.' . $action, $replace), $options);
+        $this->notify($type, __('admin_ui.'.$resource.'.notify.'.$action, $replace), $options);
     }
 
     protected function notifySuccess(string $message, array $options = []): void

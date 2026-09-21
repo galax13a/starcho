@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Closure;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -37,7 +38,7 @@ class SafeCache
      */
     public static function rememberPlain(string $key, \DateTimeInterface|\DateInterval|int|null $ttl, Closure $callback, ?string $store = null): mixed
     {
-        $repository = static::store($store);
+        $repository = self::store($store);
 
         $cached = $repository->get($key);
 
@@ -65,7 +66,7 @@ class SafeCache
      */
     public static function getPlain(string $key, mixed $default = null, ?string $store = null): mixed
     {
-        $repository = static::store($store);
+        $repository = self::store($store);
 
         $cached = $repository->get($key);
 
@@ -103,7 +104,7 @@ class SafeCache
             return false;
         }
 
-        return static::store($store)->put($key, $value, $ttl);
+        return self::store($store)->put($key, $value, $ttl);
     }
 
     /**
@@ -158,7 +159,7 @@ class SafeCache
             return $value->format(\DateTimeInterface::ATOM);
         }
 
-        if ($value instanceof \Illuminate\Contracts\Support\Arrayable) {
+        if ($value instanceof Arrayable) {
             $value = $value->toArray();
         } elseif ($value instanceof \JsonSerializable) {
             $value = $value->jsonSerialize();

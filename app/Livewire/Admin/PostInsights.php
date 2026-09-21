@@ -16,18 +16,28 @@ use Livewire\Component;
  * Slide-over panel that surfaces per-post analytics: word count, AI generation
  * history with quality ratings, threaded comments, and AI memory snippets.
  * Opened via the `openPostInsights` browser event from the posts table.
+ *
+ * @property-read Post|null $post
+ * @property-read PostAiGeneration|null $selectedGeneration
  */
 class PostInsights extends Component
 {
     use DispatchesStarchoNotify;
 
     public ?int $postId = null;
+
     public string $tab = 'stats';
+
     public ?int $selectedGenerationId = null;
+
     public ?int $replyTo = null;
+
     public string $commentBody = '';
+
     public string $ratingNotes = '';
+
     public string $memoryTitle = '';
+
     public string $memoryBody = '';
 
     #[On('openPostInsights')]
@@ -68,16 +78,20 @@ class PostInsights extends Component
     public function selectedGeneration(): ?PostAiGeneration
     {
         if (! $this->selectedGenerationId) {
-            return $this->post?->aiGenerations->first();
+            $generation = $this->post?->aiGenerations->first();
+
+            return $generation instanceof PostAiGeneration ? $generation : null;
         }
 
-        return $this->post?->aiGenerations->firstWhere('id', $this->selectedGenerationId);
+        $generation = $this->post?->aiGenerations->firstWhere('id', $this->selectedGenerationId);
+
+        return $generation instanceof PostAiGeneration ? $generation : null;
     }
 
     public function selectGeneration(int $id): void
     {
         $this->selectedGenerationId = $id;
-        $this->ratingNotes = (string) ($this->selectedGeneration?->rating_notes ?? '');
+        $this->ratingNotes = (string) (data_get($this->selectedGeneration, 'rating_notes') ?? '');
         $this->tab = 'ai';
     }
 
@@ -122,6 +136,7 @@ class PostInsights extends Component
 
         if ($parent && $parent->depth >= PostComment::MAX_DEPTH) {
             $this->notifyWarning('Solo se permiten subcomentarios hasta 3 niveles.');
+
             return;
         }
 
@@ -225,12 +240,12 @@ class PostInsights extends Component
             'words' => $words,
             'read_minutes' => max(1, (int) ceil($words / 220)),
             'characters' => Str::length($plain),
-            'ai_runs' => $post?->ai_generations_count ?? 0,
-            'comments' => $post?->comments_count ?? 0,
-            'memories' => $post?->ai_memories_count ?? 0,
-            'total_tokens' => (int) ($post?->aiGenerations->sum('total_tokens') ?? 0),
-            'views' => (int) ($post?->views_count ?? 0),
-            'avg_rating' => round((float) ($post?->aiGenerations->whereNotNull('rating')->avg('rating') ?? 0), 1),
+            'ai_runs' => $post === null ? 0 : ($post->ai_generations_count ?? 0),
+            'comments' => $post === null ? 0 : ($post->comments_count ?? 0),
+            'memories' => $post === null ? 0 : ($post->ai_memories_count ?? 0),
+            'total_tokens' => $post === null ? 0 : (int) $post->aiGenerations->sum('total_tokens'),
+            'views' => $post === null ? 0 : (int) ($post->views_count ?? 0),
+            'avg_rating' => round($post === null ? 0.0 : (float) $post->aiGenerations->whereNotNull('rating')->avg('rating'), 1),
         ];
     }
 
@@ -258,7 +273,7 @@ class PostInsights extends Component
                 return match ($block['type'] ?? '') {
                     'header', 'paragraph', 'quote' => (string) ($data['text'] ?? ''),
                     'list' => collect($data['items'] ?? [])->map(fn ($item) => is_array($item) ? ($item['content'] ?? '') : $item)->join(' '),
-                    'starchoHtml' => trim(strip_tags(($data['html'] ?? '') . ' ' . ($data['css'] ?? ''))),
+                    'starchoHtml' => trim(strip_tags(($data['html'] ?? '').' '.($data['css'] ?? ''))),
                     default => '',
                 };
             })

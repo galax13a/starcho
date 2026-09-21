@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 abstract class GeoIPProvider
 {
     protected int $timeout = 5;
+
     protected string $name = '';
 
     abstract public function fetch(string $ip): ?array;

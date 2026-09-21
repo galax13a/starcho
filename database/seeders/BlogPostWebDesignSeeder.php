@@ -18,9 +18,9 @@ class BlogPostWebDesignSeeder extends Seeder
         $cat = PostCategory::updateOrCreate(
             ['slug' => 'diseno-web'],
             [
-                'color'       => '#06b6d4',
-                'sort_order'  => 5,
-                'name'        => ['es' => 'Diseño Web', 'en' => 'Web Design'],
+                'color' => '#06b6d4',
+                'sort_order' => 5,
+                'name' => ['es' => 'Diseño Web', 'en' => 'Web Design'],
                 'description' => [
                     'es' => 'Tendencias, herramientas y mejores prácticas para diseñar experiencias web modernas.',
                     'en' => 'Trends, tools and best practices for designing modern web experiences.',
@@ -37,7 +37,7 @@ class BlogPostWebDesignSeeder extends Seeder
         ];
         $tagIds = [];
         foreach ($tagDefs as $td) {
-            $tag      = PostTag::updateOrCreate(['slug' => $td['slug']], $td);
+            $tag = PostTag::updateOrCreate(['slug' => $td['slug']], $td);
             $tagIds[] = $tag->id;
         }
 
@@ -45,11 +45,11 @@ class BlogPostWebDesignSeeder extends Seeder
         $post = Post::updateOrCreate(
             ['slug->es' => 'tendencias-diseno-web-2026'],
             [
-                'type'   => Post::TYPE_POST,
+                'type' => Post::TYPE_POST,
                 'status' => Post::STATUS_PUBLISHED,
                 'published_at' => now(),
                 'author_id' => $author->id,
-                'user_id'   => $author->id,
+                'user_id' => $author->id,
                 'allow_comments' => true,
                 'slug' => [
                     'es' => 'tendencias-diseno-web-2026',
@@ -87,9 +87,9 @@ class BlogPostWebDesignSeeder extends Seeder
     private function contentEs(): string
     {
         return json_encode([
-            'time'    => time() * 1000,
+            'time' => time() * 1000,
             'version' => '2.28.2',
-            'blocks'  => [
+            'blocks' => [
                 ['type' => 'header',    'data' => ['text' => 'El diseño web en 2026: entre lo humano y lo generativo', 'level' => 2]],
                 ['type' => 'paragraph', 'data' => ['text' => 'El diseño web nunca se detiene. En 2026, la frontera entre lo creado por humanos y lo asistido por inteligencia artificial se difumina cada vez más. Los mejores diseñadores no son los que resisten la IA, sino los que la integran como parte de su flujo creativo. Aquí te presentamos las 8 tendencias más relevantes que están redefiniendo cómo construimos experiencias en la web.']],
                 ['type' => 'header',    'data' => ['text' => '1. Glassmorphism evolucionado', 'level' => 3]],
@@ -118,9 +118,9 @@ class BlogPostWebDesignSeeder extends Seeder
     private function contentEn(): string
     {
         return json_encode([
-            'time'    => time() * 1000,
+            'time' => time() * 1000,
             'version' => '2.28.2',
-            'blocks'  => [
+            'blocks' => [
                 ['type' => 'header',    'data' => ['text' => 'Web design in 2026: between the human and the generative', 'level' => 2]],
                 ['type' => 'paragraph', 'data' => ['text' => 'Web design never stops. In 2026, the boundary between what\'s created by humans and what\'s assisted by artificial intelligence blurs increasingly. The best designers aren\'t those who resist AI, but those who integrate it as part of their creative workflow. Here are the 8 most relevant trends redefining how we build web experiences.']],
                 ['type' => 'header',    'data' => ['text' => '1. Evolved glassmorphism', 'level' => 3]],

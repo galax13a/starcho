@@ -12,7 +12,7 @@ class AiSettingsController extends Controller
     {
         $data = $request->validate([
             'enabled' => ['nullable', 'boolean'],
-            'provider' => ['required', 'in:' . implode(',', array_keys(AiSetting::PROVIDERS))],
+            'provider' => ['required', 'in:'.implode(',', array_keys(AiSetting::PROVIDERS))],
             'openai_api_key' => ['nullable', 'string', 'max:1000'],
             'deepseek_api_key' => ['nullable', 'string', 'max:1000'],
             'anthropic_api_key' => ['nullable', 'string', 'max:1200'],

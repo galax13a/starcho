@@ -47,27 +47,27 @@ final class ContactsTable extends PowerGridComponent
     {
         return Contact::query()
             ->with('creator')
-            ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus));
+            ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus));
     }
 
     public function fields(): PowerGridFields
     {
         $statusLabels = [
-            'lead'     => __('admin_ui.contacts.status.lead'),
+            'lead' => __('admin_ui.contacts.status.lead'),
             'prospect' => __('admin_ui.contacts.status.prospect'),
             'customer' => __('admin_ui.contacts.status.customer'),
-            'churned'  => __('admin_ui.contacts.status.churned'),
+            'churned' => __('admin_ui.contacts.status.churned'),
         ];
 
         return PowerGrid::fields()
             ->add('id')
             ->add('name')
-            ->add('company', fn(Contact $c) => $c->company ?? '—')
-            ->add('email',   fn(Contact $c) => $c->email   ?? '—')
-            ->add('phone',   fn(Contact $c) => $c->phone   ?? '—')
-            ->add('status_label', fn(Contact $c) => $statusLabels[$c->status] ?? $c->status)
-            ->add('creator_name', fn(Contact $c) => $c->creator?->name ?? '—')
-            ->add('created_at_fmt', fn(Contact $c) => Carbon::parse($c->created_at)->format('d/m/Y'));
+            ->add('company', fn (Contact $c) => $c->company ?? '—')
+            ->add('email', fn (Contact $c) => $c->email ?? '—')
+            ->add('phone', fn (Contact $c) => $c->phone ?? '—')
+            ->add('status_label', fn (Contact $c) => $statusLabels[$c->status] ?? $c->status)
+            ->add('creator_name', fn (Contact $c) => $c->creator->name ?? '—')
+            ->add('created_at_fmt', fn (Contact $c) => Carbon::parse($c->created_at)->format('d/m/Y'));
     }
 
     public function columns(): array
@@ -107,12 +107,13 @@ final class ContactsTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedContactIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+
             return null;
         }
 
@@ -120,7 +121,7 @@ final class ContactsTable extends PowerGridComponent
 
         return Excel::download(
             new AdminContactsExport($selectedIds),
-            'admin-contacts-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-contacts-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -130,6 +131,7 @@ final class ContactsTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+
             return;
         }
 
@@ -140,6 +142,7 @@ final class ContactsTable extends PowerGridComponent
         if ($contacts->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.contacts.notify.no_selection'));
+
             return;
         }
 
@@ -153,7 +156,7 @@ final class ContactsTable extends PowerGridComponent
         $this->clearSelection();
 
         $this->notifyWarning(__('admin_ui.contacts.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deleteAdminContact')]
@@ -163,12 +166,13 @@ final class ContactsTable extends PowerGridComponent
 
         if (! $contact) {
             $this->notifyCrud('contacts', 'not_found');
+
             return;
         }
 
         $contact->delete();
         $this->notifyCrud('contacts', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedContactIds(): array

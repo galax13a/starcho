@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 
 class MediaAlbum extends Model
 {
+    public const VISIBILITIES = ['public', 'authenticated', 'protected', 'private'];
+
     protected $fillable = [
         'user_id',
         'name',
@@ -19,6 +21,7 @@ class MediaAlbum extends Model
         'description',
         'password_enabled',
         'password',
+        'visibility',
     ];
 
     protected $casts = [
@@ -39,6 +42,7 @@ class MediaAlbum extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsToMany<Media, $this> */
     public function media(): BelongsToMany
     {
         return $this->belongsToMany(Media::class, 'media_album_media')
@@ -67,6 +71,24 @@ class MediaAlbum extends Model
     {
         $this->password = filled($password) ? Hash::make($password) : null;
         $this->password_enabled = filled($password);
+
+        if (filled($password)) {
+            $this->visibility = Media::stricterVisibility($this->visibility ?: 'public', 'protected');
+        }
+    }
+
+    /** A legacy password flag is always treated as protected. */
+    public function effectiveVisibility(): string
+    {
+        $visibility = in_array($this->visibility, self::VISIBILITIES, true)
+            ? $this->visibility
+            : 'private';
+
+        if ($this->password_enabled && in_array($visibility, ['public', 'authenticated'], true)) {
+            return 'protected';
+        }
+
+        return $visibility;
     }
 
     public function getAverageRatingAttribute(): ?float

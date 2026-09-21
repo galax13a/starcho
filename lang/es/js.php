@@ -4,20 +4,20 @@ return [
     'toasts' => [
         'success' => 'Exito',
         'warning' => 'Aviso',
-        'error'   => 'Error',
+        'error' => 'Error',
         'default' => 'Operacion completada.',
     ],
 
     'confirm' => [
-        'title'   => 'Confirmar accion',
+        'title' => 'Confirmar accion',
         'message' => 'Estas seguro? Esta accion no se puede deshacer.',
-        'ok'      => 'Si, continuar',
-        'cancel'  => 'Cancelar',
+        'ok' => 'Si, continuar',
+        'cancel' => 'Cancelar',
     ],
 
     'delete' => [
-        'title'   => 'Confirmar eliminacion',
+        'title' => 'Confirmar eliminacion',
         'message' => 'Eliminar ":name"? Esta accion no se puede deshacer.',
-        'ok'      => 'Si, eliminar',
+        'ok' => 'Si, eliminar',
     ],
 ];

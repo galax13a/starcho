@@ -2,19 +2,18 @@
 
 namespace App\Exports;
 
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Spatie\Permission\Models\Role;
 
-class AdminRolesExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AdminRolesExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
-    public function __construct(private readonly ?array $roleIds = null)
-    {
-    }
+    public function __construct(private readonly ?array $roleIds = null) {}
 
-    public function query()
+    public function query(): Builder
     {
         return Role::query()
             ->with('permissions')

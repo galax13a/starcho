@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiSetting;
-use App\Models\Post;
-use App\Models\SitePageSetting;
-use App\Models\SiteLanguage;
 use App\Models\Media;
+use App\Models\Post;
+use App\Models\SiteLanguage;
+use App\Models\SitePageSetting;
 use App\Models\SiteSetting;
-use App\Models\StarchoModule;
 use App\Models\SiteSocialNetwork;
+use App\Models\StarchoModule;
 use App\Models\StoragePlan;
 use App\Services\StorageService;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +27,7 @@ class SiteController extends Controller
 
     public function index(): View|RedirectResponse
     {
-        if (!StarchoModule::isActive('site')) {
+        if (! StarchoModule::isActive('site')) {
             return redirect()
                 ->route('admin.modules.index')
                 ->with('warning', __('admin_ui.site.notify.module_inactive'));
@@ -40,10 +40,10 @@ class SiteController extends Controller
         $pageSeoRows = $this->buildPageSeoRows($locales, $folioPages, $settings);
 
         $socialNetworks = SiteSocialNetwork::allOrdered();
-        $siteLanguages  = SiteLanguage::allOrdered();
-        $storagePlans   = StoragePlan::orderBy('sort_order')->get();
-        $aiSetting      = AiSetting::singleton();
-        $cmsPages       = Post::query()
+        $siteLanguages = SiteLanguage::allOrdered();
+        $storagePlans = StoragePlan::orderBy('sort_order')->get();
+        $aiSetting = AiSetting::singleton();
+        $cmsPages = Post::query()
             ->where('type', Post::TYPE_PAGE)
             ->orderBy('title')
             ->get(['id', 'title', 'status']);
@@ -53,7 +53,7 @@ class SiteController extends Controller
 
     public function update(Request $request): RedirectResponse|Redirector
     {
-        if (!StarchoModule::isActive('site')) {
+        if (! StarchoModule::isActive('site')) {
             return redirect()
                 ->route('admin.modules.index')
                 ->with('warning', __('admin_ui.site.notify.module_inactive'));
@@ -108,17 +108,17 @@ class SiteController extends Controller
             'social_instagram' => ['nullable', 'url', 'max:255'],
             'social_youtube' => ['nullable', 'url', 'max:255'],
             'social_pinterest' => ['nullable', 'url', 'max:255'],
-                'social_onlyfans' => ['nullable', 'url', 'max:255'],
-                'slogan' => ['nullable', 'string', 'max:200'],
-                'dark_mode_enabled' => ['nullable', 'boolean'],
-                'address' => ['nullable', 'string', 'max:500'],
-                'founding_year' => ['nullable', 'integer', 'min:1800', 'max:' . (int) now()->year],
-                'google_maps_url' => ['nullable', 'url', 'max:1000'],
-                'social_networks' => ['nullable', 'array'],
-                'social_networks.*.active' => ['nullable', 'boolean'],
-                'social_networks.*.url' => ['nullable', 'url', 'max:255'],
-                'site_languages' => ['nullable', 'array'],
-                'site_languages.*.active' => ['nullable', 'boolean'],
+            'social_onlyfans' => ['nullable', 'url', 'max:255'],
+            'slogan' => ['nullable', 'string', 'max:200'],
+            'dark_mode_enabled' => ['nullable', 'boolean'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'founding_year' => ['nullable', 'integer', 'min:1800', 'max:'.(int) now()->year],
+            'google_maps_url' => ['nullable', 'url', 'max:1000'],
+            'social_networks' => ['nullable', 'array'],
+            'social_networks.*.active' => ['nullable', 'boolean'],
+            'social_networks.*.url' => ['nullable', 'url', 'max:255'],
+            'site_languages' => ['nullable', 'array'],
+            'site_languages.*.active' => ['nullable', 'boolean'],
             'page_settings' => ['nullable', 'array'],
             'page_settings.*.locale' => ['required_with:page_settings', 'string', 'max:20'],
             'page_settings.*.path' => ['required_with:page_settings', 'string', 'max:255'],
@@ -289,7 +289,7 @@ class SiteController extends Controller
 
     public function editPage(Request $request): View|RedirectResponse
     {
-        if (!StarchoModule::isActive('site')) {
+        if (! StarchoModule::isActive('site')) {
             return redirect()
                 ->route('admin.modules.index')
                 ->with('warning', __('admin_ui.site.notify.module_inactive'));
@@ -300,7 +300,7 @@ class SiteController extends Controller
         $folioPages = collect($this->discoverFolioPages());
         $page = $folioPages->firstWhere('path', $path);
 
-        if (!$page) {
+        if (! $page) {
             return redirect()
                 ->route('admin.site.index')
                 ->with('warning', __('admin_ui.site.notify.page_not_found'));
@@ -317,7 +317,7 @@ class SiteController extends Controller
 
     public function updatePage(Request $request): RedirectResponse
     {
-        if (!StarchoModule::isActive('site')) {
+        if (! StarchoModule::isActive('site')) {
             return redirect()
                 ->route('admin.modules.index')
                 ->with('warning', __('admin_ui.site.notify.module_inactive'));
@@ -342,7 +342,7 @@ class SiteController extends Controller
         $path = SitePageSetting::normalizePath($data['path']);
         $page = collect($this->discoverFolioPages())->firstWhere('path', $path);
 
-        if (!$page) {
+        if (! $page) {
             return redirect()
                 ->route('admin.site.index')
                 ->with('warning', __('admin_ui.site.notify.page_not_found'));
@@ -365,7 +365,7 @@ class SiteController extends Controller
             $path = SitePageSetting::normalizePath((string) ($row['path'] ?? '/'));
             $page = $pages->get($path);
 
-            if (!$page || !array_key_exists('blade_content', $row)) {
+            if (! $page || ! array_key_exists('blade_content', $row)) {
                 continue;
             }
 
@@ -390,16 +390,6 @@ class SiteController extends Controller
             'html' => null,
             'mode' => 'none',
         ];
-    }
-
-    private function replaceVisualEditableContent(string $originalContent, string $newBodyHtml): string
-    {
-        return (string) preg_replace_callback(
-            '/(<body[^>]*>)(.*?)(<\/body>)/is',
-            fn (array $matches) => $matches[1] . PHP_EOL . trim($newBodyHtml) . PHP_EOL . $matches[3],
-            $originalContent,
-            1
-        );
     }
 
     private function savePageSeoSettings(array $rows): void
@@ -433,39 +423,39 @@ class SiteController extends Controller
         $home = $this->homeDefaults();
         $updates = [];
 
-        if (!filled($settings->site_name) && filled($home['site_name'])) {
+        if (! filled($settings->site_name) && filled($home['site_name'])) {
             $updates['site_name'] = $home['site_name'];
         }
 
-        if (!filled($settings->site_description) && filled($home['description'])) {
+        if (! filled($settings->site_description) && filled($home['description'])) {
             $updates['site_description'] = $home['description'];
         }
 
-        if (!filled($settings->meta_keywords) && filled($home['keywords'])) {
+        if (! filled($settings->meta_keywords) && filled($home['keywords'])) {
             $updates['meta_keywords'] = $home['keywords'];
         }
 
-        if (!filled($settings->meta_author) && filled($home['author'])) {
+        if (! filled($settings->meta_author) && filled($home['author'])) {
             $updates['meta_author'] = $home['author'];
         }
 
-        if (!filled($settings->og_title) && filled($home['og_title'])) {
+        if (! filled($settings->og_title) && filled($home['og_title'])) {
             $updates['og_title'] = $home['og_title'];
         }
 
-        if (!filled($settings->og_description) && filled($home['og_description'])) {
+        if (! filled($settings->og_description) && filled($home['og_description'])) {
             $updates['og_description'] = $home['og_description'];
         }
 
-        if (!filled($settings->canonical_url)) {
+        if (! filled($settings->canonical_url)) {
             $updates['canonical_url'] = rtrim(config('app.url', ''), '/') ?: null;
         }
 
-        if (!filled($settings->og_type)) {
+        if (! filled($settings->og_type)) {
             $updates['og_type'] = 'website';
         }
 
-        if (!filled($settings->twitter_card)) {
+        if (! filled($settings->twitter_card)) {
             $updates['twitter_card'] = 'summary_large_image';
         }
 
@@ -477,7 +467,7 @@ class SiteController extends Controller
             $updates['public_registration_enabled'] = true;
         }
 
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             $settings->update($updates);
             $settings->refresh();
         }
@@ -487,7 +477,7 @@ class SiteController extends Controller
     {
         $file = resource_path('views/pages/index.blade.php');
 
-        if (!File::exists($file)) {
+        if (! File::exists($file)) {
             return [
                 'site_name' => config('app.name', 'Starcho'),
                 'description' => null,
@@ -514,7 +504,7 @@ class SiteController extends Controller
     private function extractMeta(string $html, string $key, bool $property): ?string
     {
         $attr = $property ? 'property' : 'name';
-        $pattern = '/<meta\\s+' . $attr . '="' . preg_quote($key, '/') . '"\\s+content="([^"]*)"\\s*\\/?\\s*>/i';
+        $pattern = '/<meta\\s+'.$attr.'="'.preg_quote($key, '/').'"\\s+content="([^"]*)"\\s*\\/?\\s*>/i';
 
         if (preg_match($pattern, $html, $matches) === 1) {
             return trim(html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5));
@@ -525,7 +515,7 @@ class SiteController extends Controller
 
     private function extractHtmlTag(string $html, string $tag): ?string
     {
-        $pattern = '/<' . preg_quote($tag, '/') . '>(.*?)<\\/' . preg_quote($tag, '/') . '>/is';
+        $pattern = '/<'.preg_quote($tag, '/').'>(.*?)<\\/'.preg_quote($tag, '/').'>/is';
 
         if (preg_match($pattern, $html, $matches) === 1) {
             return trim(strip_tags($matches[1]));
@@ -562,7 +552,7 @@ class SiteController extends Controller
     {
         $base = resource_path('views/pages');
 
-        if (!File::exists($base)) {
+        if (! File::exists($base)) {
             return [];
         }
 
@@ -571,7 +561,7 @@ class SiteController extends Controller
         foreach (File::allFiles($base) as $file) {
             $relative = str_replace('\\', '/', $file->getRelativePathname());
 
-            if (!Str::endsWith($relative, '.blade.php')) {
+            if (! Str::endsWith($relative, '.blade.php')) {
                 continue;
             }
 
@@ -608,13 +598,13 @@ class SiteController extends Controller
             ->whereIn('locale', $locales)
             ->whereIn('path', $paths)
             ->get()
-            ->keyBy(fn (SitePageSetting $item) => $item->locale . '|' . $item->path);
+            ->keyBy(fn (SitePageSetting $item) => $item->locale.'|'.$item->path);
 
         $rows = [];
 
         foreach ($locales as $locale) {
             foreach ($paths as $path) {
-                $key = $locale . '|' . $path;
+                $key = $locale.'|'.$path;
                 /** @var SitePageSetting|null $record */
                 $record = $records->get($key);
 
@@ -623,14 +613,14 @@ class SiteController extends Controller
                 $rows[] = [
                     'locale' => $locale,
                     'path' => $path,
-                    'title' => $record?->title ?? ($isHome ? ($settings->og_title ?: $settings->site_name) : null),
-                    'description' => $record?->description ?? ($isHome ? $settings->site_description : null),
-                    'meta_keywords' => $record?->meta_keywords ?? ($isHome ? $settings->meta_keywords : null),
-                    'og_title' => $record?->og_title ?? ($isHome ? $settings->og_title : null),
-                    'og_description' => $record?->og_description ?? ($isHome ? $settings->og_description : null),
-                    'robots_index' => $record?->robots_index ?? true,
-                    'robots_follow' => $record?->robots_follow ?? true,
-                    'active' => $record?->active ?? $isHome,
+                    'title' => data_get($record, 'title') ?? ($isHome ? ($settings->og_title ?: $settings->site_name) : null),
+                    'description' => data_get($record, 'description') ?? ($isHome ? $settings->site_description : null),
+                    'meta_keywords' => data_get($record, 'meta_keywords') ?? ($isHome ? $settings->meta_keywords : null),
+                    'og_title' => data_get($record, 'og_title') ?? ($isHome ? $settings->og_title : null),
+                    'og_description' => data_get($record, 'og_description') ?? ($isHome ? $settings->og_description : null),
+                    'robots_index' => data_get($record, 'robots_index') ?? true,
+                    'robots_follow' => data_get($record, 'robots_follow') ?? true,
+                    'active' => data_get($record, 'active') ?? $isHome,
                 ];
             }
         }

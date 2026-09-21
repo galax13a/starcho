@@ -51,22 +51,22 @@ class AiVideoService
         @set_time_limit($timeout + (int) config('starcho_ai.time_limit_buffer', 15));
 
         $generation = AiAssetGeneration::create([
-            'user_id'  => $user?->id,
-            'type'     => AiAssetGeneration::TYPE_IMAGE,
+            'user_id' => $user?->id,
+            'type' => AiAssetGeneration::TYPE_IMAGE,
             'provider' => 'fal',
-            'model'    => $model,
-            'status'   => AiAssetGeneration::STATUS_PROCESSING,
-            'prompt'   => $prompt,
-            'params'   => $params,
+            'model' => $model,
+            'status' => AiAssetGeneration::STATUS_PROCESSING,
+            'prompt' => $prompt,
+            'params' => $params,
         ]);
 
         $startedAt = microtime(true);
 
         try {
-            $response = Http::withHeaders(['Authorization' => 'Key ' . $apiKey])
+            $response = Http::withHeaders(['Authorization' => 'Key '.$apiKey])
                 ->timeout($timeout)
                 ->acceptJson()
-                ->post('https://fal.run/' . $model, array_merge(['prompt' => $prompt], $params));
+                ->post('https://fal.run/'.$model, array_merge(['prompt' => $prompt], $params));
 
             if ($response->failed()) {
                 throw new RuntimeException($response->json('detail') ?? 'fal.ai rechazó la solicitud de imagen.');
@@ -83,12 +83,12 @@ class AiVideoService
             }
 
             $media = $this->storeBytes($download->body(), 'png', 'image/png', $user, 'ai_image', $prompt);
-            $cost  = $this->quota->pricing()->imageCostCents($model, 1);
+            $cost = $this->quota->pricing()->imageCostCents($model, 1);
 
             $generation->update([
-                'status'      => AiAssetGeneration::STATUS_COMPLETED,
-                'media_id'    => $media->id,
-                'cost_cents'  => $cost,
+                'status' => AiAssetGeneration::STATUS_COMPLETED,
+                'media_id' => $media->id,
+                'cost_cents' => $cost,
                 'price_cents' => $this->quota->pricing()->priceCents($cost),
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ]);
@@ -113,20 +113,20 @@ class AiVideoService
         $this->quota->ensureCanGenerate($user, 'video', 1, $estCost);
 
         $generation = AiAssetGeneration::create([
-            'user_id'  => $user?->id,
-            'type'     => AiAssetGeneration::TYPE_VIDEO,
+            'user_id' => $user?->id,
+            'type' => AiAssetGeneration::TYPE_VIDEO,
             'provider' => 'fal',
-            'model'    => $model,
-            'status'   => AiAssetGeneration::STATUS_PROCESSING,
-            'prompt'   => $prompt,
-            'params'   => $params,
+            'model' => $model,
+            'status' => AiAssetGeneration::STATUS_PROCESSING,
+            'prompt' => $prompt,
+            'params' => $params,
         ]);
 
         try {
-            $response = Http::withHeaders(['Authorization' => 'Key ' . $apiKey])
+            $response = Http::withHeaders(['Authorization' => 'Key '.$apiKey])
                 ->timeout(60)
                 ->acceptJson()
-                ->post('https://queue.fal.run/' . $model, array_merge(['prompt' => $prompt], $params));
+                ->post('https://queue.fal.run/'.$model, array_merge(['prompt' => $prompt], $params));
 
             if ($response->failed()) {
                 throw new RuntimeException($response->json('detail') ?? 'fal.ai rechazó la solicitud de video.');
@@ -134,15 +134,15 @@ class AiVideoService
 
             $generation->update([
                 'external_id' => $response->json('request_id'),
-                'params'      => array_merge($params, [
-                    'status_url'   => $response->json('status_url'),
+                'params' => array_merge($params, [
+                    'status_url' => $response->json('status_url'),
                     'response_url' => $response->json('response_url'),
                 ]),
             ]);
         } catch (\Throwable $e) {
             $generation->update([
                 'status' => AiAssetGeneration::STATUS_FAILED,
-                'error'  => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -166,7 +166,7 @@ class AiVideoService
         }
 
         $apiKey = $this->apiKey();
-        $status = Http::withHeaders(['Authorization' => 'Key ' . $apiKey])->acceptJson()->get($statusUrl);
+        $status = Http::withHeaders(['Authorization' => 'Key '.$apiKey])->acceptJson()->get($statusUrl);
 
         if ($status->failed()) {
             return $generation;
@@ -179,7 +179,7 @@ class AiVideoService
         }
 
         try {
-            $result = Http::withHeaders(['Authorization' => 'Key ' . $apiKey])->acceptJson()->get($responseUrl);
+            $result = Http::withHeaders(['Authorization' => 'Key '.$apiKey])->acceptJson()->get($responseUrl);
             $videoUrl = $result->json('video.url') ?? $result->json('videos.0.url');
 
             if (! $videoUrl) {
@@ -194,13 +194,13 @@ class AiVideoService
 
             $media = $this->storeBytes($download->body(), 'mp4', 'video/mp4', $generation->user, 'ai_video', $generation->prompt);
 
-            $cost  = $this->quota->pricing()->videoCostCents($generation->model, 1);
+            $cost = $this->quota->pricing()->videoCostCents($generation->model, 1);
             $price = $this->quota->pricing()->priceCents($cost);
 
             $generation->update([
-                'status'      => AiAssetGeneration::STATUS_COMPLETED,
-                'media_id'    => $media->id,
-                'cost_cents'  => $cost,
+                'status' => AiAssetGeneration::STATUS_COMPLETED,
+                'media_id' => $media->id,
+                'cost_cents' => $cost,
                 'price_cents' => $price,
             ]);
 
@@ -208,7 +208,7 @@ class AiVideoService
         } catch (\Throwable $e) {
             $generation->update([
                 'status' => AiAssetGeneration::STATUS_FAILED,
-                'error'  => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -217,11 +217,11 @@ class AiVideoService
 
     private function storeBytes(string $bytes, string $ext, string $mime, ?User $user, string $context, string $caption): Media
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'aigen_') . '.' . $ext;
+        $tmp = tempnam(sys_get_temp_dir(), 'aigen_').'.'.$ext;
         file_put_contents($tmp, $bytes);
 
         try {
-            $file = new UploadedFile($tmp, 'ai-' . $context . '-' . now()->timestamp . '.' . $ext, $mime, null, true);
+            $file = new UploadedFile($tmp, 'ai-'.$context.'-'.now()->timestamp.'.'.$ext, $mime, null, true);
 
             return $this->storage->upload($file, $user, null, $context, [
                 'caption' => mb_substr($caption, 0, 480),

@@ -89,12 +89,13 @@ final class RolesTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedRoleIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+
             return null;
         }
 
@@ -102,7 +103,7 @@ final class RolesTable extends PowerGridComponent
 
         return Excel::download(
             new AdminRolesExport($selectedIds),
-            'admin-roles-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-roles-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -112,6 +113,7 @@ final class RolesTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+
             return;
         }
 
@@ -122,6 +124,7 @@ final class RolesTable extends PowerGridComponent
         if ($roles->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.roles.notify.no_selection'));
+
             return;
         }
 
@@ -140,11 +143,12 @@ final class RolesTable extends PowerGridComponent
 
         if ($deletedCount === 0) {
             $this->notifyWarning(__('admin_ui.roles.notify.cannot_delete_admin'));
+
             return;
         }
 
         $this->notifyWarning(__('admin_ui.roles.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deleteRole')]
@@ -154,6 +158,7 @@ final class RolesTable extends PowerGridComponent
 
         if (! $role || $role->name === 'admin') {
             $this->notifyCrud('roles', 'cannot_delete_admin');
+
             return;
         }
 
@@ -161,7 +166,7 @@ final class RolesTable extends PowerGridComponent
 
         $this->notifyCrud('roles', 'deleted');
 
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedRoleIds(): array

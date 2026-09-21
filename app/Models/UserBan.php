@@ -19,9 +19,9 @@ class UserBan extends Model
     ];
 
     protected $casts = [
-        'banned_at'  => 'datetime',
+        'banned_at' => 'datetime',
         'expires_at' => 'datetime',
-        'lifted_at'  => 'datetime',
+        'lifted_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -63,6 +63,6 @@ class UserBan extends Model
             return __('admin_ui.users_ban.duration.permanent');
         }
 
-        return $this->expires_at->diffForHumans($this->banned_at, true);
+        return $this->expires_at->diffForHumans($this->banned_at, null, true);
     }
 }

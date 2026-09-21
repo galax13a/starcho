@@ -8,18 +8,18 @@ use App\Models\PostTag;
 use App\Models\SiteLanguage;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class BlogPostAiLaravelSeeder extends Seeder
 {
     public function run(): void
     {
-        $activeCodes   = SiteLanguage::activeCodes();
+        $activeCodes = SiteLanguage::activeCodes();
         $primaryLocale = $activeCodes[0] ?? 'es';
-        $author        = User::first();
+        $author = User::first();
 
         if (! $author) {
             $this->command->warn('No users found.');
+
             return;
         }
 
@@ -27,11 +27,11 @@ class BlogPostAiLaravelSeeder extends Seeder
         $category = PostCategory::firstOrCreate(
             ['slug' => 'desarrollo-web'],
             [
-                'name'        => ['es' => 'Desarrollo Web', 'en' => 'Web Development'],
+                'name' => ['es' => 'Desarrollo Web', 'en' => 'Web Development'],
                 'description' => ['es' => 'Artículos sobre desarrollo web moderno.', 'en' => 'Articles about modern web development.'],
-                'slug'        => 'desarrollo-web',
-                'color'       => '#7c3aed',
-                'sort_order'  => 1,
+                'slug' => 'desarrollo-web',
+                'color' => '#7c3aed',
+                'sort_order' => 1,
             ]
         );
 
@@ -66,12 +66,12 @@ class BlogPostAiLaravelSeeder extends Seeder
         $post = Post::updateOrCreate(
             ['slug' => $slug, 'type' => 'post'],
             [
-                'type'   => 'post',
+                'type' => 'post',
                 'status' => 'published',
-                'slug'   => $slug,
+                'slug' => $slug,
                 'published_at' => now(),
-                'author_id'    => $author->id,
-                'user_id'      => $author->id,
+                'author_id' => $author->id,
+                'user_id' => $author->id,
                 'allow_comments' => true,
 
                 'title' => [
@@ -111,7 +111,7 @@ class BlogPostAiLaravelSeeder extends Seeder
         $post->tags()->sync($tagIds);
 
         $this->command->info("✓ Post publicado: \"{$post->getTranslation('title', $primaryLocale)}\"");
-        $this->command->line("  Categoría: {$category->getTranslation('name', $primaryLocale)} · Etiquetas: " . count($tagIds));
+        $this->command->line("  Categoría: {$category->getTranslation('name', $primaryLocale)} · Etiquetas: ".count($tagIds));
     }
 
     // ── ARTICLE ES ────────────────────────────────────────────────────────────
@@ -143,13 +143,13 @@ class BlogPostAiLaravelSeeder extends Seeder
             $this->h3('2. Laravel Prism: el paquete oficial para LLMs'),
             $this->p('<b>Laravel Prism</b> (antes conocido como Prism PHP) es el paquete de referencia para integrar modelos de lenguaje directamente en aplicaciones Laravel. Permite llamar a Claude, GPT-4, Gemini o Mistral desde el código PHP con una API unificada:'),
             $this->code(
-                "use EchoLabs\\Prism\\Prism;\n" .
-                "use EchoLabs\\Prism\\Enums\\Provider;\n\n" .
-                "\$respuesta = Prism::text()\n" .
-                "    ->using(Provider::Anthropic, 'claude-opus-4-7')\n" .
-                "    ->withSystemPrompt('Eres un asistente de soporte técnico experto en Laravel.')\n" .
-                "    ->withPrompt('¿Cómo implemento rate limiting por usuario en Laravel 13?')\n" .
-                "    ->generate();\n\n" .
+                "use EchoLabs\\Prism\\Prism;\n".
+                "use EchoLabs\\Prism\\Enums\\Provider;\n\n".
+                "\$respuesta = Prism::text()\n".
+                "    ->using(Provider::Anthropic, 'claude-opus-4-7')\n".
+                "    ->withSystemPrompt('Eres un asistente de soporte técnico experto en Laravel.')\n".
+                "    ->withPrompt('¿Cómo implemento rate limiting por usuario en Laravel 13?')\n".
+                "    ->generate();\n\n".
                 "return response()->json(['reply' => \$respuesta->text]);"
             ),
             $this->p('En cuestión de minutos puedes tener un chatbot de soporte, un generador de contenido SEO, un clasificador de tickets o un extractor de datos integrado directamente en tu aplicación Laravel.'),
@@ -168,17 +168,17 @@ class BlogPostAiLaravelSeeder extends Seeder
             $this->h3('1. El ecosistema AI-native de JavaScript'),
             $this->p('Node.js tiene una ventaja enorme: el ecosistema JavaScript fue de los primeros en adoptar herramientas de IA. Paquetes como <b>LangChain.js</b>, <b>Vercel AI SDK</b> y <b>@anthropic-ai/sdk</b> permiten construir aplicaciones con IA de manera muy rápida:'),
             $this->code(
-                "import Anthropic from '@anthropic-ai/sdk';\n\n" .
-                "const client = new Anthropic();\n\n" .
-                "const mensaje = await client.messages.create({\n" .
-                "    model: 'claude-opus-4-7',\n" .
-                "    max_tokens: 1024,\n" .
-                "    messages: [{\n" .
-                "        role: 'user',\n" .
-                "        content: 'Genera un endpoint REST en Express.js para gestión de usuarios'\n" .
-                "    }]\n" .
-                "});\n\n" .
-                "console.log(mensaje.content[0].text);"
+                "import Anthropic from '@anthropic-ai/sdk';\n\n".
+                "const client = new Anthropic();\n\n".
+                "const mensaje = await client.messages.create({\n".
+                "    model: 'claude-opus-4-7',\n".
+                "    max_tokens: 1024,\n".
+                "    messages: [{\n".
+                "        role: 'user',\n".
+                "        content: 'Genera un endpoint REST en Express.js para gestión de usuarios'\n".
+                "    }]\n".
+                "});\n\n".
+                'console.log(mensaje.content[0].text);'
             ),
 
             $this->h3('2. Generación de APIs en tiempo récord'),
@@ -267,13 +267,13 @@ class BlogPostAiLaravelSeeder extends Seeder
             $this->h3('2. Laravel Prism: the official package for LLMs'),
             $this->p('<b>Laravel Prism</b> is the go-to package for integrating language models directly into Laravel applications. It lets you call Claude, GPT-4, Gemini or Mistral from PHP with a unified API:'),
             $this->code(
-                "use EchoLabs\\Prism\\Prism;\n" .
-                "use EchoLabs\\Prism\\Enums\\Provider;\n\n" .
-                "\$response = Prism::text()\n" .
-                "    ->using(Provider::Anthropic, 'claude-opus-4-7')\n" .
-                "    ->withSystemPrompt('You are a technical support expert specialised in Laravel.')\n" .
-                "    ->withPrompt('How do I implement per-user rate limiting in Laravel 13?')\n" .
-                "    ->generate();\n\n" .
+                "use EchoLabs\\Prism\\Prism;\n".
+                "use EchoLabs\\Prism\\Enums\\Provider;\n\n".
+                "\$response = Prism::text()\n".
+                "    ->using(Provider::Anthropic, 'claude-opus-4-7')\n".
+                "    ->withSystemPrompt('You are a technical support expert specialised in Laravel.')\n".
+                "    ->withPrompt('How do I implement per-user rate limiting in Laravel 13?')\n".
+                "    ->generate();\n\n".
                 "return response()->json(['reply' => \$response->text]);"
             ),
             $this->p('In minutes you can have a support chatbot, an SEO content generator, a ticket classifier or a data extractor integrated directly into your Laravel application.'),
@@ -292,17 +292,17 @@ class BlogPostAiLaravelSeeder extends Seeder
             $this->h3('1. The AI-native JavaScript ecosystem'),
             $this->p('Node.js has a huge advantage: the JavaScript ecosystem was among the first to embrace AI tooling. Packages like <b>LangChain.js</b>, <b>Vercel AI SDK</b> and <b>@anthropic-ai/sdk</b> make it very fast to build AI-powered applications:'),
             $this->code(
-                "import Anthropic from '@anthropic-ai/sdk';\n\n" .
-                "const client = new Anthropic();\n\n" .
-                "const message = await client.messages.create({\n" .
-                "    model: 'claude-opus-4-7',\n" .
-                "    max_tokens: 1024,\n" .
-                "    messages: [{\n" .
-                "        role: 'user',\n" .
-                "        content: 'Generate a REST endpoint in Express.js for user management'\n" .
-                "    }]\n" .
-                "});\n\n" .
-                "console.log(message.content[0].text);"
+                "import Anthropic from '@anthropic-ai/sdk';\n\n".
+                "const client = new Anthropic();\n\n".
+                "const message = await client.messages.create({\n".
+                "    model: 'claude-opus-4-7',\n".
+                "    max_tokens: 1024,\n".
+                "    messages: [{\n".
+                "        role: 'user',\n".
+                "        content: 'Generate a REST endpoint in Express.js for user management'\n".
+                "    }]\n".
+                "});\n\n".
+                'console.log(message.content[0].text);'
             ),
 
             $this->h3('2. Generating APIs in record time'),

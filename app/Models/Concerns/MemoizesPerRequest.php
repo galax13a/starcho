@@ -40,11 +40,11 @@ trait MemoizesPerRequest
      */
     protected static function memo(string $key, Closure $resolver): mixed
     {
-        if (array_key_exists($key, static::$memo)) {
-            return static::$memo[$key];
+        if (array_key_exists($key, self::$memo)) {
+            return self::$memo[$key];
         }
 
-        return static::$memo[$key] = $resolver();
+        return self::$memo[$key] = $resolver();
     }
 
     /**
@@ -52,6 +52,6 @@ trait MemoizesPerRequest
      */
     public static function flushMemo(): void
     {
-        static::$memo = [];
+        self::$memo = [];
     }
 }

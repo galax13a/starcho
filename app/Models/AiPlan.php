@@ -22,12 +22,12 @@ class AiPlan extends Model
     ];
 
     protected $casts = [
-        'monthly_price'        => 'decimal:2',
-        'is_free'              => 'boolean',
-        'is_active'            => 'boolean',
-        'text_token_quota'     => 'integer',
-        'image_quota'          => 'integer',
-        'video_quota'          => 'integer',
+        'monthly_price' => 'decimal:2',
+        'is_free' => 'boolean',
+        'is_active' => 'boolean',
+        'text_token_quota' => 'integer',
+        'image_quota' => 'integer',
+        'video_quota' => 'integer',
         'monthly_budget_cents' => 'integer',
     ];
 
@@ -50,7 +50,7 @@ class AiPlan extends Model
     public function quotaLabel(string $type): string
     {
         $value = match ($type) {
-            'text'  => $this->text_token_quota,
+            'text' => $this->text_token_quota,
             'image' => $this->image_quota,
             'video' => $this->video_quota,
             default => null,
@@ -65,7 +65,7 @@ class AiPlan extends Model
         }
 
         return $type === 'text'
-            ? number_format($value) . ' tokens'
-            : number_format($value) . ($type === 'image' ? ' imágenes' : ' videos');
+            ? number_format($value).' tokens'
+            : number_format($value).($type === 'image' ? ' imágenes' : ' videos');
     }
 }

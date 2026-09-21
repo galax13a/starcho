@@ -26,13 +26,19 @@
             <flux:error name="tags" />
         </flux:field>
 
-        <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60">
-            <label class="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                <input type="checkbox" wire:model.live="passwordEnabled" class="rounded border-zinc-300 text-violet-600 focus:ring-violet-500">
-                Requiere password para verlo
-            </label>
+        <div class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/60">
+            <flux:field>
+                <flux:label>Visibilidad</flux:label>
+                <flux:select wire:model.live="visibility">
+                    <option value="public">Público</option>
+                    <option value="authenticated">Usuarios autenticados</option>
+                    <option value="protected">Protegido con contraseña</option>
+                    <option value="private">Privado: propietario y administradores</option>
+                </flux:select>
+                <flux:error name="visibility" />
+            </flux:field>
 
-            @if($passwordEnabled)
+            @if($visibility === 'protected')
                 <div class="mt-3">
                     <flux:field>
                         <flux:label>{{ $albumId > 0 ? 'Nuevo password opcional' : 'Password' }}</flux:label>

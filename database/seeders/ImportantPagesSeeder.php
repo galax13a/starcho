@@ -11,21 +11,22 @@ class ImportantPagesSeeder extends Seeder
 {
     public function run(): void
     {
-        $activeCodes   = SiteLanguage::activeCodes();
+        $activeCodes = SiteLanguage::activeCodes();
         $primaryLocale = $activeCodes[0] ?? 'es';
-        $author        = User::first();
+        $author = User::first();
 
         if (! $author) {
             $this->command->warn('No users found. Skipping ImportantPagesSeeder.');
+
             return;
         }
 
         $pages = [
             [
-                'slug'         => ['es' => 'inicio',    'en' => 'home'],
-                'menu_order'   => 1,
+                'slug' => ['es' => 'inicio',    'en' => 'home'],
+                'menu_order' => 1,
                 'nav_position' => 'header',
-                'title'   => ['es' => 'Inicio',    'en' => 'Home'],
+                'title' => ['es' => 'Inicio',    'en' => 'Home'],
                 'excerpt' => [
                     'es' => 'Bienvenido a nuestra plataforma. Descubre todo lo que tenemos para ofrecerte.',
                     'en' => 'Welcome to our platform. Discover everything we have to offer you.',
@@ -44,10 +45,10 @@ class ImportantPagesSeeder extends Seeder
                 ],
             ],
             [
-                'slug'         => ['es' => 'nosotros', 'en' => 'about-us'],
-                'menu_order'   => 2,
+                'slug' => ['es' => 'nosotros', 'en' => 'about-us'],
+                'menu_order' => 2,
                 'nav_position' => 'header',
-                'title'   => ['es' => 'Nosotros',  'en' => 'About Us'],
+                'title' => ['es' => 'Nosotros',  'en' => 'About Us'],
                 'excerpt' => [
                     'es' => 'Conoce quiénes somos, nuestra misión, visión y el equipo detrás del proyecto.',
                     'en' => 'Learn who we are, our mission, vision and the team behind the project.',
@@ -66,10 +67,10 @@ class ImportantPagesSeeder extends Seeder
                 ],
             ],
             [
-                'slug'         => ['es' => 'servicios', 'en' => 'services'],
-                'menu_order'   => 3,
+                'slug' => ['es' => 'servicios', 'en' => 'services'],
+                'menu_order' => 3,
                 'nav_position' => 'header',
-                'title'   => ['es' => 'Servicios', 'en' => 'Services'],
+                'title' => ['es' => 'Servicios', 'en' => 'Services'],
                 'excerpt' => [
                     'es' => 'Ofrecemos soluciones completas adaptadas a tus necesidades.',
                     'en' => 'We offer complete solutions tailored to your needs.',
@@ -88,10 +89,10 @@ class ImportantPagesSeeder extends Seeder
                 ],
             ],
             [
-                'slug'         => ['es' => 'blog', 'en' => 'blog'],
-                'menu_order'   => 4,
+                'slug' => ['es' => 'blog', 'en' => 'blog'],
+                'menu_order' => 4,
                 'nav_position' => 'header',
-                'title'   => ['es' => 'Blog',      'en' => 'Blog'],
+                'title' => ['es' => 'Blog',      'en' => 'Blog'],
                 'excerpt' => [
                     'es' => 'Artículos, tutoriales y novedades del sector.',
                     'en' => 'Articles, tutorials and industry news.',
@@ -110,10 +111,10 @@ class ImportantPagesSeeder extends Seeder
                 ],
             ],
             [
-                'slug'         => ['es' => 'contacto', 'en' => 'contact'],
-                'menu_order'   => 5,
+                'slug' => ['es' => 'contacto', 'en' => 'contact'],
+                'menu_order' => 5,
                 'nav_position' => 'header',
-                'title'   => ['es' => 'Contacto',  'en' => 'Contact'],
+                'title' => ['es' => 'Contacto',  'en' => 'Contact'],
                 'excerpt' => [
                     'es' => 'Estamos aquí para ayudarte. Respondemos en menos de 24 horas.',
                     'en' => 'We are here to help you. We respond in less than 24 hours.',
@@ -132,10 +133,10 @@ class ImportantPagesSeeder extends Seeder
                 ],
             ],
             [
-                'slug'         => ['es' => 'politica-de-privacidad', 'en' => 'privacy-policy'],
-                'menu_order'   => 6,
+                'slug' => ['es' => 'politica-de-privacidad', 'en' => 'privacy-policy'],
+                'menu_order' => 6,
                 'nav_position' => 'footer',
-                'title'   => ['es' => 'Política de Privacidad', 'en' => 'Privacy Policy'],
+                'title' => ['es' => 'Política de Privacidad', 'en' => 'Privacy Policy'],
                 'excerpt' => [
                     'es' => 'Información sobre cómo recopilamos, usamos y protegemos tus datos personales.',
                     'en' => 'Information on how we collect, use and protect your personal data.',
@@ -182,19 +183,19 @@ class ImportantPagesSeeder extends Seeder
                 ->first();
 
             $attrs = [
-                'type'            => 'page',
-                'title'           => $filter($data['title']),
-                'slug'            => $slugMap,
-                'excerpt'         => $filter($data['excerpt']),
-                'seo_title'       => $filter($data['seo_title']),
+                'type' => 'page',
+                'title' => $filter($data['title']),
+                'slug' => $slugMap,
+                'excerpt' => $filter($data['excerpt']),
+                'seo_title' => $filter($data['seo_title']),
                 'seo_description' => $filter($data['seo_description']),
-                'content'         => $contentPerLocale,
-                'status'          => 'published',
-                'author_id'       => $author->id,
-                'user_id'         => $author->id,
-                'menu_order'      => $data['menu_order'],
-                'nav_position'    => $data['nav_position'] ?? 'none',
-                'allow_comments'  => false,
+                'content' => $contentPerLocale,
+                'status' => 'published',
+                'author_id' => $author->id,
+                'user_id' => $author->id,
+                'menu_order' => $data['menu_order'],
+                'nav_position' => $data['nav_position'],
+                'allow_comments' => false,
             ];
 
             if ($existing) {
@@ -380,6 +381,7 @@ class ImportantPagesSeeder extends Seeder
     private function privacyEs(): array
     {
         $date = now()->format('d/m/Y');
+
         return $this->doc([
             $this->h2('Política de Privacidad'),
             $this->p("Última actualización: {$date}"),
@@ -411,6 +413,7 @@ class ImportantPagesSeeder extends Seeder
     private function privacyEn(): array
     {
         $date = now()->format('m/d/Y');
+
         return $this->doc([
             $this->h2('Privacy Policy'),
             $this->p("Last updated: {$date}"),

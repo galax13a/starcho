@@ -14,6 +14,7 @@ class AdminRolesImport implements ToCollection, WithHeadingRow
     use NormalizesSpreadsheetValues;
 
     public int $created = 0;
+
     public int $updated = 0;
 
     public function collection(Collection $rows): void
@@ -39,10 +40,11 @@ class AdminRolesImport implements ToCollection, WithHeadingRow
 
                 $this->syncPermissions($record, $row['permissions'] ?? null, $guardName);
                 $this->updated++;
+
                 continue;
             }
 
-            $role = Role::create([
+            $role = Role::query()->create([
                 'name' => $name,
                 'guard_name' => $guardName,
             ]);

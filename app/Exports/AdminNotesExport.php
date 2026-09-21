@@ -3,18 +3,17 @@
 namespace App\Exports;
 
 use App\Models\Note;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AdminNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AdminNotesExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
-    public function __construct(private readonly ?array $noteIds = null)
-    {
-    }
+    public function __construct(private readonly ?array $noteIds = null) {}
 
-    public function query()
+    public function query(): Builder
     {
         return Note::query()
             ->with('creator')
@@ -43,7 +42,7 @@ class AdminNotesExport implements FromQuery, WithHeadings, WithMapping, ShouldAu
             (string) ($note->content ?? ''),
             $note->color ?? '',
             $note->important_date?->format('Y-m-d') ?? '',
-            $note->creator?->email ?? '',
+            $note->creator->email ?? '',
             $note->created_at?->format('Y-m-d H:i:s') ?? '',
         ];
     }

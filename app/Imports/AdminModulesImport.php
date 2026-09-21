@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class AdminModulesImport implements ToCollection, WithHeadingRow
 {
     public int $created = 0;
+
     public int $updated = 0;
 
     public function collection(Collection $rows): void
@@ -26,7 +27,7 @@ class AdminModulesImport implements ToCollection, WithHeadingRow
             $isNew = $module === null;
 
             if ($isNew) {
-                $module = new StarchoModule();
+                $module = new StarchoModule;
                 $module->key = $key;
                 $module->config = [];
             }

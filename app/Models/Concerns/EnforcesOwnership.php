@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,7 @@ trait EnforcesOwnership
                 return;
             }
 
-            $model = new static();
+            $model = $builder->getModel();
 
             if ($model->isFillable('user_id')) {
                 $builder->where($model->qualifyColumn('user_id'), Auth::id());
@@ -54,7 +55,7 @@ trait EnforcesOwnership
 
     protected static function authUserCanBypassOwnership(): bool
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
 
         if (! $user) {

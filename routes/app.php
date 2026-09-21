@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\App\DataTransferController;
 use App\Http\Controllers\App\DashboardController;
+use App\Http\Controllers\App\DataTransferController;
 use Illuminate\Support\Facades\Route;
 
 // Alias global esperado por Fortify y por algunos componentes del starter kit.

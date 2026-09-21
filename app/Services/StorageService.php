@@ -52,11 +52,12 @@ class StorageService
     /**
      * Upload a file and return a persisted Media record.
      *
-     * @param  UploadedFile      $file     The uploaded file
-     * @param  User|null         $user     Owner (null = no quota check, no attribution)
-     * @param  Model|null        $mediable Polymorphic owner (Post, etc.)
-     * @param  string            $context  Tag: 'gallery', 'featured_image', 'editor', …
-     * @param  array{alt?:string, caption?:string} $meta
+     * @param  UploadedFile  $file  The uploaded file
+     * @param  User|null  $user  Owner (null = no quota check, no attribution)
+     * @param  Model|null  $mediable  Polymorphic owner (Post, etc.)
+     * @param  string  $context  Tag: 'gallery', 'featured_image', 'editor', …
+     * @param  array{alt?:string, caption?:string}  $meta
+     *
      * @throws \RuntimeException on quota exceeded
      */
     public function upload(
@@ -64,45 +65,52 @@ class StorageService
         ?User $user = null,
         ?Model $mediable = null,
         string $context = 'gallery',
-        array $meta = []
+        array $meta = [],
+        string $visibility = 'public'
     ): Media {
+        if (! in_array($visibility, Media::VISIBILITIES, true)) {
+            throw new \InvalidArgumentException('Invalid media visibility.');
+        }
+
         $mimeType = $file->getMimeType() ?? 'application/octet-stream';
-        $isImage  = str_starts_with($mimeType, 'image/');
+        $isImage = str_starts_with($mimeType, 'image/');
 
         // ── Quota check ──────────────────────────────────────────────
         if ($user && $user->storage_plan_id) {
             if ($user->storageExceeded($file->getSize())) {
                 throw new \RuntimeException(
-                    'Storage quota exceeded. Plan: ' . $user->storagePlan->limitLabel()
+                    'Storage quota exceeded. Plan: '.$user->storagePlan->limitLabel()
                 );
             }
         }
 
         // ── Build destination path ───────────────────────────────────
-        $ext        = $isImage ? 'webp' : strtolower($file->getClientOriginalExtension());
-        $root       = $this->settings->uploadFolder();
-        $subfolder  = $context === 'editor' ? 'media/editor' : 'media/' . date('Y/m');
-        $folder     = $root . '/' . $subfolder;
-        $filename   = Str::uuid() . '.' . $ext;
-        $path       = $folder . '/' . $filename;
+        $ext = $isImage ? 'webp' : strtolower($file->getClientOriginalExtension());
+        $root = $this->settings->uploadFolder();
+        $subfolder = $context === 'editor' ? 'media/editor' : 'media/'.date('Y/m');
+        $folder = $root.'/'.$subfolder;
+        $filename = Str::uuid().'.'.$ext;
+        $path = $folder.'/'.$filename;
 
         // ── Process & store ──────────────────────────────────────────
-        $disk      = $this->disk();
-        $diskName  = $this->settings->diskName();
+        $restricted = $visibility !== 'public';
+        $disk = $restricted ? $this->privateDisk() : $this->disk();
+        $diskName = $restricted ? 'starcho_private' : $this->settings->diskName();
+        $storedDriver = $restricted ? 'local' : $this->settings->default_driver;
         $storedUrl = null;
-        $webpPath  = null;
+        $webpPath = null;
         [$width, $height] = [null, null];
 
         if ($isImage) {
             [$content, $width, $height] = $this->convertToWebp($file);
-            $disk->put($path, $content, 'public');
+            $disk->put($path, $content, $restricted ? ['visibility' => 'private'] : 'public');
         } else {
-            $disk->put($path, file_get_contents($file->getRealPath()), 'public');
+            $disk->put($path, file_get_contents($file->getRealPath()), $restricted ? ['visibility' => 'private'] : 'public');
         }
 
         // For cloud drivers, capture only truly public URLs. R2's S3 endpoint is private
         // unless a public/custom domain is configured, so the UI will use Laravel's proxy.
-        if (! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
+        if (! $restricted && ! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
             $storedUrl = $disk->url($path);
         }
 
@@ -115,22 +123,23 @@ class StorageService
 
         // ── Persist Media record ─────────────────────────────────────
         $media = Media::create([
-            'user_id'       => $user?->id,
-            'driver'        => $this->settings->default_driver,
-            'disk'          => $diskName,
-            'path'          => $path,
-            'webp_path'     => $webpPath,
-            'url'           => $storedUrl,
+            'user_id' => $user?->id,
+            'driver' => $storedDriver,
+            'disk' => $diskName,
+            'path' => $path,
+            'webp_path' => $webpPath,
+            'url' => $storedUrl,
             'original_name' => $file->getClientOriginalName(),
-            'mime_type'     => $isImage ? 'image/webp' : $mimeType,
-            'size'          => $storedSize,
-            'width'         => $width,
-            'height'        => $height,
+            'mime_type' => $isImage ? 'image/webp' : $mimeType,
+            'size' => $storedSize,
+            'width' => $width,
+            'height' => $height,
             'mediable_type' => $mediable ? get_class($mediable) : null,
-            'mediable_id'   => $mediable?->getKey(),
-            'context'       => $context,
-            'alt'           => $meta['alt'] ?? null,
-            'caption'       => $meta['caption'] ?? null,
+            'mediable_id' => $mediable?->getKey(),
+            'context' => $context,
+            'visibility' => $visibility,
+            'alt' => $meta['alt'] ?? null,
+            'caption' => $meta['caption'] ?? null,
         ]);
 
         // ── Update user quota counter ────────────────────────────────
@@ -161,15 +170,15 @@ class StorageService
             ->where('context', 'profile_avatar')
             ->where('path', $user->avatar)
             ->first();
-        $oldSize = (int) ($oldMedia?->size ?? 0);
+        $oldSize = (int) ($oldMedia->size ?? 0);
 
-        if ($user->storage_plan_id && $user->storageExceeded(max(0, $size - $oldSize))) {
+        if ($user->storageExceeded(max(0, $size - $oldSize))) {
             throw new \RuntimeException('No hay espacio suficiente en tu plan para subir este avatar.');
         }
 
         $baseName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'avatar';
-        $folder = trim($this->settings->uploadFolder() . '/profiles/avatars/' . $user->id, '/');
-        $path = $folder . '/' . $baseName . '-' . Str::random(10) . '.webp';
+        $folder = trim($this->settings->uploadFolder().'/profiles/avatars/'.$user->id, '/');
+        $path = $folder.'/'.$baseName.'-'.Str::random(10).'.webp';
         $disk = $this->disk();
         $diskName = $this->settings->diskName();
 
@@ -178,7 +187,7 @@ class StorageService
         if ($oldMedia) {
             $this->delete($oldMedia);
         } elseif ($user->avatar && ! Str::startsWith($user->avatar, ['http://', 'https://'])) {
-            $oldDisk = $user->avatar && ($user->avatar !== $path) ? $this->disk() : null;
+            $oldDisk = $user->avatar !== $path ? $this->disk() : null;
 
             if ($oldDisk && $oldDisk->exists($user->avatar)) {
                 $oldDisk->delete($user->avatar);
@@ -194,14 +203,14 @@ class StorageService
             'url' => null,
             'variants' => null,
             'variants_size' => 0,
-            'original_name' => $baseName . '.webp',
-            'display_name' => 'Avatar de ' . $user->name,
+            'original_name' => $baseName.'.webp',
+            'display_name' => 'Avatar de '.$user->name,
             'mime_type' => 'image/webp',
             'size' => $size,
             'width' => $width,
             'height' => $height,
             'context' => 'profile_avatar',
-            'alt' => 'Avatar de ' . $user->name,
+            'alt' => 'Avatar de '.$user->name,
         ]);
 
         $user->forceFill(['avatar' => $path])->save();
@@ -229,9 +238,9 @@ class StorageService
             ? 'webp'
             : strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin');
         $root = $this->settings->uploadFolder();
-        $folder = trim($root . '/site', '/');
-        $filename = Str::uuid() . '.' . $extension;
-        $path = $folder . '/' . $filename;
+        $folder = trim($root.'/site', '/');
+        $filename = Str::uuid().'.'.$extension;
+        $path = $folder.'/'.$filename;
         $disk = $this->disk();
         $diskName = $this->settings->diskName();
         $storedUrl = null;
@@ -332,7 +341,7 @@ class StorageService
         $sourceMax = max($sourceWidth, $sourceHeight);
         $basename = pathinfo($media->path, PATHINFO_FILENAME);
         $folder = trim(dirname($media->path), '.');
-        $variantFolder = ($folder === '' ? '' : $folder . '/') . 'variants';
+        $variantFolder = ($folder === '' ? '' : $folder.'/').'variants';
         $oldVariants = $media->variants ?? [];
         $existing = $force ? [] : $oldVariants;
         $variants = $existing;
@@ -340,10 +349,11 @@ class StorageService
 
         foreach ($this->settings->imageVariantSizes() as $size) {
             $key = (string) $size;
-            $targetPath = $variantFolder . '/' . $basename . '-' . $size . '.webp';
+            $targetPath = $variantFolder.'/'.$basename.'-'.$size.'.webp';
 
             if (! $force && isset($existing[$key]['path']) && $disk->exists($existing[$key]['path'])) {
                 $variants[$key] = $existing[$key];
+
                 continue;
             }
 
@@ -379,7 +389,7 @@ class StorageService
 
             if ($user && $user->storageExceeded($diff)) {
                 throw new \RuntimeException(
-                    'No hay espacio suficiente para generar las copias responsive. Plan: ' . ($user->storagePlan?->limitLabel() ?? 'sin límite')
+                    'No hay espacio suficiente para generar las copias responsive. Plan: '.($user->storagePlan?->limitLabel() ?? 'sin límite')
                 );
             }
         }
@@ -395,7 +405,7 @@ class StorageService
         }
 
         foreach ($pendingWrites as $targetPath => $content) {
-            $disk->put($targetPath, $content, 'public');
+            $disk->put($targetPath, $content, $media->disk === 'starcho_private' ? ['visibility' => 'private'] : 'public');
         }
 
         $media->forceFill([
@@ -423,6 +433,10 @@ class StorageService
      */
     public function diskFor(Media $media): Filesystem
     {
+        if ($media->disk === 'starcho_private') {
+            return $this->privateDisk();
+        }
+
         if ($media->driver === 'local' || $media->disk === 'public') {
             return Storage::disk('public');
         }
@@ -430,9 +444,96 @@ class StorageService
         $driver = $media->driver ?: $this->settings->default_driver;
         $diskName = $media->disk ?: $this->diskNameForDriver($driver);
 
-        config(['filesystems.disks.' . $diskName => $this->buildDiskConfig($driver)]);
+        config(['filesystems.disks.'.$diskName => $this->buildDiskConfig($driver)]);
 
         return Storage::disk($diskName);
+    }
+
+    /**
+     * Move an asset and every generated variant onto a private disk, removing
+     * the old public object only after the private copies are in place.
+     * Persist a restrictive visibility or album policy before calling this
+     * method; a failed move must leave the asset denied by its DB policy.
+     */
+    public function moveToPrivate(Media $media): void
+    {
+        if ($media->disk === 'starcho_private') {
+            if ($media->getRawOriginal('url') !== null) {
+                $media->forceFill(['url' => null])->save();
+            }
+
+            return;
+        }
+
+        $source = $this->diskFor($media);
+        $destination = $this->privateDisk();
+        $paths = collect([$media->path, $media->webp_path])
+            ->merge(collect($media->variants ?? [])->pluck('path'))
+            ->filter()
+            ->unique()
+            ->values();
+        $copiedPaths = [];
+
+        if (! filled($media->path)) {
+            throw new \RuntimeException("El archivo multimedia {$media->id} no tiene una ruta de origen.");
+        }
+
+        foreach ($paths as $path) {
+            if (! $source->exists($path)) {
+                if ($destination->exists($path)) {
+                    // A previous attempt may have removed the public object but
+                    // failed before updating the database record.
+                    $copiedPaths[] = $path;
+
+                    continue;
+                }
+
+                if ($path === $media->path) {
+                    throw new \RuntimeException("No se encontró el archivo multimedia {$media->id} en el storage de origen.");
+                }
+
+                // Tolerate stale optional WebP/variant paths; they were already
+                // unavailable to readers and must not block securing the source.
+                continue;
+            }
+
+            $stream = $source->readStream($path);
+
+            if (! is_resource($stream)) {
+                throw new \RuntimeException("No se pudo leer el archivo multimedia {$media->id}.");
+            }
+
+            try {
+                $stored = $destination->put($path, $stream, ['visibility' => 'private']);
+            } finally {
+                fclose($stream);
+            }
+
+            if (! $stored || ! $destination->exists($path)) {
+                throw new \RuntimeException("No se pudo guardar en el storage privado el archivo multimedia {$media->id}.");
+            }
+
+            $copiedPaths[] = $path;
+        }
+
+        // Do not report success while a public origin object remains reachable.
+        // The visibility policy is persisted by the caller first, so a failure
+        // leaves the record denied by the application and safely retryable.
+        foreach (array_unique($copiedPaths) as $path) {
+            if ($source->exists($path)) {
+                $source->delete($path);
+            }
+
+            if ($source->exists($path)) {
+                throw new \RuntimeException("No se pudo eliminar del storage público el archivo multimedia {$media->id}.");
+            }
+        }
+
+        $media->forceFill([
+            'driver' => 'local',
+            'disk' => 'starcho_private',
+            'url' => null,
+        ])->save();
     }
 
     /**
@@ -448,7 +549,7 @@ class StorageService
 
         // Dynamically configure the cloud disk at runtime from DB settings
         $diskConfig = $this->buildDiskConfig($driver);
-        config(['filesystems.disks.' . $this->settings->diskName() => $diskConfig]);
+        config(['filesystems.disks.'.$this->settings->diskName() => $diskConfig]);
 
         return Storage::disk($this->settings->diskName());
     }
@@ -467,7 +568,7 @@ class StorageService
         }
 
         if ($this->settings->default_driver === 'r2' && filled($this->settings->r2_public_url)) {
-            return rtrim((string) $this->settings->r2_public_url, '/') . '/' . $path;
+            return rtrim((string) $this->settings->r2_public_url, '/').'/'.$path;
         }
 
         $disk = $this->disk();
@@ -489,7 +590,8 @@ class StorageService
         if (! function_exists('imagecreatefromstring')) {
             // GD not available — store original bytes, no resize
             $content = file_get_contents($file->getRealPath());
-            [$w, $h]  = @getimagesize($file->getRealPath()) ?: [null, null];
+            [$w, $h] = @getimagesize($file->getRealPath()) ?: [null, null];
+
             return [$content, $w, $h];
         }
 
@@ -617,49 +719,74 @@ class StorageService
 
         return match ($driver) {
             's3' => [
-                'driver'                  => 's3',
-                'key'                     => $s->s3_key,
-                'secret'                  => $s->s3_secret,
-                'region'                  => $s->s3_region ?? 'us-east-1',
-                'bucket'                  => $s->s3_bucket,
-                'url'                     => $s->s3_url,
-                'endpoint'                => $s->s3_endpoint ?: null,
+                'driver' => 's3',
+                'key' => $s->s3_key,
+                'secret' => $s->s3_secret,
+                'region' => $s->s3_region ?? 'us-east-1',
+                'bucket' => $s->s3_bucket,
+                'url' => $s->s3_url,
+                'endpoint' => $s->s3_endpoint ?: null,
                 'use_path_style_endpoint' => (bool) $s->s3_use_path_style,
-                'visibility'              => 'public',
+                'visibility' => 'public',
             ],
             'do_spaces' => [
-                'driver'                  => 's3',
-                'key'                     => $s->do_key,
-                'secret'                  => $s->do_secret,
-                'region'                  => $s->do_region ?? 'nyc3',
-                'bucket'                  => $s->do_bucket,
-                'endpoint'                => $s->do_endpoint,
-                'url'                     => $s->do_cdn_url ?: null,
+                'driver' => 's3',
+                'key' => $s->do_key,
+                'secret' => $s->do_secret,
+                'region' => $s->do_region ?? 'nyc3',
+                'bucket' => $s->do_bucket,
+                'endpoint' => $s->do_endpoint,
+                'url' => $s->do_cdn_url ?: null,
                 'use_path_style_endpoint' => false,
-                'visibility'              => 'public',
+                'visibility' => 'public',
             ],
             'r2' => [
-                'driver'                  => 's3',
-                'key'                     => $s->r2_key,
-                'secret'                  => $s->r2_secret,
-                'region'                  => 'auto',
-                'bucket'                  => $s->r2_bucket,
-                'endpoint'                => $s->r2_endpoint,
-                'url'                     => $s->r2_public_url ?: null,
+                'driver' => 's3',
+                'key' => $s->r2_key,
+                'secret' => $s->r2_secret,
+                'region' => 'auto',
+                'bucket' => $s->r2_bucket,
+                'endpoint' => $s->r2_endpoint,
+                'url' => $s->r2_public_url ?: null,
                 'use_path_style_endpoint' => false,
-                'visibility'              => 'public',
+                'visibility' => 'public',
             ],
             default => ['driver' => 'local', 'root' => storage_path('app/public'), 'visibility' => 'public'],
         };
     }
 
+    private function configurePrivateDisk(): void
+    {
+        // Restricted assets always leave the configured public provider and
+        // live under storage/app/private/media, outside storage:link. In
+        // particular, never reuse an S3/R2 bucket whose public endpoint may
+        // ignore object ACLs or expose every key through a CDN.
+        $config = config('filesystems.disks.starcho_private', [
+            'driver' => 'local',
+            'root' => storage_path('app/private/media'),
+            'throw' => true,
+            'report' => false,
+        ]);
+        $config['driver'] = 'local';
+        $config['visibility'] = 'private';
+        $config['serve'] = false;
+        config(['filesystems.disks.starcho_private' => $config]);
+    }
+
+    private function privateDisk(): Filesystem
+    {
+        $this->configurePrivateDisk();
+
+        return Storage::disk('starcho_private');
+    }
+
     private function diskNameForDriver(string $driver): string
     {
         return match ($driver) {
-            's3'        => 'starcho_s3',
+            's3' => 'starcho_s3',
             'do_spaces' => 'starcho_do',
-            'r2'        => 'starcho_r2',
-            default     => 'public',
+            'r2' => 'starcho_r2',
+            default => 'public',
         };
     }
 }

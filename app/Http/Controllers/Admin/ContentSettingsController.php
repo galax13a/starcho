@@ -3,28 +3,29 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
 use App\Models\BrokenLink;
 use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Models\SiteLanguage;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ContentSettingsController extends Controller
 {
     public function index(): View
     {
-        $settings     = ContentSetting::singleton();
-        $brokenCount  = BrokenLink::active()->count();
-        $sitemapData  = $this->buildSitemapData($settings);
+        $settings = ContentSetting::singleton();
+        $brokenCount = BrokenLink::active()->count();
+        $sitemapData = $this->buildSitemapData($settings);
 
-        $sitemapFile   = public_path('sitemap.xml');
+        $sitemapFile = public_path('sitemap.xml');
         clearstatcache(true, $sitemapFile);
         $sitemapExists = file_exists($sitemapFile);
-        $sitemapDate   = $sitemapExists ? \Carbon\Carbon::createFromTimestamp(filemtime($sitemapFile)) : null;
-        $sitemapSize   = $sitemapExists ? round(filesize($sitemapFile) / 1024, 1) : null;
+        $sitemapDate = $sitemapExists ? Carbon::createFromTimestamp(filemtime($sitemapFile)) : null;
+        $sitemapSize = $sitemapExists ? round(filesize($sitemapFile) / 1024, 1) : null;
 
         return view('admin.content.settings', compact(
             'settings', 'brokenCount', 'sitemapData',
@@ -34,16 +35,18 @@ class ContentSettingsController extends Controller
 
     private function buildSitemapData(ContentSetting $settings): array
     {
-        $excluded  = $settings->sitemap_excluded_urls ?? [];
-        $locales   = SiteLanguage::activeCodes() ?: ['es'];
-        $pages     = [];
-        $posts     = [];
+        $excluded = $settings->sitemap_excluded_urls ?? [];
+        $locales = SiteLanguage::activeCodes() ?: ['es'];
+        $pages = [];
+        $posts = [];
 
         foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
             foreach ($locales as $locale) {
                 $slug = $page->getTranslation('slug', $locale, false);
-                if (!$slug) continue;
-                $url = url('/' . $locale . '/' . $slug);
+                if (! $slug) {
+                    continue;
+                }
+                $url = url('/'.$locale.'/'.$slug);
                 $pages[] = ['url' => $url, 'title' => $page->getTranslation('title', $locale, false) ?: $page->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded)];
             }
         }
@@ -51,8 +54,10 @@ class ContentSettingsController extends Controller
         foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
             foreach ($locales as $locale) {
                 $slug = $post->getTranslation('slug', $locale, false);
-                if (!$slug) continue;
-                $url = url('/' . $locale . '/blog/' . $slug);
+                if (! $slug) {
+                    continue;
+                }
+                $url = url('/'.$locale.'/blog/'.$slug);
                 $posts[] = ['url' => $url, 'title' => $post->getTranslation('title', $locale, false) ?: $post->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded), 'date' => $post->updated_at?->toDateString()];
             }
         }
@@ -63,35 +68,40 @@ class ContentSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'posts_per_page'              => 'required|integer|min:1|max:100',
-            'related_posts_count'         => 'required|integer|min:0|max:20',
-            'show_author'                 => 'boolean',
-            'show_date'                   => 'boolean',
-            'show_categories'             => 'boolean',
-            'show_tags'                   => 'boolean',
-            'show_excerpt_in_list'        => 'boolean',
+            'posts_per_page' => 'required|integer|min:1|max:100',
+            'related_posts_count' => 'required|integer|min:0|max:20',
+            'show_author' => 'boolean',
+            'show_date' => 'boolean',
+            'show_categories' => 'boolean',
+            'show_tags' => 'boolean',
+            'show_excerpt_in_list' => 'boolean',
             'show_featured_image_in_list' => 'boolean',
-            'comments_enabled'            => 'boolean',
-            'comments_require_approval'   => 'boolean',
-            'blog_sidebar_enabled'        => 'boolean',
-            'breadcrumbs_enabled'         => 'boolean',
-            'track_broken_links'          => 'boolean',
-            'broken_links_notify_email'   => 'nullable|email|max:255',
-            'reading_time_enabled'        => 'boolean',
-            'reading_words_per_minute'    => 'required|integer|min:50|max:1000',
-            'featured_post_id'            => 'nullable|integer|exists:posts,id',
-            'blog_layout'                 => 'required|in:grid,list',
-            'sitemap_include_pages'       => 'boolean',
-            'sitemap_include_posts'       => 'boolean',
-            'sitemap_excluded_urls'       => 'nullable|array',
-            'sitemap_excluded_urls.*'     => 'nullable|string|max:2000',
-            'render_cache_enabled'        => 'boolean',
-            'render_cache_posts_enabled'  => 'boolean',
-            'render_cache_pages_enabled'  => 'boolean',
-            'render_cache_guest_only'     => 'boolean',
-            'render_cache_per_locale'     => 'boolean',
-            'render_cache_ttl_minutes'    => 'required|integer|min:1|max:10080',
-            'render_cache_strategy'       => 'required|in:safe,balanced,aggressive',
+            'comments_enabled' => 'boolean',
+            'comments_require_approval' => 'boolean',
+            'blog_sidebar_enabled' => 'boolean',
+            'breadcrumbs_enabled' => 'boolean',
+            'track_broken_links' => 'boolean',
+            'broken_links_notify_email' => 'nullable|email|max:255',
+            'reading_time_enabled' => 'boolean',
+            'reading_words_per_minute' => 'required|integer|min:50|max:1000',
+            'featured_post_id' => 'nullable|integer|exists:posts,id',
+            'blog_layout' => 'required|in:grid,list',
+            'sitemap_include_pages' => 'boolean',
+            'sitemap_include_posts' => 'boolean',
+            'sitemap_excluded_urls' => 'nullable|array',
+            'sitemap_excluded_urls.*' => 'nullable|string|max:2000',
+            'render_cache_enabled' => 'boolean',
+            'render_cache_posts_enabled' => 'boolean',
+            'render_cache_pages_enabled' => 'boolean',
+            'render_cache_guest_only' => 'boolean',
+            'render_cache_per_locale' => 'boolean',
+            'render_cache_ttl_minutes' => 'required|integer|min:1|max:10080',
+            'render_cache_strategy' => 'required|in:safe,balanced,aggressive',
+            'scheduled_publish_interval_minutes' => [
+                'required',
+                'integer',
+                Rule::in(ContentSetting::SCHEDULED_PUBLISH_INTERVALS),
+            ],
         ]);
 
         // Checkboxes come as 0/1 when not checked they are absent — normalize
@@ -122,18 +132,20 @@ class ContentSettingsController extends Controller
 
     public function generateSitemap(): RedirectResponse
     {
-        $settings  = ContentSetting::singleton();
-        $excluded  = $settings->sitemap_excluded_urls ?? [];
-        $locales   = SiteLanguage::activeCodes() ?: ['es'];
-        $urls      = [];
+        $settings = ContentSetting::singleton();
+        $excluded = $settings->sitemap_excluded_urls ?? [];
+        $locales = SiteLanguage::activeCodes() ?: ['es'];
+        $urls = [];
 
         if ($settings->sitemap_include_pages) {
             foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
                 foreach ($locales as $locale) {
                     $slug = $page->getTranslation('slug', $locale, false);
-                    if (!$slug) continue;
-                    $url = url('/' . $locale . '/' . $slug);
-                    if (!in_array($url, $excluded)) {
+                    if (! $slug) {
+                        continue;
+                    }
+                    $url = url('/'.$locale.'/'.$slug);
+                    if (! in_array($url, $excluded)) {
                         $urls[] = ['loc' => $url, 'lastmod' => $page->updated_at?->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'];
                     }
                 }
@@ -144,21 +156,25 @@ class ContentSettingsController extends Controller
             foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
                 foreach ($locales as $locale) {
                     $slug = $post->getTranslation('slug', $locale, false);
-                    if (!$slug) continue;
-                    $url = url('/' . $locale . '/blog/' . $slug);
-                    if (!in_array($url, $excluded)) {
+                    if (! $slug) {
+                        continue;
+                    }
+                    $url = url('/'.$locale.'/blog/'.$slug);
+                    if (! in_array($url, $excluded)) {
                         $urls[] = ['loc' => $url, 'lastmod' => $post->updated_at?->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.6'];
                     }
                 }
             }
         }
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
         foreach ($urls as $entry) {
             $xml .= "  <url>\n";
-            $xml .= "    <loc>" . e($entry['loc']) . "</loc>\n";
-            if ($entry['lastmod']) $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
+            $xml .= '    <loc>'.e($entry['loc'])."</loc>\n";
+            if ($entry['lastmod']) {
+                $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
+            }
             $xml .= "    <changefreq>{$entry['changefreq']}</changefreq>\n";
             $xml .= "    <priority>{$entry['priority']}</priority>\n";
             $xml .= "  </url>\n";
@@ -169,7 +185,7 @@ class ContentSettingsController extends Controller
         clearstatcache();
 
         return redirect()->route('admin.content.settings', ['tab' => 'sitemap'])
-            ->with('success', 'Sitemap generado con ' . count($urls) . ' URLs → /sitemap.xml');
+            ->with('success', 'Sitemap generado con '.count($urls).' URLs → /sitemap.xml');
     }
 
     public function brokenLinks(Request $request): View

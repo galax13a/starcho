@@ -21,15 +21,25 @@ class SitePageEditor extends Component
     use DispatchesStarchoNotify;
 
     public string $path = '/';
+
     public array $page = [];
+
     public bool $supported = false;
+
     public string $visualHtml = '';
+
     public string $bladeContent = '';
+
     public array $seoRows = [];
+
     public array $locales = [];
+
     public string $aiPrompt = '';
+
     public string $provider = 'openai';
+
     public string $model = '';
+
     public ?string $errorMessage = null;
 
     public function mount(string $path): void
@@ -165,25 +175,6 @@ class SitePageEditor extends Component
         }
     }
 
-    private function extractVisualEditableContent(string $content): array
-    {
-        if (preg_match('/<body[^>]*>(.*)<\/body>/is', $content, $matches) === 1) {
-            return ['supported' => true, 'html' => trim($matches[1])];
-        }
-
-        return ['supported' => false, 'html' => null];
-    }
-
-    private function replaceVisualEditableContent(string $originalContent, string $newBodyHtml): string
-    {
-        return (string) preg_replace_callback(
-            '/(<body[^>]*>)(.*?)(<\/body>)/is',
-            fn (array $matches) => $matches[1] . PHP_EOL . trim($newBodyHtml) . PHP_EOL . $matches[3],
-            $originalContent,
-            1
-        );
-    }
-
     private function savePageSeoSettings(array $rows): void
     {
         foreach ($rows as $row) {
@@ -210,35 +201,43 @@ class SitePageEditor extends Component
         }
     }
 
+    /**
+     * @param  list<array{path: string, title?: string|null, ...}>  $pages
+     * @return list<array{locale: string, path: string, title: mixed, description: mixed, meta_keywords: mixed, og_title: mixed, og_description: mixed, robots_index: bool, robots_follow: bool, active: bool}>
+     */
     private function buildPageSeoRows(array $pages): array
     {
         $settings = SiteSetting::singleton();
-        $paths = collect($pages)->pluck('path')->all();
+        $paths = array_column($pages, 'path');
         $existing = SitePageSetting::query()
             ->whereIn('path', $paths)
             ->get()
-            ->keyBy(fn (SitePageSetting $row) => $row->path . '|' . $row->locale);
+            ->keyBy(fn (SitePageSetting $row) => $row->path.'|'.$row->locale);
 
-        return collect($pages)
-            ->flatMap(fn (array $page) => collect($this->locales)->map(function (string $locale) use ($page, $existing, $settings): array {
-                $key = $page['path'] . '|' . $locale;
+        $rows = [];
+
+        foreach ($pages as $page) {
+            foreach ($this->locales as $locale) {
+                $locale = (string) $locale;
+                $key = $page['path'].'|'.$locale;
                 $row = $existing->get($key);
 
-                return [
+                $rows[] = [
                     'locale' => $locale,
                     'path' => $page['path'],
-                    'title' => $row?->title ?? $page['title'] ?? $settings->site_name,
-                    'description' => $row?->description ?? $settings->site_description,
-                    'meta_keywords' => $row?->meta_keywords ?? $settings->meta_keywords,
-                    'og_title' => $row?->og_title ?? $settings->og_title,
-                    'og_description' => $row?->og_description ?? $settings->og_description,
-                    'robots_index' => $row?->robots_index ?? true,
-                    'robots_follow' => $row?->robots_follow ?? true,
-                    'active' => $row?->active ?? true,
+                    'title' => data_get($row, 'title') ?? $page['title'] ?? $settings->site_name,
+                    'description' => data_get($row, 'description') ?? $settings->site_description,
+                    'meta_keywords' => data_get($row, 'meta_keywords') ?? $settings->meta_keywords,
+                    'og_title' => data_get($row, 'og_title') ?? $settings->og_title,
+                    'og_description' => data_get($row, 'og_description') ?? $settings->og_description,
+                    'robots_index' => data_get($row, 'robots_index') ?? true,
+                    'robots_follow' => data_get($row, 'robots_follow') ?? true,
+                    'active' => data_get($row, 'active') ?? true,
                 ];
-            }))
-            ->values()
-            ->all();
+            }
+        }
+
+        return $rows;
     }
 
     private function discoverFolioPages(): array
@@ -289,7 +288,7 @@ class SitePageEditor extends Component
 
     private function extractHtmlTag(string $html, string $tag): ?string
     {
-        if (preg_match('/<' . preg_quote($tag, '/') . '>(.*?)<\/' . preg_quote($tag, '/') . '>/is', $html, $matches) === 1) {
+        if (preg_match('/<'.preg_quote($tag, '/').'>(.*?)<\/'.preg_quote($tag, '/').'>/is', $html, $matches) === 1) {
             return trim(strip_tags($matches[1]));
         }
 

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiSetting;
 use App\Models\Post;
+use App\Models\PostAiGeneration;
 use App\Models\PostAiMemory;
 use App\Models\SiteLanguage;
 use App\Services\PageAiContentService;
@@ -22,25 +23,40 @@ class PageAiAssistant extends Component
     use DispatchesStarchoNotify;
 
     public Post $post;
+
     public bool $open = false;
+
     public string $locale;
+
     public string $sourceLocale = '';
+
     public string $currentContentJson = '{}';
+
     public string $prompt = '';
+
     #[Session(key: 'starcho.page_ai_assistant.provider')]
     public string $provider = 'openai';
+
     #[Session(key: 'starcho.page_ai_assistant.model')]
     public string $model = '';
+
     #[Session(key: 'starcho.page_ai_assistant.mode')]
     public string $mode = 'replace';
+
     public string $target = 'content';
+
     #[Session(key: 'starcho.page_ai_assistant.output_format')]
     public string $outputFormat = 'editorjs';
+
     #[Session(key: 'starcho.page_ai_assistant.translate_prompt')]
     public string $translateLocalePrompt = '';
+
     public ?string $result = null;
+
     public ?string $errorMessage = null;
+
     public array $selectedMemoryIds = [];
+
     public array $inspirationPrompts = [
         'Dame 5 ideas para ampliar este artículo con secciones nuevas y útiles.',
         'Genera 5 variaciones de enfoque para hacerlo más profesional y persuasivo.',
@@ -128,11 +144,11 @@ class PageAiAssistant extends Component
                 in_array($this->target, ['content', 'memory_regenerate', 'translate_locale'], true) ? $this->outputFormat : 'editorjs',
                 $this->memoryContext(),
             );
-            $generation = $this->post->aiGenerations()->create($service->lastGenerationRecord([
+            $generation = PostAiGeneration::query()->create(array_merge($service->lastGenerationRecord([
                 'user_id' => auth()->id(),
-                'action' => 'assistant_' . $this->target,
+                'action' => 'assistant_'.$this->target,
                 'locale' => $this->locale,
-            ]));
+            ]), ['post_id' => $this->post->id]));
             $this->storeMemoryForGeneration($generation->id);
         } catch (Throwable $exception) {
             report($exception);
@@ -162,6 +178,7 @@ class PageAiAssistant extends Component
 
         if ($this->target === 'audit') {
             $this->notifyWarning('La auditoría es solo informativa y no se aplica al editor.');
+
             return;
         }
 
@@ -249,7 +266,8 @@ PROMPT);
             return '';
         }
 
-        return $this->post->aiMemories()
+        return PostAiMemory::query()
+            ->where('post_id', $this->post->id)
             ->whereIn('id', $this->selectedMemoryIds)
             ->where('active', true)
             ->latest()
@@ -280,7 +298,7 @@ PROMPT);
         $this->post->aiMemories()->create([
             'post_ai_generation_id' => $generationId,
             'user_id' => auth()->id(),
-            'title' => Str::limit($this->targetLabel() . ' - ' . now()->format('d/m/Y H:i'), 120, ''),
+            'title' => Str::limit($this->targetLabel().' - '.now()->format('d/m/Y H:i'), 120, ''),
             'source' => 'assistant',
             'status' => PostAiMemory::STATUS_DRAFT,
             'active' => true,

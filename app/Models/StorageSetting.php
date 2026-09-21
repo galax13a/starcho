@@ -34,18 +34,18 @@ class StorageSetting extends Model
         'image_variants_enabled' => 'boolean',
         'image_variant_sizes' => 'array',
         // Cloud credentials encrypted at rest (graceful: tolerates legacy plaintext).
-        's3_key'    => EncryptedOrPlain::class,
+        's3_key' => EncryptedOrPlain::class,
         's3_secret' => EncryptedOrPlain::class,
-        'do_key'    => EncryptedOrPlain::class,
+        'do_key' => EncryptedOrPlain::class,
         'do_secret' => EncryptedOrPlain::class,
-        'r2_key'    => EncryptedOrPlain::class,
+        'r2_key' => EncryptedOrPlain::class,
         'r2_secret' => EncryptedOrPlain::class,
     ];
 
     /** Column names holding encrypted credentials (used by the migration). */
     public const ENCRYPTED_SECRETS = ['s3_key', 's3_secret', 'do_key', 'do_secret', 'r2_key', 'r2_secret'];
 
-    public static function singleton(): static
+    public static function singleton(): self
     {
         return static::firstOrCreate(['id' => 1], ['default_driver' => 'local']);
     }
@@ -64,10 +64,10 @@ class StorageSetting extends Model
     public function uploadFolder(): string
     {
         $raw = match ($this->default_driver) {
-            's3'        => $this->s3_folder,
+            's3' => $this->s3_folder,
             'do_spaces' => $this->do_folder,
-            'r2'        => $this->r2_folder,
-            default     => $this->local_folder,
+            'r2' => $this->r2_folder,
+            default => $this->local_folder,
         };
 
         return trim($raw ?? 'uploads', '/');
@@ -77,10 +77,10 @@ class StorageSetting extends Model
     public function diskName(): string
     {
         return match ($this->default_driver) {
-            's3'        => 'starcho_s3',
+            's3' => 'starcho_s3',
             'do_spaces' => 'starcho_do',
-            'r2'        => 'starcho_r2',
-            default     => 'public',
+            'r2' => 'starcho_r2',
+            default => 'public',
         };
     }
 
@@ -101,7 +101,7 @@ class StorageSetting extends Model
 
     public function localPublicUrl(string $path): string
     {
-        return $this->localBaseUrl() . '/storage/' . ltrim($path, '/');
+        return $this->localBaseUrl().'/storage/'.ltrim($path, '/');
     }
 
     public function imageVariantsEnabled(): bool

@@ -11,6 +11,7 @@ class GeoLocationsController
     public function index(): View
     {
         $topCountryRow = UserGeoLocation::query()
+            ->toBase()
             ->select('country', DB::raw('count(*) as total'))
             ->whereNotNull('country')
             ->groupBy('country')
@@ -18,6 +19,7 @@ class GeoLocationsController
             ->first();
 
         $topCityRow = UserGeoLocation::query()
+            ->toBase()
             ->select('city', DB::raw('count(*) as total'))
             ->whereNotNull('city')
             ->groupBy('city')
@@ -25,6 +27,7 @@ class GeoLocationsController
             ->first();
 
         $topIspRow = UserGeoLocation::query()
+            ->toBase()
             ->select('isp', DB::raw('count(*) as total'))
             ->whereNotNull('isp')
             ->where('isp', '!=', '')
@@ -69,18 +72,24 @@ class GeoLocationsController
             'totalUsers' => UserGeoLocation::select('user_id')->distinct()->count(),
             'totalIsps' => UserGeoLocation::query()->whereNotNull('isp')->where('isp', '!=', '')->distinct('isp')->count('isp'),
             'topCountry' => $topCountryRow?->country,
-            'topCountryCount' => (int) ($topCountryRow?->total ?? 0),
+            'topCountryCount' => (int) ($topCountryRow->total ?? 0),
             'topCity' => $topCityRow?->city,
-            'topCityCount' => (int) ($topCityRow?->total ?? 0),
+            'topCityCount' => (int) ($topCityRow->total ?? 0),
             'topIsp' => $topIspRow?->isp,
-            'topIspCount' => (int) ($topIspRow?->total ?? 0),
+            'topIspCount' => (int) ($topIspRow->total ?? 0),
             'latestCaptureAt' => $latestCapture?->captured_at,
         ]);
     }
 
     public function show(UserGeoLocation $geolocation): View
     {
-        $userTimeline = $geolocation->user
+        $user = $geolocation->user;
+
+        if ($user === null) {
+            abort(404);
+        }
+
+        $userTimeline = $user
             ->geolocations()
             ->orderBy('captured_at', 'desc')
             ->get();

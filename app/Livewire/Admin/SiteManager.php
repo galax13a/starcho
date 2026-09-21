@@ -15,8 +15,6 @@ use App\Models\SitePageSetting;
 use App\Models\SiteSetting;
 use App\Models\SiteSocialNetwork;
 use App\Models\StoragePlan;
-use App\Models\StorageSetting;
-use App\Models\StarchoModule;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,15 +39,25 @@ class SiteManager extends Component
     use WithFileUploads;
 
     public $favicon = null;
+
     public $ogImage = null;
+
     public $socialImportFile = null;
+
     public array $selectedSocialNetworks = [];
+
     public string $socialImportMode = 'replace';
+
     public string $newSocialKey = '';
+
     public string $newSocialLabel = '';
+
     public string $newSocialIcon = 'fas fa-link';
+
     public string $newSocialColor = '#6b7280';
+
     public string $newSocialUrl = '';
+
     public int $newSocialSortOrder = 100;
 
     public function saveSite(array $pairs): void
@@ -261,7 +269,7 @@ class SiteManager extends Component
 
         return response()->streamDownload(function () use ($payload): void {
             echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        }, 'starcho-social-networks-' . now()->format('Ymd-His') . '.json', [
+        }, 'starcho-social-networks-'.now()->format('Ymd-His').'.json', [
             'Content-Type' => 'application/json; charset=UTF-8',
         ]);
     }
@@ -429,7 +437,7 @@ class SiteManager extends Component
     {
         $query = collect($pairs)
             ->filter(fn ($pair) => is_array($pair) && count($pair) >= 2)
-            ->map(fn (array $pair) => rawurlencode((string) $pair[0]) . '=' . rawurlencode((string) $pair[1]))
+            ->map(fn (array $pair) => rawurlencode((string) $pair[0]).'='.rawurlencode((string) $pair[1]))
             ->implode('&');
 
         parse_str($query, $input);
@@ -515,7 +523,7 @@ class SiteManager extends Component
     private function extractMeta(string $html, string $key, bool $property): ?string
     {
         $attr = $property ? 'property' : 'name';
-        $pattern = '/<meta\s+' . $attr . '="' . preg_quote($key, '/') . '"\s+content="([^"]*)"\s*\/?\s*>/i';
+        $pattern = '/<meta\s+'.$attr.'="'.preg_quote($key, '/').'"\s+content="([^"]*)"\s*\/?\s*>/i';
 
         if (preg_match($pattern, $html, $matches) === 1) {
             return trim(html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5));
@@ -526,7 +534,7 @@ class SiteManager extends Component
 
     private function extractHtmlTag(string $html, string $tag): ?string
     {
-        $pattern = '/<' . preg_quote($tag, '/') . '>(.*?)<\/' . preg_quote($tag, '/') . '>/is';
+        $pattern = '/<'.preg_quote($tag, '/').'>(.*?)<\/'.preg_quote($tag, '/').'>/is';
 
         if (preg_match($pattern, $html, $matches) === 1) {
             return trim(strip_tags($matches[1]));
@@ -609,26 +617,26 @@ class SiteManager extends Component
             ->whereIn('locale', $locales)
             ->whereIn('path', $paths)
             ->get()
-            ->keyBy(fn (SitePageSetting $item) => $item->locale . '|' . $item->path);
+            ->keyBy(fn (SitePageSetting $item) => $item->locale.'|'.$item->path);
 
         $rows = [];
 
         foreach ($locales as $locale) {
             foreach ($paths as $path) {
-                $record = $records->get($locale . '|' . $path);
+                $record = $records->get($locale.'|'.$path);
                 $isHome = $path === '/';
 
                 $rows[] = [
                     'locale' => $locale,
                     'path' => $path,
-                    'title' => $record?->title ?? ($isHome ? ($settings->og_title ?: $settings->site_name) : null),
-                    'description' => $record?->description ?? ($isHome ? $settings->site_description : null),
-                    'meta_keywords' => $record?->meta_keywords ?? ($isHome ? $settings->meta_keywords : null),
-                    'og_title' => $record?->og_title ?? ($isHome ? $settings->og_title : null),
-                    'og_description' => $record?->og_description ?? ($isHome ? $settings->og_description : null),
-                    'robots_index' => $record?->robots_index ?? true,
-                    'robots_follow' => $record?->robots_follow ?? true,
-                    'active' => $record?->active ?? $isHome,
+                    'title' => data_get($record, 'title') ?? ($isHome ? ($settings->og_title ?: $settings->site_name) : null),
+                    'description' => data_get($record, 'description') ?? ($isHome ? $settings->site_description : null),
+                    'meta_keywords' => data_get($record, 'meta_keywords') ?? ($isHome ? $settings->meta_keywords : null),
+                    'og_title' => data_get($record, 'og_title') ?? ($isHome ? $settings->og_title : null),
+                    'og_description' => data_get($record, 'og_description') ?? ($isHome ? $settings->og_description : null),
+                    'robots_index' => data_get($record, 'robots_index') ?? true,
+                    'robots_follow' => data_get($record, 'robots_follow') ?? true,
+                    'active' => data_get($record, 'active') ?? $isHome,
                 ];
             }
         }

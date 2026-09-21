@@ -59,7 +59,7 @@ final class NotesTable extends PowerGridComponent
             ->add('content_excerpt', fn (Note $n) => Str::limit((string) ($n->content ?? ''), 80) ?: '—')
             ->add('color_label', fn (Note $n) => $this->colorLabel($n->color))
             ->add('important_date_fmt', fn (Note $n) => $n->important_date?->format('d/m/Y') ?? '—')
-            ->add('creator_name', fn (Note $n) => $n->creator?->name ?? '—')
+            ->add('creator_name', fn (Note $n) => $n->creator->name ?? '—')
             ->add('created_at_fmt', fn (Note $n) => Carbon::parse($n->created_at)->format('d/m/Y'));
     }
 
@@ -99,12 +99,13 @@ final class NotesTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedNoteIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+
             return null;
         }
 
@@ -112,7 +113,7 @@ final class NotesTable extends PowerGridComponent
 
         return Excel::download(
             new AdminNotesExport($selectedIds),
-            'admin-notes-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-notes-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -122,6 +123,7 @@ final class NotesTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+
             return;
         }
 
@@ -132,6 +134,7 @@ final class NotesTable extends PowerGridComponent
         if ($notes->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.notes.notify.no_selection'));
+
             return;
         }
 
@@ -145,7 +148,7 @@ final class NotesTable extends PowerGridComponent
         $this->clearSelection();
 
         $this->notifyWarning(__('admin_ui.notes.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deleteAdminNote')]
@@ -155,12 +158,13 @@ final class NotesTable extends PowerGridComponent
 
         if (! $note) {
             $this->notifyCrud('notes', 'not_found');
+
             return;
         }
 
         $note->delete();
         $this->notifyCrud('notes', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedNoteIds(): array

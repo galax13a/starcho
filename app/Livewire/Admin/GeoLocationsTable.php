@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\UserGeoLocation;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
+use App\Models\UserGeoLocation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use PowerComponents\LivewirePowerGrid\Column;
@@ -41,16 +41,16 @@ final class GeoLocationsTable extends PowerGridComponent
             ->add('user_id')
             ->add('ip_address')
             ->add('country')
-            ->add('country_display', fn (UserGeoLocation $geo) => trim(($geo->country ?? '-') . ' ' . ($geo->country_code ? '(' . $geo->country_code . ')' : '')))
+            ->add('country_display', fn (UserGeoLocation $geo) => trim(($geo->country ?? '-').' '.($geo->country_code ? '('.$geo->country_code.')' : '')))
             ->add('city')
             ->add('region')
             ->add('isp')
             ->add('timezone')
             ->add('coordinates', fn (UserGeoLocation $geo) => ($geo->latitude && $geo->longitude)
-                ? number_format($geo->latitude, 4) . ', ' . number_format($geo->longitude, 4)
+                ? number_format($geo->latitude, 4).', '.number_format($geo->longitude, 4)
                 : '-')
             ->add('captured_at_formatted', fn (UserGeoLocation $geo) => Carbon::parse($geo->captured_at)->format('d/m/Y H:i'))
-            ->add('user_name', fn (UserGeoLocation $geo) => $geo->user?->name ?? 'N/A');
+            ->add('user_name', fn (UserGeoLocation $geo) => $geo->user->name ?? 'N/A');
     }
 
     public function columns(): array

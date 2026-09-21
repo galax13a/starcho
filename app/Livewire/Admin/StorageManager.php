@@ -21,13 +21,21 @@ class StorageManager extends Component
 
     // ── Plan modal state ──────────────────────────────────────────────
     public bool $showPlanModal = false;
+
     public ?int $planId = null;
+
     public array $planName = [];
+
     public array $planDescription = [];
+
     public string $planSlug = '';
+
     public int $planBytes = 5242880;
+
     public string $planPrice = '0.00';
+
     public bool $planIsFree = false;
+
     public bool $planIsActive = true;
 
     #[Computed]
@@ -44,7 +52,7 @@ class StorageManager extends Component
     public function updated(string $name, $value): void
     {
         // Auto-suggest slug from the primary-locale name while creating.
-        if (! $this->planId && $name === 'planName.' . $this->primaryLocale()) {
+        if (! $this->planId && $name === 'planName.'.$this->primaryLocale()) {
             $this->planSlug = Str::slug((string) $value);
         }
     }
@@ -81,17 +89,17 @@ class StorageManager extends Component
         $primary = $this->primaryLocale();
 
         $this->validate([
-            'planName.' . $primary => 'required|string|max:80',
-            'planName.*'           => 'nullable|string|max:80',
-            'planDescription.*'    => 'nullable|string|max:255',
-            'planSlug'             => ['required', 'string', 'max:80', Rule::unique('storage_plans', 'slug')->ignore($this->planId)],
-            'planBytes'            => 'required|integer|min:1',
-            'planPrice'            => 'required|numeric|min:0',
+            'planName.'.$primary => 'required|string|max:80',
+            'planName.*' => 'nullable|string|max:80',
+            'planDescription.*' => 'nullable|string|max:255',
+            'planSlug' => ['required', 'string', 'max:80', Rule::unique('storage_plans', 'slug')->ignore($this->planId)],
+            'planBytes' => 'required|integer|min:1',
+            'planPrice' => 'required|numeric|min:0',
         ], [], [
-            'planName.' . $primary => 'nombre (' . $primary . ')',
-            'planSlug'             => 'slug',
-            'planBytes'            => 'límite',
-            'planPrice'            => 'precio',
+            'planName.'.$primary => 'nombre ('.$primary.')',
+            'planSlug' => 'slug',
+            'planBytes' => 'límite',
+            'planPrice' => 'precio',
         ]);
 
         // Fill every active locale name; fall back to the primary one.
@@ -110,7 +118,7 @@ class StorageManager extends Component
             }
         }
 
-        $plan = $this->planId ? StoragePlan::findOrFail($this->planId) : new StoragePlan();
+        $plan = $this->planId ? StoragePlan::findOrFail($this->planId) : new StoragePlan;
 
         $plan->setTranslations('name', $name);
         $plan->setTranslations('description', $description);
@@ -136,6 +144,7 @@ class StorageManager extends Component
 
         if ($plan->users()->exists()) {
             $this->notifyWarning("No se puede eliminar «{$plan->name}»: tiene usuarios asignados.");
+
             return;
         }
 
@@ -171,7 +180,7 @@ class StorageManager extends Component
     {
         $query = collect($pairs)
             ->filter(fn ($pair) => is_array($pair) && count($pair) >= 2)
-            ->map(fn (array $pair) => rawurlencode((string) $pair[0]) . '=' . rawurlencode((string) $pair[1]))
+            ->map(fn (array $pair) => rawurlencode((string) $pair[0]).'='.rawurlencode((string) $pair[1]))
             ->implode('&');
 
         parse_str($query, $input);
@@ -184,12 +193,12 @@ class StorageManager extends Component
     {
         $plans = StoragePlan::orderBy('sort_order')->get();
 
-        $totalUsers   = User::count();
-        $totalUsed    = (int) User::sum('storage_used_bytes');
-        $noPlanCount  = User::whereNull('storage_plan_id')->count();
-        $noPlanUsed   = (int) User::whereNull('storage_plan_id')->sum('storage_used_bytes');
-        $usersOnPlan  = $totalUsers - $noPlanCount;
-        $usedOnPlan   = $totalUsed - $noPlanUsed;
+        $totalUsers = User::count();
+        $totalUsed = (int) User::sum('storage_used_bytes');
+        $noPlanCount = User::whereNull('storage_plan_id')->count();
+        $noPlanUsed = (int) User::whereNull('storage_plan_id')->sum('storage_used_bytes');
+        $usersOnPlan = $totalUsers - $noPlanCount;
+        $usedOnPlan = $totalUsed - $noPlanUsed;
 
         // Single grouped query instead of 2 queries per plan (avoids N+1).
         $usageByPlan = User::query()
@@ -200,20 +209,20 @@ class StorageManager extends Component
             ->keyBy('storage_plan_id');
 
         $planRows = $plans->map(function (StoragePlan $plan) use ($usageByPlan): array {
-            $stat  = $usageByPlan->get($plan->id);
+            $stat = $usageByPlan->get($plan->id);
             $count = (int) ($stat->users_count ?? 0);
-            $used  = (int) ($stat->used_bytes ?? 0);
+            $used = (int) ($stat->used_bytes ?? 0);
             $limit = (int) $plan->storage_limit_bytes;
             $capacity = $count * $limit;
 
             return [
-                'id'        => $plan->id,
-                'name'      => $plan->name,
-                'limit'     => $limit,
-                'count'     => $count,
-                'used'      => $used,
-                'capacity'  => $capacity,
-                'pct'       => $capacity > 0 ? (int) min(100, round($used / $capacity * 100)) : 0,
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'limit' => $limit,
+                'count' => $count,
+                'used' => $used,
+                'capacity' => $capacity,
+                'pct' => $capacity > 0 ? (int) min(100, round($used / $capacity * 100)) : 0,
                 'is_active' => (bool) $plan->is_active,
             ];
         });
@@ -231,6 +240,7 @@ class StorageManager extends Component
         $weeklyRaw = Media::query()
             ->whereNotNull('user_id')
             ->where('created_at', '>=', now()->subDays(7))
+            ->toBase()
             ->selectRaw('user_id, SUM(size + COALESCE(variants_size, 0)) as bytes, COUNT(*) as files')
             ->groupBy('user_id')
             ->orderByDesc('bytes')
@@ -244,36 +254,36 @@ class StorageManager extends Component
 
             return [
                 'user_id' => $row->user_id,
-                'name'    => $user?->name ?? ('#' . $row->user_id),
-                'email'   => $user?->email ?? '',
-                'bytes'   => (int) $row->bytes,
-                'files'   => (int) $row->files,
+                'name' => $user->name ?? ('#'.$row->user_id),
+                'email' => $user->email ?? '',
+                'bytes' => (int) $row->bytes,
+                'files' => (int) $row->files,
             ];
         });
 
         return [
-            'plans'          => $plans,
-            'planRows'       => $planRows,
-            'totalUsers'     => $totalUsers,
-            'usersOnPlan'    => $usersOnPlan,
-            'noPlanCount'    => $noPlanCount,
-            'totalUsed'      => $totalUsed,
-            'usedOnPlan'     => $usedOnPlan,
-            'totalCapacity'  => $totalCapacity,
-            'globalPct'      => $totalCapacity > 0 ? (int) min(100, round($usedOnPlan / $totalCapacity * 100)) : 0,
-            'activePlans'    => $plans->where('is_active', true)->count(),
-            'topUsers'       => $topUsers,
+            'plans' => $plans,
+            'planRows' => $planRows,
+            'totalUsers' => $totalUsers,
+            'usersOnPlan' => $usersOnPlan,
+            'noPlanCount' => $noPlanCount,
+            'totalUsed' => $totalUsed,
+            'usedOnPlan' => $usedOnPlan,
+            'totalCapacity' => $totalCapacity,
+            'globalPct' => $totalCapacity > 0 ? (int) min(100, round($usedOnPlan / $totalCapacity * 100)) : 0,
+            'activePlans' => $plans->where('is_active', true)->count(),
+            'topUsers' => $topUsers,
             // Chart datasets
             'usersByPlanLabels' => $planRows->pluck('name')->push('Sin plan')->values()->all(),
             'usersByPlanSeries' => $planRows->pluck('count')->push($noPlanCount)->map(fn ($v) => (int) $v)->values()->all(),
-            'usedByPlanCats'    => $planRows->pluck('name')->values()->all(),
-            'usedByPlanData'    => $planRows->map(fn ($r) => round($r['used'] / 1_048_576, 2))->values()->all(),
-            'topUsersCats'      => $topUsers->pluck('name')->values()->all(),
-            'topUsersData'      => $topUsers->map(fn ($u) => round(((int) $u->storage_used_bytes) / 1_048_576, 2))->values()->all(),
+            'usedByPlanCats' => $planRows->pluck('name')->values()->all(),
+            'usedByPlanData' => $planRows->map(fn ($r) => round($r['used'] / 1_048_576, 2))->values()->all(),
+            'topUsersCats' => $topUsers->pluck('name')->values()->all(),
+            'topUsersData' => $topUsers->map(fn ($u) => round(((int) $u->storage_used_bytes) / 1_048_576, 2))->values()->all(),
             // Weekly report
-            'weeklyTop'         => $weeklyTop,
-            'weeklyCats'        => $weeklyTop->pluck('name')->values()->all(),
-            'weeklyData'        => $weeklyTop->map(fn ($r) => round($r['bytes'] / 1_048_576, 2))->values()->all(),
+            'weeklyTop' => $weeklyTop,
+            'weeklyCats' => $weeklyTop->pluck('name')->values()->all(),
+            'weeklyData' => $weeklyTop->map(fn ($r) => round($r['bytes'] / 1_048_576, 2))->values()->all(),
         ];
     }
 

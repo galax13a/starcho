@@ -245,6 +245,14 @@ Entrega de archivos:
 - R2: `r2_public_url` si esta configurado; si no, URL temporal desde Laravel.
 - Variantes: siempre pueden pasar por `/media/files/{media}?variant=240`.
 
+Privacidad de medios:
+
+- Cada archivo y album admite `public`, `authenticated`, `protected` o `private`.
+- Al combinar albumes, se aplica la visibilidad mas restrictiva; un album publico no hace publico un archivo protegido.
+- Los archivos restringidos se entregan desde `/media/files/{media}` tras comprobar permisos. Los nuevos archivos restringidos usan `starcho_private`.
+- `authenticated` requiere una sesion; `protected` requiere desbloquear todos los albumes protegidos asociados; `private` queda para el propietario y administradores.
+- Tras desplegar la migracion de visibilidad sobre datos existentes, ejecuta `php artisan starcho:secure-media` para mover los objetos restringidos de discos publicos al disco privado. Los enlaces publicos antiguos de esos objetos seguiran funcionando hasta moverlos.
+
 Avatares:
 
 - `StorageService::uploadProfileAvatar()` recorta y convierte a WebP cuadrado.
@@ -479,6 +487,18 @@ Novedades principales:
 - AI assistant en edicion.
 - Post Insights para estadisticas, historial AI, comments y memories.
 - Bloque `starchoHtml` para contenido HTML + Tailwind generado o editado.
+
+Los posts y paginas con estado `scheduled` requieren `published_at`. El comando
+`php artisan starcho:publish-scheduled` publica de forma idempotente el contenido
+cuyo horario ya llego. La revisión es cada 5 minutos por defecto y se administra en
+Admin > Contenido > Blog; las frecuencias disponibles son 1, 2, 5, 10 y 30 minutos,
+o cada hora. El scheduler consulta la configuración cada minuto y publica solo en
+los límites de la frecuencia elegida, así los cambios del admin se aplican sin
+reiniciar el proceso. En desarrollo puedes ejecutar `php artisan schedule:work`; en
+producción configura el cron de Laravel para llamar `php artisan schedule:run` cada
+minuto. Comprueba la programación con
+`php artisan schedule:list`. Las busquedas de slugs y del blog funcionan con SQLite
+y MySQL.
 
 ---
 

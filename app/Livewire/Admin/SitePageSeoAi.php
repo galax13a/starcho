@@ -4,8 +4,8 @@ namespace App\Livewire\Admin;
 
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\AiSetting;
-use App\Models\SitePageSetting;
 use App\Models\SiteLanguage;
+use App\Models\SitePageSetting;
 use App\Services\PageAiContentService;
 use Illuminate\Support\Facades\File;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
@@ -20,9 +20,13 @@ class SitePageSeoAi extends Component
     use DispatchesStarchoNotify;
 
     public string $path = '/';
+
     public string $filePath = '';
+
     public string $provider = 'openai';
+
     public string $model = '';
+
     public ?string $errorMessage = null;
 
     public function mount(): void
@@ -95,7 +99,7 @@ class SitePageSeoAi extends Component
         }
 
         $this->js("document.dispatchEvent(new CustomEvent('modal-close',{detail:{name:'modal-site-page-seo-ai'}}))");
-        $this->notifySuccess('SEO generado con AI para ' . $this->path . '.');
+        $this->notifySuccess('SEO generado con AI para '.$this->path.'.');
         $this->redirect(route('admin.site.index', ['tab' => 'pages']), navigate: false);
     }
 

@@ -6,6 +6,7 @@ use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\PostCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
+use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
@@ -38,11 +39,10 @@ final class PostCategoriesTable extends PowerGridComponent
     {
         return PowerGrid::fields()
             ->add('id')
-            ->add('color_dot', fn (PostCategory $c) =>
-                '<span class="inline-flex items-center gap-1.5">'
-                . '<span class="inline-block w-3 h-3 rounded-full shrink-0" style="background:' . e($c->color) . '"></span>'
-                . '<span>' . e($c->name) . '</span>'
-                . '</span>'
+            ->add('color_dot', fn (PostCategory $c) => '<span class="inline-flex items-center gap-1.5">'
+                .'<span class="inline-block w-3 h-3 rounded-full shrink-0" style="background:'.e($c->color).'"></span>'
+                .'<span>'.e($c->name).'</span>'
+                .'</span>'
             )
             ->add('slug')
             ->add('posts_count')
@@ -53,7 +53,7 @@ final class PostCategoriesTable extends PowerGridComponent
     {
         return [
             Column::make('ID', 'id')->sortable()->hidden(),
-            Column::make('Nombre', 'color_dot')->searchable('name'),
+            Column::make('Nombre', 'color_dot', 'name')->searchable(),
             Column::make('Slug', 'slug')->sortable()->searchable(),
             Column::make('Posts', 'posts_count')->sortable(),
             Column::make('Orden', 'sort_order')->sortable(),
@@ -64,7 +64,7 @@ final class PostCategoriesTable extends PowerGridComponent
     public function actions(PostCategory $row): array
     {
         return [
-            \PowerComponents\LivewirePowerGrid\Button::add('cat-actions')
+            Button::add('cat-actions')
                 ->tag('div')
                 ->slot(
                     view('admin.post-categories._table-actions', ['category' => $row])->render()
@@ -76,10 +76,12 @@ final class PostCategoriesTable extends PowerGridComponent
     public function deleteCategory(int $id): void
     {
         $cat = PostCategory::find($id);
-        if (! $cat) return;
+        if (! $cat) {
+            return;
+        }
 
         $cat->delete();
         $this->notifyCrud('post_categories', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 }

@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class AdminModulesExport implements FromCollection, WithHeadings, ShouldAutoSize
+class AdminModulesExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
     public function headings(): array
     {

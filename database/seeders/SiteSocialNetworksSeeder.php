@@ -31,8 +31,8 @@ class SiteSocialNetworksSeeder extends Seeder
             DB::table('site_social_networks')->updateOrInsert(
                 ['key' => $network['key']],
                 array_merge($network, [
-                    'url'        => null,
-                    'active'     => true,
+                    'url' => null,
+                    'active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ])

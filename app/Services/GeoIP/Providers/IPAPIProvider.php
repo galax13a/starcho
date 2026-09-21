@@ -14,12 +14,13 @@ class IPAPIProvider extends GeoIPProvider
         $url = "https://ip-api.com/json/{$ip}?fields=country,city,regionName,isp,lat,lon,timezone,countryCode";
         $response = $this->makeRequest($url);
 
-        if (!$response) {
+        if (! $response) {
             return null;
         }
 
         if (isset($response['status']) && $response['status'] === 'fail') {
-            Log::warning("IP-API failed for IP {$ip}: " . ($response['message'] ?? 'Unknown error'));
+            Log::warning("IP-API failed for IP {$ip}: ".($response['message'] ?? 'Unknown error'));
+
             return null;
         }
 

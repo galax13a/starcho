@@ -13,11 +13,10 @@ class AppNotesImport implements ToCollection, WithHeadingRow
     use NormalizesSpreadsheetValues;
 
     public int $created = 0;
+
     public int $updated = 0;
 
-    public function __construct(private readonly int $userId)
-    {
-    }
+    public function __construct(private readonly int $userId) {}
 
     public function collection(Collection $rows): void
     {

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\PostTag;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\View\View;
 use Livewire\Attributes\On;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
@@ -54,7 +55,7 @@ final class PostTagsTable extends PowerGridComponent
         ];
     }
 
-    public function actionsFromView(PostTag $row): \Illuminate\View\View
+    public function actionsFromView(PostTag $row): View
     {
         return view('admin.post-tags._table-actions', ['tag' => $row]);
     }
@@ -63,10 +64,12 @@ final class PostTagsTable extends PowerGridComponent
     public function deleteTag(int $id): void
     {
         $tag = PostTag::find($id);
-        if (! $tag) return;
+        if (! $tag) {
+            return;
+        }
 
         $tag->delete();
         $this->notifyCrud('post_tags', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 }

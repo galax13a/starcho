@@ -52,8 +52,8 @@ final class TasksTable extends PowerGridComponent
         return Task::query()
             ->with('assignedUser', 'creator')
             ->withoutTrashed()
-            ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
-            ->when($this->filterPriority, fn($q) => $q->where('priority', $this->filterPriority));
+            ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus))
+            ->when($this->filterPriority, fn ($q) => $q->where('priority', $this->filterPriority));
     }
 
     public function fields(): PowerGridFields
@@ -78,7 +78,7 @@ final class TasksTable extends PowerGridComponent
             ->add('status_label', fn (Task $t) => $statusLabels[$t->status] ?? $t->status)
             ->add('priority_label', fn (Task $t) => $priorityLabels[$t->priority] ?? $t->priority)
             ->add('due_date_formatted', fn (Task $t) => $t->due_date?->format('d/m/Y') ?? '—')
-            ->add('assigned_name', fn (Task $t) => $t->assignedUser?->name ?? __('admin_ui.tasks.form.unassigned'))
+            ->add('assigned_name', fn (Task $t) => $t->assignedUser->name ?? __('admin_ui.tasks.form.unassigned'))
             ->add('created_at_formatted', fn (Task $t) => Carbon::parse($t->created_at)->format('d/m/Y'));
     }
 
@@ -118,12 +118,13 @@ final class TasksTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedTaskIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+
             return null;
         }
 
@@ -131,7 +132,7 @@ final class TasksTable extends PowerGridComponent
 
         return Excel::download(
             new AdminTasksExport($selectedIds),
-            'admin-tasks-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'admin-tasks-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -141,6 +142,7 @@ final class TasksTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+
             return;
         }
 
@@ -151,6 +153,7 @@ final class TasksTable extends PowerGridComponent
         if ($tasks->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('admin_ui.tasks.notify.no_selection'));
+
             return;
         }
 
@@ -164,7 +167,7 @@ final class TasksTable extends PowerGridComponent
         $this->clearSelection();
 
         $this->notifyWarning(__('admin_ui.tasks.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     #[On('deleteTask')]
@@ -174,12 +177,13 @@ final class TasksTable extends PowerGridComponent
 
         if (! $task) {
             $this->notifyCrud('tasks', 'not_found');
+
             return;
         }
 
         $task->delete();
         $this->notifyCrud('tasks', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function selectedTaskIds(): array

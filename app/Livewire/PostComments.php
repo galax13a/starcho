@@ -43,6 +43,7 @@ class PostComments extends Component
 
         if (! auth()->check()) {
             $this->addError('body', __('Debes iniciar sesión para comentar.'));
+
             return;
         }
 
@@ -52,6 +53,7 @@ class PostComments extends Component
 
         if ($existingCount >= 3) {
             $this->addError('body', __('Solo puedes dejar hasta 3 comentarios en este artículo.'));
+
             return;
         }
 
@@ -60,7 +62,7 @@ class PostComments extends Component
         ]);
 
         $parent = $this->replyTo
-            ? PostComment::where('post_id', $this->post->id)->find($this->replyTo)
+            ? PostComment::query()->where('post_id', $this->post->id)->find($this->replyTo)
             : null;
 
         if ($parent && $parent->depth >= PostComment::MAX_DEPTH) {
@@ -99,16 +101,17 @@ class PostComments extends Component
             ->oldest()
             ->get();
 
-        $byId = $approved->keyBy('id');
+        $byId = [];
 
         foreach ($approved as $comment) {
+            $byId[$comment->id] = $comment;
             $comment->setRelation('approvedChildren', collect());
         }
 
         $roots = collect();
 
         foreach ($approved as $comment) {
-            $parent = $comment->parent_id ? $byId->get($comment->parent_id) : null;
+            $parent = $comment->parent_id ? ($byId[$comment->parent_id] ?? null) : null;
 
             if ($parent) {
                 $parent->approvedChildren->push($comment);

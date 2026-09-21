@@ -13,8 +13,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Maatwebsite\Excel\Facades\Excel;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\Facades\Filter;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -49,16 +49,16 @@ final class ContactsTable extends PowerGridComponent
     {
         return Contact::query()
             ->where('user_id', Auth::id())
-            ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus));
+            ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus));
     }
 
     public function fields(): PowerGridFields
     {
         $statusLabels = [
-            'lead'     => __('actions.statuses.lead'),
+            'lead' => __('actions.statuses.lead'),
             'prospect' => __('actions.statuses.prospect'),
             'customer' => __('actions.statuses.customer'),
-            'churned'  => __('actions.statuses.churned'),
+            'churned' => __('actions.statuses.churned'),
         ];
 
         return PowerGrid::fields()
@@ -67,7 +67,7 @@ final class ContactsTable extends PowerGridComponent
             ->add('company', fn (Contact $c) => $c->company ?? '—')
             ->add('email', fn (Contact $c) => $c->email ?? '—')
             ->add('phone', fn (Contact $c) => $c->phone ?? '—')
-                ->add('status_badge', fn (Contact $c) => view('components.starcho-status', ['status' => $c->status])->render())
+            ->add('status_badge', fn (Contact $c) => view('components.starcho-status', ['status' => $c->status])->render())
             ->add('active_icon', fn (Contact $c) => view('components.starcho-active', ['active' => (bool) $c->active])->render())
             ->add('created_at_fmt', fn (Contact $c) => Carbon::parse($c->created_at)->format('d/m/Y'));
     }
@@ -121,12 +121,13 @@ final class ContactsTable extends PowerGridComponent
         $this->dispatch('pgBulkActions::clear', $this->tableName);
     }
 
-    public function exportSelected(): BinaryFileResponse|null
+    public function exportSelected(): ?BinaryFileResponse
     {
         $selectedIds = $this->selectedContactIds();
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('contacts.notify.no_selection'));
+
             return null;
         }
 
@@ -134,7 +135,7 @@ final class ContactsTable extends PowerGridComponent
 
         return Excel::download(
             new AppContactsExport((int) Auth::id(), $selectedIds),
-            'contacts-selected-' . now()->format('Ymd-His') . '.xlsx'
+            'contacts-selected-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -144,6 +145,7 @@ final class ContactsTable extends PowerGridComponent
 
         if ($selectedIds === []) {
             $this->notifyWarning(__('contacts.notify.no_selection'));
+
             return;
         }
 
@@ -155,6 +157,7 @@ final class ContactsTable extends PowerGridComponent
         if ($contacts->isEmpty()) {
             $this->clearSelection();
             $this->notifyWarning(__('contacts.notify.no_selection'));
+
             return;
         }
 
@@ -168,7 +171,7 @@ final class ContactsTable extends PowerGridComponent
         $this->clearSelection();
 
         $this->notifyWarning(__('contacts.notify.bulk_deleted', ['count' => $deletedCount]));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
         $this->dispatch('contacts-updated');
     }
 
@@ -179,13 +182,14 @@ final class ContactsTable extends PowerGridComponent
 
         if (! $contact) {
             $this->notifyFailure(__('contacts.notify.not_found'));
+
             return;
         }
 
         $contact->delete();
 
         $this->notifyWarning(__('contacts.notify.deleted'));
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
         $this->dispatch('contacts-updated');
     }
 

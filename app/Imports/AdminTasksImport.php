@@ -15,6 +15,7 @@ class AdminTasksImport implements ToCollection, WithHeadingRow
     use NormalizesSpreadsheetValues;
 
     public int $created = 0;
+
     public int $updated = 0;
 
     public function collection(Collection $rows): void
@@ -59,7 +60,7 @@ class AdminTasksImport implements ToCollection, WithHeadingRow
         return $recordId !== null ? Task::find($recordId) : null;
     }
 
-    private function resolveUser(string|null $email): ?User
+    private function resolveUser(?string $email): ?User
     {
         if ($email === null) {
             return null;
@@ -68,7 +69,7 @@ class AdminTasksImport implements ToCollection, WithHeadingRow
         return User::where('email', trim($email))->first();
     }
 
-    private function resolveAssignee(string|null $email): ?int
+    private function resolveAssignee(?string $email): ?int
     {
         if ($email === null) {
             return null;

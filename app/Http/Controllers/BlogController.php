@@ -15,11 +15,11 @@ class BlogController extends Controller
 {
     public function index(string $locale, Request $request): View
     {
-        $settings     = ContentSetting::cached();
-        $perPage      = $settings?->posts_per_page ?? 12;
+        $settings = ContentSetting::cached();
+        $perPage = $settings->posts_per_page ?? 12;
         $categorySlug = $request->query('category');
-        $tagSlug      = $request->query('tag');
-        $search       = trim($request->query('q', ''));
+        $tagSlug = $request->query('tag');
+        $search = trim($request->query('q', ''));
 
         $query = Post::query()
             ->where('type', Post::TYPE_POST)
@@ -32,8 +32,8 @@ class BlogController extends Controller
             $codes = SiteLanguage::activeCodes() ?: [$locale];
             $query->where(function ($q) use ($search, $codes) {
                 foreach ($codes as $code) {
-                    $q->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(title, '$.$code')) LIKE ?", ['%' . $search . '%'])
-                      ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(excerpt, '$.$code')) LIKE ?", ['%' . $search . '%']);
+                    $q->orWhere("title->{$code}", 'like', '%'.$search.'%')
+                        ->orWhere("excerpt->{$code}", 'like', '%'.$search.'%');
                 }
             });
         }
@@ -54,11 +54,11 @@ class BlogController extends Controller
             }
         }
 
-        $posts    = $query->paginate($perPage)->withQueryString();
-        $sidebar  = $this->sidebarData($locale);
+        $posts = $query->paginate($perPage)->withQueryString();
+        $sidebar = $this->sidebarData($locale);
         $langUrls = [];
         foreach (SiteLanguage::active() as $lang) {
-            $langUrls[$lang->code] = url('/' . $lang->code . '/blog');
+            $langUrls[$lang->code] = url('/'.$lang->code.'/blog');
         }
 
         return view('blog.index', compact('posts', 'settings', 'locale', 'langUrls', 'sidebar', 'activeCategory', 'activeTag', 'search'));
@@ -79,7 +79,7 @@ class BlogController extends Controller
             ->get();
 
         $tags = PostTag::withCount(['posts' => fn ($q) => $q->where('status', Post::STATUS_PUBLISHED)])
-            ->having('posts_count', '>', 0)
+            ->whereHas('posts', fn ($q) => $q->where('status', Post::STATUS_PUBLISHED))
             ->orderByDesc('posts_count')
             ->limit(20)
             ->get();
@@ -96,24 +96,24 @@ class BlogController extends Controller
             ->with(['categories', 'tags', 'author'])
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             abort(404);
         }
 
         $post->increment('views_count');
 
-        $settings        = ContentSetting::cached();
-        $activeCodes     = SiteLanguage::activeCodes();
-        $fallbackLocale  = null;
-        $usingFallback   = false;
+        $settings = ContentSetting::cached();
+        $activeCodes = SiteLanguage::activeCodes();
+        $fallbackLocale = null;
+        $usingFallback = false;
 
         $hasContentInLocale = filled($post->getTranslation('content', $locale, false));
 
-        if (!$hasContentInLocale) {
+        if (! $hasContentInLocale) {
             foreach ($activeCodes as $code) {
                 if ($code !== $locale && filled($post->getTranslation('content', $code, false))) {
                     $fallbackLocale = $code;
-                    $usingFallback  = true;
+                    $usingFallback = true;
                     app()->setLocale($code);
                     break;
                 }
@@ -122,9 +122,9 @@ class BlogController extends Controller
 
         $readingTime = null;
         if ($settings?->reading_time_enabled) {
-            $wpm         = $settings->reading_words_per_minute ?? 200;
+            $wpm = $settings->reading_words_per_minute ?? 200;
             $contentText = strip_tags($post->getTranslation('content', app()->getLocale(), false) ?? '');
-            $wordCount   = str_word_count($contentText);
+            $wordCount = str_word_count($contentText);
             $readingTime = max(1, (int) ceil($wordCount / $wpm));
         }
 

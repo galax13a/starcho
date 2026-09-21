@@ -33,7 +33,7 @@ class SitePageSetting extends Model
 
     public static function forPathAndLocale(string $path, string $locale): ?self
     {
-        if (!Schema::hasTable('site_page_settings')) {
+        if (! Schema::hasTable('site_page_settings')) {
             return null;
         }
 
@@ -50,9 +50,9 @@ class SitePageSetting extends Model
 
     public static function normalizePath(string $path): string
     {
-        $path = '/' . ltrim(trim($path), '/');
+        $path = '/'.ltrim(trim($path), '/');
         $path = preg_replace('#/+#', '/', $path) ?: '/';
 
-        return $path === '' ? '/' : $path;
+        return $path;
     }
 }

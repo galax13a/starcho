@@ -5,21 +5,35 @@ namespace App\Livewire\Admin;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\Media;
 use App\Models\MediaComment;
+use App\Models\StorageSetting;
 use App\Services\StorageService;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+/**
+ * @property-read Media|null $media
+ * @property-read int $currentIndex
+ */
 class MediaViewer extends Component
 {
     use DispatchesStarchoNotify;
 
     public bool $open = false;
+
     public ?int $mediaId = null;
+
     public array $mediaIds = [];
+
     public int $rating = 1;
+
     public string $comment = '';
+
+    public string $visibility = 'public';
+
     public bool $commentsOpen = false;
+
     public string $variantSize = '240';
 
     #[On('openAdminMediaViewer')]
@@ -37,6 +51,7 @@ class MediaViewer extends Component
         $this->open = true;
         $this->commentsOpen = false;
         $this->comment = '';
+        $this->visibility = Media::find($id)->visibility ?? 'public';
         $this->syncRating();
     }
 
@@ -80,6 +95,36 @@ class MediaViewer extends Component
 
         unset($this->media);
         $this->notifySuccess('Calificación guardada.');
+    }
+
+    public function saveVisibility(): void
+    {
+        $media = $this->media;
+
+        if (! $media) {
+            return;
+        }
+
+        $this->validate([
+            'visibility' => ['required', Rule::in(Media::VISIBILITIES)],
+        ]);
+
+        if ($this->visibility === 'protected' && ! $media->albums()->where(function ($query): void {
+            $query->where('visibility', 'protected')->orWhere('password_enabled', true);
+        })->exists()) {
+            $this->addError('visibility', 'Asigna el archivo a un álbum protegido con contraseña.');
+
+            return;
+        }
+
+        $media->update(['visibility' => $this->visibility]);
+
+        if ($media->effectiveVisibility() !== 'public') {
+            app(StorageService::class)->moveToPrivate($media);
+        }
+
+        unset($this->media);
+        $this->notifySuccess('Visibilidad del archivo actualizada.');
     }
 
     public function addComment(): void
@@ -147,6 +192,7 @@ class MediaViewer extends Component
 
         if (! $comment) {
             $this->notifyWarning('El comentario ya no existe.');
+
             return;
         }
 
@@ -178,7 +224,7 @@ class MediaViewer extends Component
 
     public function confirmDelete(): void
     {
-        $name = $this->media?->name ?? 'este archivo';
+        $name = $this->media->name ?? 'este archivo';
         $message = json_encode(
             "¿Eliminar {$name} del storage? Esta acción no se puede deshacer.",
             JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
@@ -250,6 +296,7 @@ class MediaViewer extends Component
         $count = count($this->mediaIds);
         $nextIndex = ($this->currentIndex + $direction + $count) % $count;
         $this->mediaId = $this->mediaIds[$nextIndex];
+        $this->visibility = Media::find($this->mediaId)->visibility ?? 'public';
         $this->comment = '';
         $this->commentsOpen = false;
         unset($this->media);
@@ -265,7 +312,7 @@ class MediaViewer extends Component
 
     private function normalizeVariant(string $variant): string
     {
-        $settings = \App\Models\StorageSetting::singleton();
+        $settings = StorageSetting::singleton();
         $allowed = array_merge(['original'], array_map('strval', $settings->imageVariantSizes()));
 
         return in_array($variant, $allowed, true) ? $variant : (string) $settings->imagePreviewVariantSize();

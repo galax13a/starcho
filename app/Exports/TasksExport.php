@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Task;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -10,9 +11,9 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class TasksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class TasksExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
-    public function query()
+    public function query(): Builder
     {
         return Task::query()
             ->with('assignedUser', 'creator')
@@ -43,8 +44,8 @@ class TasksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSiz
             Task::STATUS[$task->status] ?? $task->status,
             Task::PRIORITY[$task->priority] ?? $task->priority,
             $task->due_date?->format('d/m/Y') ?? '',
-            $task->assignedUser?->name ?? 'Sin asignar',
-            $task->creator?->name ?? '',
+            $task->assignedUser->name ?? 'Sin asignar',
+            $task->creator->name ?? '',
             $task->created_at->format('d/m/Y H:i'),
         ];
     }

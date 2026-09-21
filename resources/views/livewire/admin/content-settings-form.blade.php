@@ -53,6 +53,24 @@
                 </div>
 
                 <div class="cs-card">
+                    <div class="cs-head"><span class="cs-title"><i class="fas fa-calendar-check mr-1.5"></i>Publicación programada</span></div>
+                    <div class="cs-row">
+                        <div>
+                            <div class="cs-label">Revisión automática del blog</div>
+                            <div class="cs-desc">Frecuencia con la que se publican artículos cuya fecha programada ya llegó.</div>
+                        </div>
+                        <select wire:model="form.scheduled_publish_interval_minutes" class="cs-input">
+                            <option value="1">Cada minuto</option>
+                            <option value="2">Cada 2 minutos</option>
+                            <option value="5">Cada 5 minutos (recomendado)</option>
+                            <option value="10">Cada 10 minutos</option>
+                            <option value="30">Cada 30 minutos</option>
+                            <option value="60">Cada hora</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="cs-card">
                     <div class="cs-head"><span class="cs-title"><i class="fas fa-eye mr-1.5"></i>Visibilidad</span></div>
                     @foreach ([
                         'show_author' => ['Mostrar autor', 'Nombre del autor en posts.'],

@@ -9,7 +9,9 @@ class GeoIPCache extends Model
     protected $table = 'geo_ip_cache';
 
     protected $primaryKey = 'ip_address';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -37,6 +39,7 @@ class GeoIPCache extends Model
         if ($cache) {
             $cache->delete();
         }
+
         return null;
     }
 

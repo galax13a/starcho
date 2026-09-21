@@ -25,12 +25,12 @@ class CaptureGeoIPJob implements ShouldQueue
     public function handle(GeoIPService $service): void
     {
         // Valida que el switch global y el módulo estén activos
-        if (!config('starcho_ip.enabled', true) || !StarchoModule::isActive('starcho-ip')) {
+        if (! config('starcho_ip.enabled', true) || ! StarchoModule::isActive('starcho-ip')) {
             return;
         }
 
         $user = User::find($this->userId);
-        if (!$user) {
+        if (! $user) {
             return;
         }
 

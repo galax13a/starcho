@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
@@ -20,7 +21,9 @@ final class PostsTable extends PowerGridComponent
     use HasStarchoCrudActions;
 
     public string $tableName = 'admin-posts-table';
+
     public string $sortField = 'created_at';
+
     public string $sortDirection = 'desc';
 
     #[Url]
@@ -58,7 +61,7 @@ final class PostsTable extends PowerGridComponent
             ->add('title', fn (Post $p) => e($p->title))
             ->add('slug')
             ->add('status_badge', fn (Post $p) => view('admin.posts._status-badge', ['status' => $p->status])->render())
-            ->add('author_name', fn (Post $p) => $p->author?->name ?? '—')
+            ->add('author_name', fn (Post $p) => data_get($p->author, 'name') ?? '—')
             ->add('categories_list', fn (Post $p) => $p->categories->pluck('slug')->join(', ') ?: '—')
             ->add('published_at_fmt', fn (Post $p) => $p->published_at?->format('d/m/Y H:i') ?? '—')
             ->add('created_at_fmt', fn (Post $p) => Carbon::parse($p->created_at)->format('d/m/Y'));
@@ -82,7 +85,7 @@ final class PostsTable extends PowerGridComponent
     public function actions(Post $row): array
     {
         return [
-            \PowerComponents\LivewirePowerGrid\Button::add('post-actions')
+            Button::add('post-actions')
                 ->tag('div')
                 ->slot(
                     view('admin.posts._table-actions', ['post' => $row, 'type' => 'post'])->render()
@@ -101,7 +104,7 @@ final class PostsTable extends PowerGridComponent
 
         $post->delete();
         $this->notifyCrud('posts', 'deleted');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     public function deleteSelected(): void
@@ -110,14 +113,15 @@ final class PostsTable extends PowerGridComponent
 
         if (empty($ids)) {
             $this->notifyWarning('Selecciona al menos un post.');
+
             return;
         }
 
         Post::whereIn('id', $ids)->delete();
-        $this->checkboxAll    = false;
+        $this->checkboxAll = false;
         $this->checkboxValues = [];
-        $this->notifyWarning(count($ids) . ' posts eliminados.');
-        $this->dispatch('pg:eventRefresh-' . $this->tableName);
+        $this->notifyWarning(count($ids).' posts eliminados.');
+        $this->dispatch('pg:eventRefresh-'.$this->tableName);
     }
 
     private function resolveSelectedIds(): array

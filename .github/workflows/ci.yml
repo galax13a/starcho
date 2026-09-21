@@ -3,8 +3,7 @@ name: ci
 # Pipeline unico: Pint (estilo) -> Larastan (analisis estatico) -> Pest (tests).
 # Cualquiera de los tres en rojo bloquea el merge.
 #
-# Este workflow reemplaza a lint.yml + tests.yml. Cuando lo valides, borra
-# esos dos para no ejecutar el mismo trabajo dos veces por push.
+# Este workflow unifica estilo, analisis estatico y tests.
 
 on:
   push:
@@ -117,13 +116,34 @@ jobs:
   # 3. Tests
   # --------------------------------------------------------------------
   tests:
-    name: tests (php ${{ matrix.php-version }})
+    name: tests (php ${{ matrix.php-version }}, ${{ matrix.database }})
     runs-on: ubuntu-latest
     environment: Testing
     strategy:
       fail-fast: false
       matrix:
         php-version: ['8.3', '8.4']
+        database: ['sqlite', 'mysql']
+    env:
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_DATABASE: ${{ matrix.database == 'sqlite' && ':memory:' || 'laravel' }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: password
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - uses: actions/checkout@v6

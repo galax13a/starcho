@@ -10,7 +10,7 @@ class AiQuotaExceededException extends RuntimeException
     public static function for(string $type): self
     {
         $label = match ($type) {
-            'text'  => 'texto',
+            'text' => 'texto',
             'image' => 'imágenes',
             'video' => 'video',
             default => $type,

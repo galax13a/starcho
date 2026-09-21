@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\StarchoMenuItem;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ return new class extends Migration
         if ($module) {
             $config = [];
 
-            if (!empty($module->config)) {
+            if (! empty($module->config)) {
                 $decoded = json_decode((string) $module->config, true);
                 if (is_array($decoded)) {
                     $config = $decoded;
@@ -27,17 +28,17 @@ return new class extends Migration
 
             $config['menu_items'] = [
                 [
-                    'panel'       => 'admin',
-                    'section'     => 'Sistema',
-                    'name'        => [
+                    'panel' => 'admin',
+                    'section' => 'Sistema',
+                    'name' => [
                         'es' => 'Geolocalizacion IP',
                         'en' => 'IP Geolocation',
                         'pt_BR' => 'Geolocalizacao IP',
                     ],
-                    'icon'        => 'fas fa-globe',
-                    'route'       => 'admin.geolocations.index',
-                    'parent_route'=> 'admin.site.index',
-                    'sort_order'  => 66,
+                    'icon' => 'fas fa-globe',
+                    'route' => 'admin.geolocations.index',
+                    'parent_route' => 'admin.site.index',
+                    'sort_order' => 66,
                 ],
             ];
 
@@ -85,7 +86,7 @@ return new class extends Migration
             ]);
         }
 
-        \App\Models\StarchoMenuItem::clearMenuCache();
+        StarchoMenuItem::clearMenuCache();
     }
 
     public function down(): void
@@ -106,6 +107,6 @@ return new class extends Migration
                 ]);
         }
 
-        \App\Models\StarchoMenuItem::clearMenuCache();
+        StarchoMenuItem::clearMenuCache();
     }
 };

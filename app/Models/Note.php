@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Models\Concerns\EnforcesOwnership;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Note extends Model
 {
-    use SoftDeletes, EnforcesOwnership;
+    use EnforcesOwnership, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -33,7 +34,8 @@ class Note extends Model
         '#64748b',
     ];
 
-    public function creator()
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

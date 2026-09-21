@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * A comment on a Post or Page. Supports up to MAX_DEPTH levels of nesting
  * (depth 0 = root comment, 1 = reply, 2 = reply-to-reply).
+ *
+ * @property-read Collection<int, PostComment> $approvedChildren
  */
 class PostComment extends Model
 {
@@ -40,6 +43,7 @@ class PostComment extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<PostComment, $this> */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(PostComment::class, 'parent_id');

@@ -13,5 +13,5 @@ test('authenticated users can open the Trafikcams console', function () {
         ->assertOk()
         ->assertSee('TRAFIKCAMS')
         ->assertSee('V1')
-        ->assertSee('CONECTAR LIVE');
+        ->assertSee(__('trafikcams.connect'));
 });

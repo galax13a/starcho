@@ -15,9 +15,13 @@ class MediaTagsModal extends Component
     use DispatchesStarchoNotify;
 
     public int $mediaId = 0;
+
     public string $mediaName = '';
+
     public array $selectedTags = [];
+
     public string $newTags = '';
+
     public string $search = '';
 
     #[On('openMediaTags')]
@@ -89,7 +93,7 @@ class MediaTagsModal extends Component
                 $join->on('tagged_media.id', '=', 'media_taggables.taggable_id')
                     ->where('tagged_media.user_id', auth()->id());
             })
-            ->when($this->search !== '', fn ($query) => $query->where('media_tags.name', 'like', '%' . $this->search . '%'))
+            ->when($this->search !== '', fn ($query) => $query->where('media_tags.name', 'like', '%'.$this->search.'%'))
             ->groupBy('media_tags.id', 'media_tags.name', 'media_tags.slug', 'media_tags.created_at', 'media_tags.updated_at')
             ->orderByDesc('usage_count')
             ->orderBy('media_tags.name')

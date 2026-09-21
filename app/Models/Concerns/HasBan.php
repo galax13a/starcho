@@ -19,7 +19,7 @@ trait HasBan
             ->whereNull('lifted_at')
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->latest('banned_at')
             ->first();
@@ -36,9 +36,9 @@ trait HasBan
         if ($this->banned_until && Carbon::parse($this->banned_until)->isPast()) {
             // Auto-lift expirado
             $this->forceFill([
-                'is_banned'    => false,
+                'is_banned' => false,
                 'banned_until' => null,
-                'ban_reason'   => null,
+                'ban_reason' => null,
             ])->saveQuietly();
 
             return false;
@@ -50,18 +50,18 @@ trait HasBan
     public function ban(int $bannedBy, string $reason, ?CarbonInterface $expiresAt = null, ?string $notes = null): UserBan
     {
         $ban = UserBan::create([
-            'user_id'    => $this->id,
-            'banned_by'  => $bannedBy,
-            'reason'     => $reason,
-            'notes'      => $notes,
-            'banned_at'  => now(),
+            'user_id' => $this->id,
+            'banned_by' => $bannedBy,
+            'reason' => $reason,
+            'notes' => $notes,
+            'banned_at' => now(),
             'expires_at' => $expiresAt,
         ]);
 
         $this->forceFill([
-            'is_banned'    => true,
+            'is_banned' => true,
             'banned_until' => $expiresAt,
-            'ban_reason'   => $reason,
+            'ban_reason' => $reason,
         ])->saveQuietly();
 
         return $ban;
@@ -78,9 +78,9 @@ trait HasBan
             ]);
 
         $this->forceFill([
-            'is_banned'    => false,
+            'is_banned' => false,
             'banned_until' => null,
-            'ban_reason'   => null,
+            'ban_reason' => null,
         ])->saveQuietly();
     }
 

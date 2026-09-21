@@ -13,6 +13,7 @@ class AdminPermissionsImport implements ToCollection, WithHeadingRow
     use NormalizesSpreadsheetValues;
 
     public int $created = 0;
+
     public int $updated = 0;
 
     public function collection(Collection $rows): void
@@ -34,6 +35,7 @@ class AdminPermissionsImport implements ToCollection, WithHeadingRow
                     'guard_name' => $guardName,
                 ]);
                 $this->updated++;
+
                 continue;
             }
 

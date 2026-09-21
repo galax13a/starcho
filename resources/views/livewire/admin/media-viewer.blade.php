@@ -142,6 +142,20 @@
                         </button>
                     </div>
 
+                    <form wire:submit="saveVisibility" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-white/5 p-2">
+                        <label for="viewer-visibility" class="text-xs font-semibold text-zinc-300">Visibilidad del archivo</label>
+                        <select id="viewer-visibility" wire:model="visibility" class="h-8 rounded-md border-0 bg-zinc-900 px-2 text-xs text-white focus:ring-2 focus:ring-violet-300">
+                            <option value="public">Público</option>
+                            <option value="authenticated">Usuarios autenticados</option>
+                            <option value="protected">Álbum protegido</option>
+                            <option value="private">Privado</option>
+                        </select>
+                        <button type="submit" class="h-8 rounded-md bg-white px-3 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200" wire:loading.attr="disabled" wire:target="saveVisibility">Guardar</button>
+                        @error('visibility')
+                            <span class="text-xs text-rose-300">{{ $message }}</span>
+                        @enderror
+                    </form>
+
                     <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-400">
                         <span class="inline-flex items-center gap-1">
                             <flux:icon.star class="size-3.5 text-amber-300" />

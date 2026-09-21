@@ -3,18 +3,17 @@
 namespace App\Exports;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AdminUsersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AdminUsersExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
-    public function __construct(private readonly ?array $userIds = null)
-    {
-    }
+    public function __construct(private readonly ?array $userIds = null) {}
 
-    public function query()
+    public function query(): Builder
     {
         return User::query()
             ->with('roles')

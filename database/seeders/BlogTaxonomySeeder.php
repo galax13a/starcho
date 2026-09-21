@@ -13,24 +13,24 @@ class BlogTaxonomySeeder extends Seeder
         // ── CATEGORIES ────────────────────────────────────────────────────────
         $categories = [
             [
-                'slug'        => 'tecnologia',
-                'color'       => '#3b82f6',
-                'sort_order'  => 2,
-                'name'        => ['es' => 'Tecnología',        'en' => 'Technology'],
+                'slug' => 'tecnologia',
+                'color' => '#3b82f6',
+                'sort_order' => 2,
+                'name' => ['es' => 'Tecnología',        'en' => 'Technology'],
                 'description' => ['es' => 'Artículos sobre tendencias, herramientas y novedades tecnológicas.', 'en' => 'Articles about technology trends, tools and news.'],
             ],
             [
-                'slug'        => 'tutoriales',
-                'color'       => '#10b981',
-                'sort_order'  => 3,
-                'name'        => ['es' => 'Tutoriales',        'en' => 'Tutorials'],
+                'slug' => 'tutoriales',
+                'color' => '#10b981',
+                'sort_order' => 3,
+                'name' => ['es' => 'Tutoriales',        'en' => 'Tutorials'],
                 'description' => ['es' => 'Guías paso a paso para aprender y dominar nuevas habilidades.', 'en' => 'Step-by-step guides to learn and master new skills.'],
             ],
             [
-                'slug'        => 'noticias',
-                'color'       => '#f59e0b',
-                'sort_order'  => 4,
-                'name'        => ['es' => 'Noticias',          'en' => 'News'],
+                'slug' => 'noticias',
+                'color' => '#f59e0b',
+                'sort_order' => 4,
+                'name' => ['es' => 'Noticias',          'en' => 'News'],
                 'description' => ['es' => 'Últimas noticias del sector tech, IA y desarrollo de software.', 'en' => 'Latest news from the tech, AI and software development industry.'],
             ],
         ];

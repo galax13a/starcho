@@ -16,7 +16,7 @@ class DataTransferController extends Controller
     {
         return Excel::download(
             new AppNotesExport((int) Auth::id()),
-            'notes-' . now()->format('Ymd-His') . '.xlsx'
+            'notes-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -24,7 +24,7 @@ class DataTransferController extends Controller
     {
         return Excel::download(
             new AppTasksExport((int) Auth::id()),
-            'tasks-' . now()->format('Ymd-His') . '.xlsx'
+            'tasks-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 
@@ -32,7 +32,7 @@ class DataTransferController extends Controller
     {
         return Excel::download(
             new AppContactsExport((int) Auth::id()),
-            'contacts-' . now()->format('Ymd-His') . '.xlsx'
+            'contacts-'.now()->format('Ymd-His').'.xlsx'
         );
     }
 }

@@ -31,7 +31,7 @@ return new class extends Migration
 
     public function up(): void
     {
-        if (!DB::getSchemaBuilder()->hasTable('permissions')) {
+        if (! DB::getSchemaBuilder()->hasTable('permissions')) {
             return;
         }
 
@@ -39,8 +39,9 @@ return new class extends Migration
             $oldPermission = Permission::where('name', $old)->where('guard_name', 'web')->first();
             $newPermission = Permission::where('name', $new)->where('guard_name', 'web')->first();
 
-            if ($oldPermission && !$newPermission) {
+            if ($oldPermission && ! $newPermission) {
                 $oldPermission->update(['name' => $new]);
+
                 continue;
             }
 
@@ -48,18 +49,17 @@ return new class extends Migration
                 $this->movePivotRows('role_has_permissions', 'role_id', $oldPermission->id, $newPermission->id);
                 $this->movePivotRows('model_has_permissions', 'model_id', $oldPermission->id, $newPermission->id, 'model_type');
                 $oldPermission->delete();
+
                 continue;
             }
 
-            if (!$oldPermission && !$newPermission) {
-                Permission::firstOrCreate(['name' => $new, 'guard_name' => 'web']);
-            }
+            Permission::firstOrCreate(['name' => $new, 'guard_name' => 'web']);
         }
     }
 
     public function down(): void
     {
-        if (!DB::getSchemaBuilder()->hasTable('permissions')) {
+        if (! DB::getSchemaBuilder()->hasTable('permissions')) {
             return;
         }
 
@@ -67,8 +67,9 @@ return new class extends Migration
             $newPermission = Permission::where('name', $new)->where('guard_name', 'web')->first();
             $oldPermission = Permission::where('name', $old)->where('guard_name', 'web')->first();
 
-            if ($newPermission && !$oldPermission) {
+            if ($newPermission && ! $oldPermission) {
                 $newPermission->update(['name' => $old]);
+
                 continue;
             }
 
@@ -76,18 +77,17 @@ return new class extends Migration
                 $this->movePivotRows('role_has_permissions', 'role_id', $newPermission->id, $oldPermission->id);
                 $this->movePivotRows('model_has_permissions', 'model_id', $newPermission->id, $oldPermission->id, 'model_type');
                 $newPermission->delete();
+
                 continue;
             }
 
-            if (!$newPermission && !$oldPermission) {
-                Permission::firstOrCreate(['name' => $old, 'guard_name' => 'web']);
-            }
+            Permission::firstOrCreate(['name' => $old, 'guard_name' => 'web']);
         }
     }
 
     private function movePivotRows(string $table, string $primaryKey, int $fromPermissionId, int $toPermissionId, ?string $secondaryKey = null): void
     {
-        if (!DB::getSchemaBuilder()->hasTable($table)) {
+        if (! DB::getSchemaBuilder()->hasTable($table)) {
             return;
         }
 

@@ -157,11 +157,13 @@ class PostCommentsManager extends Component
 
         if (! $parent) {
             $this->notifyWarning('No se encontró el comentario original.');
+
             return;
         }
 
         if ($parent->depth >= PostComment::MAX_DEPTH) {
             $this->notifyWarning('Solo se permiten respuestas hasta 3 niveles.');
+
             return;
         }
 
@@ -186,11 +188,13 @@ class PostCommentsManager extends Component
 
         if (! $parent) {
             $this->notifyWarning('No se encontró el comentario original.');
+
             return;
         }
 
         if (($parent->depth ?? 0) >= MediaComment::MAX_DEPTH) {
             $this->notifyWarning('Solo se permiten respuestas hasta 3 niveles.');
+
             return;
         }
 
@@ -271,7 +275,7 @@ class PostCommentsManager extends Component
             ->when($this->type !== '', fn ($q) => $q->whereHas('post', fn ($post) => $post->where('type', $this->type)))
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))
             ->when($this->search !== '', function ($q): void {
-                $search = '%' . trim($this->search) . '%';
+                $search = '%'.trim($this->search).'%';
 
                 $q->where(function ($inner) use ($search): void {
                     $inner->where('body', 'like', $search)
@@ -288,7 +292,7 @@ class PostCommentsManager extends Component
             ->with(['user', 'commentable', 'parent'])
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))
             ->when($this->search !== '', function ($q): void {
-                $search = '%' . trim($this->search) . '%';
+                $search = '%'.trim($this->search).'%';
 
                 $q->where(function ($inner) use ($search): void {
                     $inner->where('body', 'like', $search)

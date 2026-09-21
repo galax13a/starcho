@@ -17,6 +17,7 @@ class AiQuotaService
 
     /**
      * @param  'text'|'image'|'video'  $type
+     *
      * @throws AiQuotaExceededException
      */
     public function ensureCanGenerate(?User $user, string $type, int $amount = 1, int $estCostCents = 0): void

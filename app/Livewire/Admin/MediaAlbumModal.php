@@ -5,9 +5,10 @@ namespace App\Livewire\Admin;
 use App\Livewire\Concerns\DispatchesStarchoNotify;
 use App\Models\MediaAlbum;
 use App\Models\MediaTag;
-use Illuminate\Validation\Rule;
+use App\Services\StorageService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -16,10 +17,15 @@ class MediaAlbumModal extends Component
     use DispatchesStarchoNotify;
 
     public int $albumId = 0;
+
     public string $name = '';
+
     public string $description = '';
+
     public string $tags = '';
-    public bool $passwordEnabled = false;
+
+    public string $visibility = 'public';
+
     public string $password = '';
 
     #[On('openMediaAlbum')]
@@ -33,7 +39,7 @@ class MediaAlbumModal extends Component
             $this->name = $album->name;
             $this->description = $album->description ?? '';
             $this->tags = $album->tags->pluck('name')->implode(', ');
-            $this->passwordEnabled = $album->password_enabled;
+            $this->visibility = $album->effectiveVisibility();
         }
 
         $this->resetValidation();
@@ -42,14 +48,14 @@ class MediaAlbumModal extends Component
 
     public function saveAlbum(): void
     {
-        $passwordRequired = $this->passwordEnabled
+        $passwordRequired = $this->visibility === 'protected'
             && ($this->albumId === 0 || ! MediaAlbum::whereKey($this->albumId)->whereNotNull('password')->exists());
 
         $data = $this->validate([
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
             'tags' => ['nullable', 'string', 'max:500'],
-            'passwordEnabled' => ['boolean'],
+            'visibility' => ['required', Rule::in(MediaAlbum::VISIBILITIES)],
             'password' => [Rule::requiredIf($passwordRequired), 'nullable', 'string', 'max:120'],
         ]);
 
@@ -62,17 +68,26 @@ class MediaAlbumModal extends Component
         $album->fill([
             'name' => $data['name'],
             'description' => $data['description'] ?: null,
-            'password_enabled' => $data['passwordEnabled'],
+            'visibility' => $data['visibility'],
+            'password_enabled' => $data['visibility'] === 'protected',
         ]);
 
         if (filled($data['password'])) {
             $album->password = Hash::make($data['password']);
-            $album->password_enabled = true;
-        } elseif (! $album->password_enabled) {
+        } elseif ($data['visibility'] !== 'protected') {
             $album->password = null;
         }
 
         $album->save();
+
+        if ($isUpdate && $data['visibility'] !== 'public') {
+            $album->load('media');
+
+            foreach ($album->media as $media) {
+                app(StorageService::class)->moveToPrivate($media);
+            }
+        }
+
         $this->syncTags($album, $data['tags'] ?? '');
 
         $this->notifySuccess($isUpdate ? 'Álbum actualizado.' : 'Álbum creado.');
@@ -93,7 +108,7 @@ class MediaAlbumModal extends Component
         $this->name = '';
         $this->description = '';
         $this->tags = '';
-        $this->passwordEnabled = false;
+        $this->visibility = 'public';
         $this->password = '';
     }
 
@@ -104,7 +119,7 @@ class MediaAlbumModal extends Component
         $i = 2;
 
         while (MediaAlbum::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $i++;
+            $slug = $baseSlug.'-'.$i++;
         }
 
         return $slug;

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\MemoizesPerRequest;
+use App\Services\ContentRenderCache;
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -11,6 +12,12 @@ use Illuminate\Support\Facades\Schema;
 class ContentSetting extends Model
 {
     use MemoizesPerRequest;
+
+    /** Intervals exposed in the admin UI, expressed in minutes. */
+    public const SCHEDULED_PUBLISH_INTERVALS = [1, 2, 5, 10, 30, 60];
+
+    /** Safe default used for new installs and invalid legacy values. */
+    public const DEFAULT_SCHEDULED_PUBLISH_INTERVAL_MINUTES = 5;
 
     private const CACHE_KEY = 'content_settings.singleton_id';
 
@@ -43,64 +50,80 @@ class ContentSetting extends Model
         'render_cache_per_locale',
         'render_cache_ttl_minutes',
         'render_cache_strategy',
+        'scheduled_publish_interval_minutes',
     ];
 
     protected $casts = [
-        'show_author'                 => 'boolean',
-        'show_date'                   => 'boolean',
-        'show_categories'             => 'boolean',
-        'show_tags'                   => 'boolean',
-        'show_excerpt_in_list'        => 'boolean',
+        'show_author' => 'boolean',
+        'show_date' => 'boolean',
+        'show_categories' => 'boolean',
+        'show_tags' => 'boolean',
+        'show_excerpt_in_list' => 'boolean',
         'show_featured_image_in_list' => 'boolean',
-        'comments_enabled'            => 'boolean',
-        'comments_require_approval'   => 'boolean',
-        'blog_sidebar_enabled'        => 'boolean',
-        'breadcrumbs_enabled'         => 'boolean',
-        'track_broken_links'          => 'boolean',
-        'reading_time_enabled'        => 'boolean',
-        'sitemap_include_pages'       => 'boolean',
-        'sitemap_include_posts'       => 'boolean',
-        'sitemap_excluded_urls'       => 'array',
-        'render_cache_enabled'        => 'boolean',
-        'render_cache_posts_enabled'  => 'boolean',
-        'render_cache_pages_enabled'  => 'boolean',
-        'render_cache_guest_only'     => 'boolean',
-        'render_cache_per_locale'     => 'boolean',
-        'render_cache_ttl_minutes'    => 'integer',
+        'comments_enabled' => 'boolean',
+        'comments_require_approval' => 'boolean',
+        'blog_sidebar_enabled' => 'boolean',
+        'breadcrumbs_enabled' => 'boolean',
+        'track_broken_links' => 'boolean',
+        'reading_time_enabled' => 'boolean',
+        'sitemap_include_pages' => 'boolean',
+        'sitemap_include_posts' => 'boolean',
+        'sitemap_excluded_urls' => 'array',
+        'render_cache_enabled' => 'boolean',
+        'render_cache_posts_enabled' => 'boolean',
+        'render_cache_pages_enabled' => 'boolean',
+        'render_cache_guest_only' => 'boolean',
+        'render_cache_per_locale' => 'boolean',
+        'render_cache_ttl_minutes' => 'integer',
+        'scheduled_publish_interval_minutes' => 'integer',
     ];
 
     public static function defaults(): array
     {
         return [
-            'posts_per_page'              => 12,
-            'related_posts_count'         => 3,
-            'show_author'                 => true,
-            'show_date'                   => true,
-            'show_categories'             => true,
-            'show_tags'                   => true,
-            'show_excerpt_in_list'        => true,
+            'posts_per_page' => 12,
+            'related_posts_count' => 3,
+            'show_author' => true,
+            'show_date' => true,
+            'show_categories' => true,
+            'show_tags' => true,
+            'show_excerpt_in_list' => true,
             'show_featured_image_in_list' => true,
-            'comments_enabled'            => true,
-            'comments_require_approval'   => false,
-            'blog_sidebar_enabled'        => true,
-            'breadcrumbs_enabled'         => true,
-            'track_broken_links'          => true,
-            'broken_links_notify_email'   => null,
-            'reading_time_enabled'        => true,
-            'reading_words_per_minute'    => 200,
-            'featured_post_id'            => null,
-            'blog_layout'                 => 'grid',
-            'sitemap_include_pages'       => true,
-            'sitemap_include_posts'       => true,
-            'sitemap_excluded_urls'       => null,
-            'render_cache_enabled'        => false,
-            'render_cache_posts_enabled'  => true,
-            'render_cache_pages_enabled'  => true,
-            'render_cache_guest_only'     => true,
-            'render_cache_per_locale'     => true,
-            'render_cache_ttl_minutes'    => 60,
-            'render_cache_strategy'       => 'balanced',
+            'comments_enabled' => true,
+            'comments_require_approval' => false,
+            'blog_sidebar_enabled' => true,
+            'breadcrumbs_enabled' => true,
+            'track_broken_links' => true,
+            'broken_links_notify_email' => null,
+            'reading_time_enabled' => true,
+            'reading_words_per_minute' => 200,
+            'featured_post_id' => null,
+            'blog_layout' => 'grid',
+            'sitemap_include_pages' => true,
+            'sitemap_include_posts' => true,
+            'sitemap_excluded_urls' => null,
+            'render_cache_enabled' => false,
+            'render_cache_posts_enabled' => true,
+            'render_cache_pages_enabled' => true,
+            'render_cache_guest_only' => true,
+            'render_cache_per_locale' => true,
+            'render_cache_ttl_minutes' => 60,
+            'render_cache_strategy' => 'balanced',
+            'scheduled_publish_interval_minutes' => self::DEFAULT_SCHEDULED_PUBLISH_INTERVAL_MINUTES,
         ];
+    }
+
+    /**
+     * Return the admin-selected cadence, falling back safely if the database
+     * contains a value that is no longer one of the supported intervals.
+     */
+    public function scheduledPublishIntervalMinutes(): int
+    {
+        $minutes = (int) ($this->scheduled_publish_interval_minutes ?? self::DEFAULT_SCHEDULED_PUBLISH_INTERVAL_MINUTES);
+
+        return in_array($minutes, self::SCHEDULED_PUBLISH_INTERVALS, true)
+            ? $minutes
+            : self::DEFAULT_SCHEDULED_PUBLISH_INTERVAL_MINUTES;
     }
 
     public static function singleton(): self
@@ -132,12 +155,12 @@ class ContentSetting extends Model
         static::saved(function (): void {
             Cache::forget(self::CACHE_KEY);
             static::flushMemo();
-            app(\App\Services\ContentRenderCache::class)->clearAll();
+            app(ContentRenderCache::class)->clearAll();
         });
         static::deleted(function (): void {
             Cache::forget(self::CACHE_KEY);
             static::flushMemo();
-            app(\App\Services\ContentRenderCache::class)->clearAll();
+            app(ContentRenderCache::class)->clearAll();
         });
     }
 }

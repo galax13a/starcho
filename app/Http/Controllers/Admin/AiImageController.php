@@ -27,13 +27,13 @@ class AiImageController extends Controller
     public function featured(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'mode'    => ['required', 'in:prompt,article,url'],
-            'prompt'  => ['nullable', 'string', 'max:3000'],
-            'title'   => ['nullable', 'string', 'max:300'],
+            'mode' => ['required', 'in:prompt,article,url'],
+            'prompt' => ['nullable', 'string', 'max:3000'],
+            'title' => ['nullable', 'string', 'max:300'],
             'excerpt' => ['nullable', 'string', 'max:1000'],
-            'url'     => ['nullable', 'url', 'max:2000'],
-            'width'   => ['required', 'integer', 'min:64', 'max:2048'],
-            'height'  => ['required', 'integer', 'min:64', 'max:2048'],
+            'url' => ['nullable', 'url', 'max:2000'],
+            'width' => ['required', 'integer', 'min:64', 'max:2048'],
+            'height' => ['required', 'integer', 'min:64', 'max:2048'],
         ]);
 
         /** @var User|null $user */
@@ -58,9 +58,9 @@ class AiImageController extends Controller
 
             return response()->json([
                 'success' => true,
-                'media'   => [
-                    'id'   => $media->id,
-                    'url'  => $media->preview_url ?? $media->public_url,
+                'media' => [
+                    'id' => $media->id,
+                    'url' => $media->preview_url ?? $media->public_url,
                     'full' => $media->public_url,
                 ],
             ]);
@@ -77,8 +77,8 @@ class AiImageController extends Controller
 
         $generation = match ($provider) {
             'replicate' => app(AiReplicateService::class)->generateImage($prompt, $model, $user, ['width' => $w, 'height' => $h]),
-            'fal'       => app(AiVideoService::class)->generateImage($prompt, $model, $user, ['image_size' => ['width' => $w, 'height' => $h]]),
-            default     => app(AiImageService::class)->generate($prompt, $model, $user, $this->openAiSize($w, $h)),
+            'fal' => app(AiVideoService::class)->generateImage($prompt, $model, $user, ['image_size' => ['width' => $w, 'height' => $h]]),
+            default => app(AiImageService::class)->generate($prompt, $model, $user, $this->openAiSize($w, $h)),
         };
 
         if (! $generation->media) {
@@ -103,17 +103,17 @@ class AiImageController extends Controller
         }
 
         $ext = match (true) {
-            str_contains($mime, 'png')  => 'png',
+            str_contains($mime, 'png') => 'png',
             str_contains($mime, 'webp') => 'webp',
-            str_contains($mime, 'gif')  => 'gif',
-            default                     => 'jpg',
+            str_contains($mime, 'gif') => 'gif',
+            default => 'jpg',
         };
 
-        $tmp = tempnam(sys_get_temp_dir(), 'feat_') . '.' . $ext;
+        $tmp = tempnam(sys_get_temp_dir(), 'feat_').'.'.$ext;
         file_put_contents($tmp, $response->body());
 
         try {
-            $file = new UploadedFile($tmp, 'featured-url-' . now()->timestamp . '.' . $ext, $mime, null, true);
+            $file = new UploadedFile($tmp, 'featured-url-'.now()->timestamp.'.'.$ext, $mime, null, true);
 
             return $this->storage->upload($file, $user, null, 'featured_url');
         } finally {
@@ -136,7 +136,7 @@ class AiImageController extends Controller
             $base .= " Contexto: {$excerpt}.";
         }
 
-        return $base . ' Estilo fotográfico profesional, alta calidad, sin texto ni marcas de agua, composición limpia.';
+        return $base.' Estilo fotográfico profesional, alta calidad, sin texto ni marcas de agua, composición limpia.';
     }
 
     private function openAiSize(int $w, int $h): string

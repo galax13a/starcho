@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\StarchoModule;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
 {
     public function __invoke(): View
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
         $userId = $user->getAuthIdentifier();
         $tasksActive = StarchoModule::isActive('tasks');
@@ -35,12 +36,13 @@ class DashboardController extends Controller
             $dueStats = (clone $taskQuery)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereNotNull('due_date')
+                ->toBase()
                 ->selectRaw('SUM(CASE WHEN due_date < ? THEN 1 ELSE 0 END) as overdue', [today()->toDateString()])
                 ->selectRaw('SUM(CASE WHEN due_date = ? THEN 1 ELSE 0 END) as due_today', [today()->toDateString()])
                 ->first();
 
-            $myLate = (int) ($dueStats?->overdue ?? 0);
-            $myToday = (int) ($dueStats?->due_today ?? 0);
+            $myLate = (int) ($dueStats->overdue ?? 0);
+            $myToday = (int) ($dueStats->due_today ?? 0);
             $recentTasks = (clone $taskQuery)->latest()->limit(5)->get();
             $monthTasks = (clone $taskQuery)
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])

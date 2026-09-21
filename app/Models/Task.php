@@ -10,7 +10,7 @@ use Spatie\Translatable\HasTranslations;
 
 class Task extends Model
 {
-    use SoftDeletes, HasTranslations, EnforcesOwnership;
+    use EnforcesOwnership, HasTranslations, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -29,38 +29,40 @@ class Task extends Model
     public $translatable = ['title', 'description'];
 
     const STATUS = [
-        'pending'     => 'Pendiente',
+        'pending' => 'Pendiente',
         'in_progress' => 'En progreso',
-        'completed'   => 'Completada',
-        'cancelled'   => 'Cancelada',
+        'completed' => 'Completada',
+        'cancelled' => 'Cancelada',
     ];
 
     const PRIORITY = [
-        'low'    => 'Baja',
+        'low' => 'Baja',
         'medium' => 'Media',
-        'high'   => 'Alta',
+        'high' => 'Alta',
         'urgent' => 'Urgente',
     ];
 
     const STATUS_COLORS = [
-        'pending'     => 'zinc',
+        'pending' => 'zinc',
         'in_progress' => 'blue',
-        'completed'   => 'green',
-        'cancelled'   => 'red',
+        'completed' => 'green',
+        'cancelled' => 'red',
     ];
 
     const PRIORITY_COLORS = [
-        'low'    => 'zinc',
+        'low' => 'zinc',
         'medium' => 'yellow',
-        'high'   => 'orange',
+        'high' => 'orange',
         'urgent' => 'red',
     ];
 
+    /** @return BelongsTo<User, $this> */
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

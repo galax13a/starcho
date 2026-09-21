@@ -23,14 +23,14 @@ class DashboardController extends Controller
             'tasks_pending' => Task::where('status', 'pending')->count(),
             'contacts_active' => Contact::where('active', true)->count(),
             'notes_total' => Note::count(),
-            'modules_active'   => StarchoModule::where('installed', true)->where('active', true)->count(),
-            'posts_published'  => Post::where('type', 'post')->where('status', 'published')->count(),
-            'pages_published'  => Post::where('type', 'page')->where('status', 'published')->count(),
+            'modules_active' => StarchoModule::where('installed', true)->where('active', true)->count(),
+            'posts_published' => Post::where('type', 'post')->where('status', 'published')->count(),
+            'pages_published' => Post::where('type', 'page')->where('status', 'published')->count(),
         ];
 
         $tasksByStatus = collect(Task::STATUS)
             ->mapWithKeys(fn (string $label, string $status) => [
-                __('admin_ui.tasks.status.' . $status) => Task::where('status', $status)->count(),
+                __('admin_ui.tasks.status.'.$status) => Task::where('status', $status)->count(),
             ]);
 
         $monthlyLabels = [];
@@ -103,6 +103,6 @@ class DashboardController extends Controller
             $index++;
         }
 
-        return ($index === 0 ? number_format($value, 0) : number_format($value, 2)) . ' ' . $units[$index];
+        return ($index === 0 ? number_format($value, 0) : number_format($value, 2)).' '.$units[$index];
     }
 }

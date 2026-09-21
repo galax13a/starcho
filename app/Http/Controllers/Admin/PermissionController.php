@@ -38,7 +38,7 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission)
     {
         $request->validate([
-            'name' => 'required|string|max:125|unique:permissions,name,' . $permission->id,
+            'name' => 'required|string|max:125|unique:permissions,name,'.$permission->id,
         ]);
 
         $permission->update(['name' => $request->name]);
@@ -69,7 +69,7 @@ class PermissionController extends Controller
         ]);
 
         $contents = file_get_contents($request->file('json_file')->getRealPath());
-        $data     = json_decode($contents, true);
+        $data = json_decode($contents, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
             return back()->with('error', 'Archivo JSON inválido.');
@@ -99,8 +99,8 @@ class PermissionController extends Controller
         $permissions = Permission::orderBy('name')->get()->pluck('name');
 
         return response()->json($permissions, 200, [
-            'Content-Disposition' => 'attachment; filename="permissions-' . now()->format('Ymd-His') . '.json"',
-            'Content-Type'        => 'application/json',
+            'Content-Disposition' => 'attachment; filename="permissions-'.now()->format('Ymd-His').'.json"',
+            'Content-Type' => 'application/json',
         ]);
     }
 }

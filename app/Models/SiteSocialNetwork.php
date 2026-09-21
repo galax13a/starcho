@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
@@ -28,9 +29,9 @@ class SiteSocialNetwork extends Model
     /**
      * Redes activas que tienen URL configurada (para el frontend público).
      *
-     * @return \Illuminate\Support\Collection<int, self>
+     * @return Collection<int, self>
      */
-    public static function activeWithUrl(): \Illuminate\Support\Collection
+    public static function activeWithUrl(): Collection
     {
         if (! Schema::hasTable('site_social_networks')) {
             return collect();
@@ -52,7 +53,7 @@ class SiteSocialNetwork extends Model
             return collect();
         }
 
-        return static::query()
+        return self::query()
             ->whereIn('id', $ids)
             ->orderBy('sort_order')
             ->get();
@@ -61,15 +62,15 @@ class SiteSocialNetwork extends Model
     /**
      * Todas las redes (para el panel admin).
      *
-     * @return \Illuminate\Support\Collection<int, self>
+     * @return Collection<int, self>
      */
-    public static function allOrdered(): \Illuminate\Support\Collection
+    public static function allOrdered(): Collection
     {
         if (! Schema::hasTable('site_social_networks')) {
             return collect();
         }
 
-        return static::orderBy('sort_order')->get();
+        return self::orderBy('sort_order')->get();
     }
 
     public static function clearCache(): void
