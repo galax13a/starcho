@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Media;
+use App\Models\StorageSetting;
 use App\Services\StorageService;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,7 +23,9 @@ class SecureRestrictedMedia extends Command
         if (! Schema::hasTable('media')
             || ! Schema::hasTable('media_albums')
             || ! Schema::hasTable('media_album_media')
-            || ! Schema::hasTable('storage_settings')) {
+            || ! Schema::hasTable('storage_settings')
+            || ! Schema::hasColumn('media', 'private_bucket')
+            || ! Schema::hasColumn('storage_settings', 'private_driver')) {
             return self::SUCCESS;
         }
 
@@ -42,7 +45,7 @@ class SecureRestrictedMedia extends Command
             }
         };
 
-        $query = $this->pendingMediaQuery();
+        $query = $this->pendingMediaQuery(StorageSetting::singleton());
 
         if ($limit > 0) {
             // Scheduled runs are bounded so a large legacy library cannot monopolize a worker.
@@ -58,7 +61,7 @@ class SecureRestrictedMedia extends Command
             $query->chunkById(100, $process);
         }
 
-        $remaining = $this->pendingMediaQuery()->count();
+        $remaining = $this->pendingMediaQuery(StorageSetting::singleton())->count();
 
         if ($moved > 0 || $failed > 0 || $limit === 0) {
             $this->info("Moved {$moved} restricted media item(s) to private storage.");
@@ -77,9 +80,12 @@ class SecureRestrictedMedia extends Command
         return self::SUCCESS;
     }
 
-    /** Select legacy restricted rows that still have a public disk object or URL. */
-    private function pendingMediaQuery(): Builder
+    /** Select public leaks and private rows that still use the previous destination. */
+    private function pendingMediaQuery(StorageSetting $settings): Builder
     {
+        $targetDriver = $settings->private_driver ?: 'local';
+        $targetBucket = $targetDriver === 'local' ? null : $settings->privateBucket($targetDriver);
+
         return Media::query()
             ->where(function ($query): void {
                 $query->where('visibility', '<>', 'public')
@@ -88,9 +94,24 @@ class SecureRestrictedMedia extends Command
                             ->orWhere('password_enabled', true);
                     });
             })
-            ->where(function ($query): void {
-                $query->where('disk', '<>', 'starcho_private')
-                    ->orWhereNotNull('url');
+            ->where(function ($pending) use ($targetDriver, $targetBucket): void {
+                // Public leaks need securing; already-private rows need moving only when their destination changed.
+                $pending->where(function ($public): void {
+                    $public->where('disk', '<>', 'starcho_private')
+                        ->orWhereNotNull('url');
+                })->orWhere(function ($private) use ($targetDriver, $targetBucket): void {
+                    $private->where('disk', 'starcho_private')
+                        ->where(function ($location) use ($targetDriver, $targetBucket): void {
+                            $location->where('driver', '<>', $targetDriver);
+
+                            if ($targetBucket === null) {
+                                $location->orWhereNotNull('private_bucket');
+                            } else {
+                                $location->orWhereNull('private_bucket')
+                                    ->orWhere('private_bucket', '<>', $targetBucket);
+                            }
+                        });
+                });
             })
             ->orderBy('id');
     }

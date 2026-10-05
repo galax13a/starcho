@@ -47,8 +47,8 @@ return [
             'report' => false,
         ],
 
-        // Restricted media is never placed beneath storage:link. Cloud-backed
-        // private disks are configured dynamically by StorageService.
+        // Restricted media stays outside storage:link. StorageService keeps this
+        // local alias for legacy/default files and registers bucket-specific cloud disks at runtime.
         'starcho_private' => [
             'driver' => 'local',
             'root' => storage_path('app/private/media'),

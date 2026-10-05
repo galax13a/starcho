@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BrokenLink;
 use App\Models\ContentSetting;
-use App\Models\Post;
-use App\Models\SiteLanguage;
 use App\Services\SitemapService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,52 +15,8 @@ class ContentSettingsController extends Controller
 {
     public function index(): View
     {
-        $settings = ContentSetting::singleton();
-        $brokenCount = BrokenLink::active()->count();
-        $sitemapData = $this->buildSitemapData($settings);
-
-        $sitemapFile = public_path('sitemap.xml');
-        clearstatcache(true, $sitemapFile);
-        $sitemapExists = file_exists($sitemapFile);
-        $sitemapDate = $sitemapExists ? Carbon::createFromTimestamp(filemtime($sitemapFile)) : null;
-        $sitemapSize = $sitemapExists ? round(filesize($sitemapFile) / 1024, 1) : null;
-
-        return view('admin.content.settings', compact(
-            'settings', 'brokenCount', 'sitemapData',
-            'sitemapExists', 'sitemapDate', 'sitemapSize'
-        ));
-    }
-
-    private function buildSitemapData(ContentSetting $settings): array
-    {
-        $excluded = $settings->sitemap_excluded_urls ?? [];
-        $locales = SiteLanguage::activeCodes() ?: ['es'];
-        $pages = [];
-        $posts = [];
-
-        foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
-            foreach ($locales as $locale) {
-                $slug = $page->getTranslation('slug', $locale, false);
-                if (! $slug) {
-                    continue;
-                }
-                $url = url('/'.$locale.'/'.$slug);
-                $pages[] = ['url' => $url, 'title' => $page->getTranslation('title', $locale, false) ?: $page->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded)];
-            }
-        }
-
-        foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
-            foreach ($locales as $locale) {
-                $slug = $post->getTranslation('slug', $locale, false);
-                if (! $slug) {
-                    continue;
-                }
-                $url = url('/'.$locale.'/blog/'.$slug);
-                $posts[] = ['url' => $url, 'title' => $post->getTranslation('title', $locale, false) ?: $post->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded), 'date' => $post->updated_at?->toDateString()];
-            }
-        }
-
-        return compact('pages', 'posts', 'excluded');
+        // Livewire owns this screen; avoid duplicate setup queries before its first render.
+        return view('admin.content.settings');
     }
 
     public function update(Request $request): RedirectResponse

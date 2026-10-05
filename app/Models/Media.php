@@ -61,7 +61,7 @@ class Media extends Model
     }
 
     protected $fillable = [
-        'user_id', 'driver', 'disk', 'path', 'webp_path', 'url',
+        'user_id', 'driver', 'disk', 'private_bucket', 'path', 'webp_path', 'url',
         'variants', 'variants_size',
         'original_name', 'display_name', 'mime_type', 'size', 'width', 'height',
         'mediable_type', 'mediable_id', 'context', 'visibility',

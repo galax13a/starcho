@@ -15,11 +15,25 @@ use Livewire\Component;
 
 class ContentSettingsForm extends Component
 {
+    private const SITEMAP_PREVIEW_PAGE_SIZE = 25;
+
     use DispatchesStarchoNotify;
 
     public array $form = [];
 
     public array $excludedUrls = [];
+
+    /** Defer the sitemap preview until its tab is requested. */
+    public bool $sitemapPreviewLoaded = false;
+
+    /** Keep only one bounded slice per content type in Livewire's public state. */
+    public array $sitemapData = ['pages' => [], 'posts' => []];
+
+    public array $sitemapTotals = ['pages' => 0, 'posts' => 0];
+
+    public int $sitemapPagesPage = 1;
+
+    public int $sitemapPostsPage = 1;
 
     public function mount(): void
     {
@@ -29,6 +43,11 @@ class ContentSettingsForm extends Component
             ->except('sitemap_excluded_urls')
             ->all();
         $this->excludedUrls = $settings->sitemap_excluded_urls ?? [];
+
+        // A direct admin link to this tab should initialize its preview on the first request only.
+        if (request()->query('tab') === 'sitemap') {
+            $this->loadSitemapPreview();
+        }
     }
 
     public function save(): void
@@ -100,11 +119,37 @@ class ContentSettingsForm extends Component
     {
         if (in_array($url, $this->excludedUrls, true)) {
             $this->excludedUrls = array_values(array_diff($this->excludedUrls, [$url]));
+        } else {
+            $this->excludedUrls[] = $url;
+        }
 
+        // Update only the visible slice; toggling one URL must not trigger a full catalogue query.
+        $this->syncSitemapExcludedFlags();
+    }
+
+    public function loadSitemapPreview(): void
+    {
+        if ($this->sitemapPreviewLoaded) {
             return;
         }
 
-        $this->excludedUrls[] = $url;
+        $this->sitemapPreviewLoaded = true;
+        $this->loadSitemapGroup('pages');
+        $this->loadSitemapGroup('posts');
+    }
+
+    public function changeSitemapPage(string $group, int $direction): void
+    {
+        if (! in_array($group, ['pages', 'posts'], true) || ! in_array($direction, [-1, 1], true)) {
+            return;
+        }
+
+        $this->loadSitemapPreview();
+
+        $pageProperty = $group === 'pages' ? 'sitemapPagesPage' : 'sitemapPostsPage';
+        $lastPage = max(1, (int) ceil($this->sitemapTotals[$group] / self::SITEMAP_PREVIEW_PAGE_SIZE));
+        $this->{$pageProperty} = min($lastPage, max(1, $this->{$pageProperty} + $direction));
+        $this->loadSitemapGroup($group);
     }
 
     public function generateSitemap(): void
@@ -125,13 +170,18 @@ class ContentSettingsForm extends Component
 
     public function render()
     {
-        $settings = ContentSetting::singleton();
         $sitemapFile = public_path('sitemap.xml');
         clearstatcache(true, $sitemapFile);
 
         return view('livewire.admin.content-settings-form', [
             'brokenCount' => BrokenLink::active()->count(),
-            'sitemapData' => $this->buildSitemapData($settings),
+            // Reuse the component's current slice so unrelated admin edits perform no sitemap scan.
+            'sitemapData' => $this->sitemapData,
+            'sitemapTotals' => $this->sitemapTotals,
+            'sitemapPagesPage' => $this->sitemapPagesPage,
+            'sitemapPostsPage' => $this->sitemapPostsPage,
+            'sitemapPageSize' => self::SITEMAP_PREVIEW_PAGE_SIZE,
+            'sitemapPreviewLoaded' => $this->sitemapPreviewLoaded,
             'sitemapExists' => file_exists($sitemapFile),
             'sitemapDate' => file_exists($sitemapFile) ? Carbon::createFromTimestamp(filemtime($sitemapFile)) : null,
             'sitemapSize' => file_exists($sitemapFile) ? round(filesize($sitemapFile) / 1024, 1) : null,
@@ -139,59 +189,69 @@ class ContentSettingsForm extends Component
         ]);
     }
 
-    private function buildSitemapData(ContentSetting $settings): array
+    /** Fetch a bounded page of one content type, expanding translations only for those records. */
+    private function loadSitemapGroup(string $group): void
     {
-        $excluded = $this->excludedUrls ?: ($settings->sitemap_excluded_urls ?? []);
-        $locales = SiteLanguage::activeCodes() ?: ['es'];
-        $pages = [];
-        $posts = [];
-
-        foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
-            foreach ($locales as $locale) {
-                $slug = $page->getTranslation('slug', $locale, false);
-                if (! $slug) {
-                    continue;
-                }
-                $url = url('/'.$locale.'/'.$slug);
-                $pages[] = ['url' => $url, 'title' => $page->getTranslation('title', $locale, false) ?: $page->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded, true)];
-            }
+        if (! in_array($group, ['pages', 'posts'], true)) {
+            return;
         }
 
-        foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
+        $type = $group === 'pages' ? 'page' : 'post';
+        $pageProperty = $group === 'pages' ? 'sitemapPagesPage' : 'sitemapPostsPage';
+        $page = $this->{$pageProperty};
+        $query = Post::query()->where('type', $type)->where('status', 'published');
+
+        if ($group === 'pages') {
+            $query->orderBy('menu_order')->orderBy('id');
+        } else {
+            $query->orderByDesc('published_at')->orderByDesc('id');
+        }
+
+        // Counting is cheap; only the selected 25 rows are hydrated and serialized to Livewire.
+        $this->sitemapTotals[$group] = (clone $query)->count();
+        $posts = $query
+            ->select(['id', 'title', 'slug', 'updated_at', 'menu_order', 'published_at'])
+            ->offset(($page - 1) * self::SITEMAP_PREVIEW_PAGE_SIZE)
+            ->limit(self::SITEMAP_PREVIEW_PAGE_SIZE)
+            ->get();
+        $locales = SiteLanguage::activeCodes() ?: ['es'];
+        $entries = [];
+
+        foreach ($posts as $post) {
             foreach ($locales as $locale) {
                 $slug = $post->getTranslation('slug', $locale, false);
+
                 if (! $slug) {
                     continue;
                 }
-                $url = url('/'.$locale.'/blog/'.$slug);
-                $posts[] = ['url' => $url, 'title' => $post->getTranslation('title', $locale, false) ?: $post->title, 'locale' => $locale, 'excluded' => in_array($url, $excluded, true), 'date' => $post->updated_at?->toDateString()];
+
+                $url = $group === 'pages'
+                    ? url('/'.$locale.'/'.$slug)
+                    : url('/'.$locale.'/blog/'.$slug);
+                $entries[] = [
+                    'url' => $url,
+                    'title' => $post->getTranslation('title', $locale, false) ?: $post->title,
+                    'locale' => $locale,
+                    'excluded' => in_array($url, $this->excludedUrls, true),
+                    'date' => $post->updated_at?->toDateString(),
+                ];
             }
         }
 
-        return compact('pages', 'posts', 'excluded');
+        $this->sitemapData[$group] = $entries;
     }
 
-    private function sitemapUrls(ContentSetting $settings): array
+    /** Keep exclusion indicators current without reloading either content collection. */
+    private function syncSitemapExcludedFlags(): void
     {
-        $data = $this->buildSitemapData($settings);
-        $urls = [];
-
-        if ($this->form['sitemap_include_pages'] ?? true) {
-            foreach ($data['pages'] as $entry) {
-                if (! $entry['excluded']) {
-                    $urls[] = ['loc' => $entry['url'], 'lastmod' => null, 'changefreq' => 'monthly', 'priority' => '0.8'];
-                }
+        foreach (['pages', 'posts'] as $group) {
+            foreach ($this->sitemapData[$group] as $index => $entry) {
+                $this->sitemapData[$group][$index]['excluded'] = in_array(
+                    $entry['url'],
+                    $this->excludedUrls,
+                    true
+                );
             }
         }
-
-        if ($this->form['sitemap_include_posts'] ?? true) {
-            foreach ($data['posts'] as $entry) {
-                if (! $entry['excluded']) {
-                    $urls[] = ['loc' => $entry['url'], 'lastmod' => $entry['date'] ?? null, 'changefreq' => 'weekly', 'priority' => '0.6'];
-                }
-            }
-        }
-
-        return $urls;
     }
 }

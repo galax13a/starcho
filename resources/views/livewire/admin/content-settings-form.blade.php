@@ -25,7 +25,7 @@
                 'cache' => ['label' => 'Cache artículo', 'icon' => 'fas fa-bolt'],
                 'sitemap' => ['label' => 'Sitemap', 'icon' => 'fas fa-sitemap'],
             ] as $key => $meta)
-                <button type="button" @click="tab = '{{ $key }}'" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition" :class="tab === '{{ $key }}' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'">
+                <button type="button" @click="tab = '{{ $key }}'; @if($key === 'sitemap') $wire.loadSitemapPreview() @endif" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition" :class="tab === '{{ $key }}' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'">
                     <i class="{{ $meta['icon'] }} text-[.72rem]"></i>{{ $meta['label'] }}
                 </button>
             @endforeach
@@ -261,10 +261,24 @@
 
                 <div class="cs-card">
                     <div class="cs-head"><span class="cs-title">URLs</span><span class="text-xs text-zinc-400">Click para incluir/excluir</span></div>
-                    @foreach(['pages' => 'Páginas', 'posts' => 'Blog'] as $group => $label)
-                        @if(count($sitemapData[$group]) > 0)
-                            <div class="border-b border-zinc-100 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:border-zinc-800">{{ $label }}</div>
-                            @foreach($sitemapData[$group] as $entry)
+                    @if(!$sitemapPreviewLoaded)
+                        <div class="p-4 text-sm text-zinc-500">La vista previa se carga cuando abres esta pestaña.</div>
+                    @else
+                        {{-- Each content group is paged independently to keep this Livewire payload bounded. --}}
+                        @foreach(['pages' => 'Páginas', 'posts' => 'Blog'] as $group => $label)
+                            @php
+                                $pageNumber = $group === 'pages' ? $sitemapPagesPage : $sitemapPostsPage;
+                                $lastPage = max(1, (int) ceil($sitemapTotals[$group] / $sitemapPageSize));
+                                $firstItem = $sitemapTotals[$group] > 0 ? (($pageNumber - 1) * $sitemapPageSize) + 1 : 0;
+                                $lastItem = min($sitemapTotals[$group], $pageNumber * $sitemapPageSize);
+                            @endphp
+                            <div class="border-b border-zinc-100 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:border-zinc-800">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span>{{ $label }}</span>
+                                    <span class="font-medium normal-case tracking-normal">Registros {{ $firstItem }}–{{ $lastItem }} de {{ $sitemapTotals[$group] }}</span>
+                                </div>
+                            </div>
+                            @forelse($sitemapData[$group] as $entry)
                                 <button type="button" wire:click="toggleExcluded(@js($entry['url']))" class="cs-url w-full text-left">
                                     <span class="grid size-4 place-items-center rounded border {{ $entry['excluded'] ? 'border-zinc-300 bg-white dark:bg-zinc-800' : 'border-violet-600 bg-violet-600 text-white' }}">
                                         @unless($entry['excluded'])<i class="fas fa-check text-[9px]"></i>@endunless
@@ -272,9 +286,18 @@
                                     <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $entry['title'] }}</span><span class="block truncate font-mono text-xs text-zinc-400">{{ $entry['url'] }}</span></span>
                                     <span class="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-500 dark:bg-zinc-800">{{ $entry['locale'] }}</span>
                                 </button>
-                            @endforeach
-                        @endif
-                    @endforeach
+                            @empty
+                                <div class="px-4 py-3 text-sm text-zinc-400">No hay contenido publicado en este grupo.</div>
+                            @endforelse
+                            @if($sitemapTotals[$group] > 0)
+                                <div class="flex items-center justify-between border-b border-zinc-100 px-4 py-3 text-xs dark:border-zinc-800">
+                                    <button type="button" wire:click="changeSitemapPage('{{ $group }}', -1)" wire:loading.attr="disabled" wire:target="changeSitemapPage" @disabled($pageNumber <= 1) class="rounded-lg border border-zinc-200 px-3 py-1.5 font-semibold text-zinc-600 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">Anterior</button>
+                                    <span class="text-zinc-500">Página {{ $pageNumber }} de {{ $lastPage }}</span>
+                                    <button type="button" wire:click="changeSitemapPage('{{ $group }}', 1)" wire:loading.attr="disabled" wire:target="changeSitemapPage" @disabled($pageNumber >= $lastPage) class="rounded-lg border border-zinc-200 px-3 py-1.5 font-semibold text-zinc-600 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">Siguiente</button>
+                                </div>
+                            @endif
+                        @endforeach
+                    @endif
                 </div>
             </div>
 

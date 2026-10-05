@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 
 class StorageSettingsController extends Controller
 {
@@ -19,6 +20,10 @@ class StorageSettingsController extends Controller
     {
         $validated = $request->validate([
             'default_driver' => 'required|in:local,s3,do_spaces,r2',
+            // Restricted files use their own private-only bucket or the local private disk.
+            'private_driver' => 'sometimes|in:local,s3,do_spaces',
+            'private_s3_bucket' => 'nullable|string|max:120',
+            'private_do_bucket' => 'nullable|string|max:120',
             // S3
             's3_key' => 'nullable|string|max:255',
             's3_secret' => 'nullable|string|max:255',
@@ -56,6 +61,50 @@ class StorageSettingsController extends Controller
         ]);
 
         $validated['s3_use_path_style'] = $request->boolean('s3_use_path_style');
+        $existing = StorageSetting::singleton();
+        $privateDriver = $validated['private_driver'] ?? ($existing->private_driver ?: 'local');
+        $validated['private_driver'] = $privateDriver;
+
+        // Require a separate bucket for cloud-private uploads; ACLs/CDNs alone are not a safe boundary.
+        if ($privateDriver !== 'local') {
+            $bucketField = match ($privateDriver) {
+                's3' => 'private_s3_bucket',
+                'do_spaces' => 'private_do_bucket',
+            };
+            $publicBucketField = match ($privateDriver) {
+                's3' => 's3_bucket',
+                'do_spaces' => 'do_bucket',
+            };
+            $privateBucket = $validated[$bucketField] ?? $existing->{$bucketField};
+            $publicBucket = $validated[$publicBucketField] ?? $existing->{$publicBucketField};
+
+            if (blank($privateBucket)) {
+                throw ValidationException::withMessages([
+                    $bucketField => 'Configura un bucket dedicado para los archivos privados.',
+                ]);
+            }
+
+            if (filled($publicBucket) && strcasecmp((string) $publicBucket, (string) $privateBucket) === 0) {
+                throw ValidationException::withMessages([
+                    $bucketField => 'El bucket privado debe ser distinto del bucket público.',
+                ]);
+            }
+
+            $credentials = match ($privateDriver) {
+                's3' => ['s3_key', 's3_secret'],
+                'do_spaces' => ['do_key', 'do_secret'],
+            };
+
+            foreach ($credentials as $credential) {
+                $providedCredential = $request->input($credential);
+
+                if (blank(filled($providedCredential) ? $providedCredential : $existing->{$credential})) {
+                    throw ValidationException::withMessages([
+                        $credential => 'Se requieren credenciales del proveedor para usar el almacenamiento privado.',
+                    ]);
+                }
+            }
+        }
 
         if ($request->has('image_variants_enabled') || $request->has('image_variant_sizes')) {
             $validated['image_variants_enabled'] = $request->boolean('image_variants_enabled');
@@ -84,6 +133,8 @@ class StorageSettingsController extends Controller
     {
         try {
             $storage = app(StorageService::class);
+            // Check private access before creating the public test object shown in the admin UI.
+            $privateDriver = $storage->testPrivateStorageConnection();
             $disk = $storage->disk();
             $driver = StorageSetting::singleton()->default_driver;
             $path = '.starcho-test/test-'.time().'.txt';
@@ -98,9 +149,10 @@ class StorageSettingsController extends Controller
             return response()->json([
                 'success' => true,
                 'driver' => $driver,
+                'private_driver' => $privateDriver,
                 'path' => $path,
                 'url' => $url,
-                'message' => "Conexión exitosa con el driver «{$driver}». Archivo de prueba subido correctamente.",
+                'message' => "Conexión exitosa con «{$driver}» y almacenamiento privado «{$privateDriver}».",
             ]);
         } catch (\Throwable $e) {
             return response()->json([

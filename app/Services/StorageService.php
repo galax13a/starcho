@@ -94,9 +94,13 @@ class StorageService
 
         // ── Process & store ──────────────────────────────────────────
         $restricted = $visibility !== 'public';
-        $disk = $restricted ? $this->privateDisk() : $this->disk();
+        $privateDriver = $restricted ? ($this->settings->private_driver ?: 'local') : null;
+        $privateBucket = $restricted && $privateDriver !== 'local'
+            ? $this->settings->privateBucket($privateDriver)
+            : null;
+        $disk = $restricted ? $this->privateDisk($privateDriver, $privateBucket) : $this->disk();
         $diskName = $restricted ? 'starcho_private' : $this->settings->diskName();
-        $storedDriver = $restricted ? 'local' : $this->settings->default_driver;
+        $storedDriver = $restricted ? $privateDriver : $this->settings->default_driver;
         $storedUrl = null;
         $webpPath = null;
         [$width, $height] = [null, null];
@@ -126,6 +130,7 @@ class StorageService
             'user_id' => $user?->id,
             'driver' => $storedDriver,
             'disk' => $diskName,
+            'private_bucket' => $privateBucket,
             'path' => $path,
             'webp_path' => $webpPath,
             'url' => $storedUrl,
@@ -434,7 +439,8 @@ class StorageService
     public function diskFor(Media $media): Filesystem
     {
         if ($media->disk === 'starcho_private') {
-            return $this->privateDisk();
+            // Keep routing tied to the asset's saved location, not today's admin selection.
+            return $this->privateDisk($media->driver ?: 'local', $media->private_bucket);
         }
 
         if ($media->driver === 'local' || $media->disk === 'public') {
@@ -457,7 +463,12 @@ class StorageService
      */
     public function moveToPrivate(Media $media): void
     {
-        if ($media->disk === 'starcho_private') {
+        $targetDriver = $this->settings->private_driver ?: 'local';
+        $targetBucket = $targetDriver === 'local' ? null : $this->settings->privateBucket($targetDriver);
+
+        if ($media->disk === 'starcho_private'
+            && $media->driver === $targetDriver
+            && $media->private_bucket === $targetBucket) {
             if ($media->getRawOriginal('url') !== null) {
                 $media->forceFill(['url' => null])->save();
             }
@@ -466,7 +477,7 @@ class StorageService
         }
 
         $source = $this->diskFor($media);
-        $destination = $this->privateDisk();
+        $destination = $this->privateDisk($targetDriver, $targetBucket);
         $paths = collect([$media->path, $media->webp_path])
             ->merge(collect($media->variants ?? [])->pluck('path'))
             ->filter()
@@ -530,8 +541,9 @@ class StorageService
         }
 
         $media->forceFill([
-            'driver' => 'local',
+            'driver' => $targetDriver,
             'disk' => 'starcho_private',
+            'private_bucket' => $targetBucket,
             'url' => null,
         ])->save();
     }
@@ -552,6 +564,29 @@ class StorageService
         config(['filesystems.disks.'.$this->settings->diskName() => $diskConfig]);
 
         return Storage::disk($this->settings->diskName());
+    }
+
+    /** Verify private credentials and bucket access without leaving a test object behind. */
+    public function testPrivateStorageConnection(): string
+    {
+        $driver = $this->settings->private_driver ?: 'local';
+        $bucket = $driver === 'local' ? null : $this->settings->privateBucket($driver);
+        $disk = $this->privateDisk($driver, $bucket);
+        $path = '.starcho-test/private-'.Str::uuid().'.txt';
+
+        try {
+            if (! $disk->put($path, 'Starcho private storage test', ['visibility' => 'private'])
+                || ! $disk->exists($path)) {
+                throw new \RuntimeException('No se pudo escribir y verificar el archivo de prueba privado.');
+            }
+        } finally {
+            // A failed check may still have created an object, so cleanup is unconditional.
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
+        }
+
+        return $driver;
     }
 
     /**
@@ -755,29 +790,51 @@ class StorageService
         };
     }
 
-    private function configurePrivateDisk(): void
+    private function configurePrivateDisk(string $driver, ?string $bucket = null): string
     {
-        // Restricted assets always leave the configured public provider and
-        // live under storage/app/private/media, outside storage:link. In
-        // particular, never reuse an S3/R2 bucket whose public endpoint may
-        // ignore object ACLs or expose every key through a CDN.
-        $config = config('filesystems.disks.starcho_private', [
-            'driver' => 'local',
-            'root' => storage_path('app/private/media'),
-            'throw' => true,
-            'report' => false,
-        ]);
-        $config['driver'] = 'local';
+        if ($driver === 'local') {
+            // Keep the original private local disk as the backward-compatible default.
+            config(['filesystems.disks.starcho_private' => [
+                'driver' => 'local',
+                'root' => storage_path('app/private/media'),
+                'visibility' => 'private',
+                'serve' => false,
+                'throw' => true,
+                'report' => false,
+            ]]);
+
+            return 'starcho_private';
+        }
+
+        $bucket ??= $this->settings->privateBucket($driver);
+
+        if (! in_array($driver, ['s3', 'do_spaces'], true) || blank($bucket)) {
+            throw new \RuntimeException('Configura un proveedor y un bucket privado antes de guardar archivos restringidos.');
+        }
+
+        // Use a bucket-specific disk name so old media remains routable after an admin changes buckets.
+        $diskName = 'starcho_private_'.substr(hash('sha256', $driver.'|'.$bucket), 0, 16);
+        $config = $this->buildDiskConfig($driver);
+        $config['bucket'] = $bucket;
+        // Never inherit a CDN/base URL from the public disk configuration for private objects.
+        unset($config['url']);
         $config['visibility'] = 'private';
-        $config['serve'] = false;
-        config(['filesystems.disks.starcho_private' => $config]);
+        if ($driver === 's3') {
+            // AWS accepts this non-public ACL on buckets with ACLs disabled (Bucket owner enforced).
+            $config['options'] = array_merge($config['options'] ?? [], ['ACL' => 'bucket-owner-full-control']);
+        }
+        $config['throw'] = true;
+        $config['report'] = false;
+        config(['filesystems.disks.'.$diskName => $config]);
+
+        return $diskName;
     }
 
-    private function privateDisk(): Filesystem
+    private function privateDisk(?string $driver = null, ?string $bucket = null): Filesystem
     {
-        $this->configurePrivateDisk();
+        $diskName = $this->configurePrivateDisk($driver ?: 'local', $bucket);
 
-        return Storage::disk('starcho_private');
+        return Storage::disk($diskName);
     }
 
     private function diskNameForDriver(string $driver): string

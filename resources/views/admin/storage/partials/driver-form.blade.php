@@ -68,6 +68,7 @@
         <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4"
              x-data="{
                 driver: @js(old('default_driver', $storageSetting->default_driver)),
+                privateDriver: @js(old('private_driver', $storageSetting->private_driver ?? 'local')),
                 variantsEnabled: @js($variantsEnabled),
                 variantSizes: @js($enabledVariants),
                 previewSize: @js(in_array($previewVariantSize, $enabledVariants, true) ? $previewVariantSize : 240),
@@ -194,8 +195,46 @@
                 @endforeach
             </div>
 
+            {{-- Private media has an independent destination so it never shares the public bucket or CDN. --}}
+            <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div>
+                    <p class="text-sm font-semibold text-amber-950 dark:text-amber-100">Almacenamiento de archivos privados</p>
+                    <p class="mt-1 max-w-3xl text-xs leading-5 text-amber-900/75 dark:text-amber-200/70">
+                        Por defecto se guardan en <code>storage/app/private/media</code>. Para varios servidores, selecciona un bucket cloud dedicado y compartido.
+                        Se reutilizan las credenciales existentes del proveedor, pero no el bucket público ni su CDN.
+                    </p>
+                </div>
+
+                <label class="block max-w-sm">
+                    <span class="mb-1 block text-xs font-semibold text-zinc-500">Destino privado</span>
+                    <select name="private_driver" x-model="privateDriver" class="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100">
+                        <option value="local">Local (un solo servidor)</option>
+                        <option value="s3">Amazon S3 · bucket privado</option>
+                        <option value="do_spaces">DigitalOcean Spaces · bucket privado</option>
+                    </select>
+                </label>
+
+                <div x-show="privateDriver === 's3'" x-cloak>
+                    <flux:field>
+                        <flux:label>Bucket privado S3</flux:label>
+                        <flux:input name="private_s3_bucket" value="{{ old('private_s3_bucket', $storageSetting->private_s3_bucket) }}" placeholder="starcho-private-media" />
+                        <flux:description>Debe ser diferente del bucket público y tener Block Public Access activado.</flux:description>
+                    </flux:field>
+                </div>
+                <div x-show="privateDriver === 'do_spaces'" x-cloak>
+                    <flux:field>
+                        <flux:label>Space privado</flux:label>
+                        <flux:input name="private_do_bucket" value="{{ old('private_do_bucket', $storageSetting->private_do_bucket) }}" placeholder="starcho-private-media" />
+                        <flux:description>No conectes un CDN o dominio público a este Space.</flux:description>
+                    </flux:field>
+                </div>
+                <p x-show="privateDriver !== 'local'" x-cloak class="rounded-lg border border-amber-200 bg-white/70 px-3 py-2 text-xs leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-zinc-900/60 dark:text-amber-200">
+                    Los buckets privados deben tener acceso público deshabilitado. Los archivos existentes se migran en lotes por la tarea automática <code>starcho:secure-media</code> después de guardar.
+                </p>
+            </div>
+
             {{-- ── Amazon S3 ── --}}
-            <div x-show="driver === 's3'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
+            <div x-show="driver === 's3' || privateDriver === 's3'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400">Amazon S3 Credentials</p>
                     <div class="flex gap-3">
@@ -240,7 +279,7 @@
             </div>
 
             {{-- ── DigitalOcean Spaces ── --}}
-            <div x-show="driver === 'do_spaces'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
+            <div x-show="driver === 'do_spaces' || privateDriver === 'do_spaces'" x-cloak class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400">DigitalOcean Spaces Credentials</p>
                     <div class="flex gap-3">

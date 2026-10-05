@@ -250,10 +250,13 @@ Privacidad de medios:
 - Cada archivo y album admite `public`, `authenticated`, `protected` o `private`.
 - Al combinar albumes, se aplica la visibilidad mas restrictiva; un album publico no hace publico un archivo protegido.
 - Los archivos restringidos se entregan desde `/media/files/{media}` tras comprobar permisos. Los nuevos archivos restringidos usan `starcho_private`.
+- En Admin > Site > Storage, `Destino privado` puede permanecer local o usar un bucket dedicado de S3/Spaces compartido por los nodos de la aplicacion. El bucket privado debe ser distinto del publico, no tener politica de acceso publico ni CDN/dominio publico; se reutilizan las credenciales del proveedor.
+- R2 sigue disponible para archivos publicos, pero no como destino privado: la API S3 de R2 no admite las ACL por objeto que usa el adaptador Flysystem actual.
+- Cada registro multimedia conserva el proveedor y bucket privado donde se guardo. Cambiar el destino no rompe las rutas de archivos ya migrados; al guardar el nuevo destino, el scheduler mueve los archivos privados anteriores en lotes de hasta 100 por minuto.
 - `authenticated` requiere una sesion; `protected` requiere desbloquear todos los albumes protegidos asociados; `private` queda para el propietario y administradores.
 - Tras desplegar la migracion de visibilidad, el scheduler migra automaticamente hasta 100 objetos restringidos por minuto; configura `php artisan schedule:run` cada minuto como se indica abajo. Para terminar el backfill inmediatamente, ejecuta `php artisan starcho:secure-media` sin limite. Los enlaces publicos antiguos seguiran accesibles hasta que cada objeto se copie al disco privado y se retire del disco publico; revisa `storage/logs/secure-media.log` si el proceso informa fallos.
 
-El sitemap se construye por lotes de 500 registros, se cachea por 24 horas y se regenera al cambiar contenido publicado, idiomas o sus opciones. La salida se escribe a un archivo temporal y se reemplaza de forma atomica para evitar XML parcial; el admin usa el mismo generador.
+El sitemap se construye por lotes de 500 registros, se cachea por 24 horas y se regenera al cambiar contenido publicado, idiomas o sus opciones. La salida se escribe a un archivo temporal y se reemplaza de forma atomica para evitar XML parcial; el admin usa el mismo generador. La vista previa administrativa solo consulta el contenido al abrir la pestaña y muestra 25 registros por pagina para limitar las consultas y el estado Livewire.
 
 Avatares:
 

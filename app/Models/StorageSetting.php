@@ -13,6 +13,8 @@ class StorageSetting extends Model
 {
     protected $fillable = [
         'default_driver',
+        'private_driver',
+        'private_s3_bucket', 'private_do_bucket',
         // S3
         's3_key', 's3_secret', 's3_region', 's3_bucket', 's3_endpoint',
         's3_use_path_style', 's3_url', 's3_folder',
@@ -81,6 +83,16 @@ class StorageSetting extends Model
             'do_spaces' => 'starcho_do',
             'r2' => 'starcho_r2',
             default => 'public',
+        };
+    }
+
+    /** Resolve the dedicated, non-public bucket configured for a private cloud driver. */
+    public function privateBucket(string $driver): ?string
+    {
+        return match ($driver) {
+            's3' => $this->private_s3_bucket,
+            'do_spaces' => $this->private_do_bucket,
+            default => null,
         };
     }
 
