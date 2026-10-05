@@ -109,7 +109,8 @@ Todas las rutas admin viven bajo `/admin` y usan `auth`, `verified`, `role:root|
 | `/admin/comments` | `admin.comments.index` | Comentarios editoriales de posts |
 | `/admin/posts/comments` | `admin.posts.comments` | Comentarios editoriales desde el modulo posts |
 | `/admin/storage` | `admin.storage.index` | Pantalla dedicada de storage |
-| `/admin/operations` | `admin.operations.index` | Estado del scheduler, cola y trabajos de imágenes |
+| `/admin/operations` | `admin.operations.index` | Salud de DB, caché, storage, scheduler, publicaciones y cola |
+| `/admin/audit` | `admin.audit.index` | Bitácora filtrable de cambios administrativos |
 | `/admin/storage` `PUT` | `admin.storage.update` | Guardar storage |
 | `/admin/storage/link` | `admin.storage.link` | Crear/verificar `storage:link` |
 | `/admin/storage/test` | `admin.storage.test` | Subida de prueba |
@@ -516,8 +517,12 @@ sin cambiar la zona horaria interna de Laravel. En desarrollo puedes ejecutar
 y MySQL. Las tareas programadas usan `onOneServer`; en un despliegue multinodo todas
 las instancias deben compartir la misma base de datos y un cache central (database,
 Redis o Memcached), además del backend de cola y los discos de archivos. El panel
-Admin > Operación muestra las últimas ejecuciones y fallos; requiere aplicar las
-migraciones y ejecutar un worker de Laravel permanentemente.
+Admin > Operación verifica conexiones de DB/caché/storage y muestra la última
+ejecución de publicación, los artículos en espera y los fallos; las pruebas de caché
+y storage crean y limpian claves/objetos temporales. El panel requiere aplicar las
+migraciones y ejecutar un worker de Laravel permanentemente. Admin > Auditoría registra
+actor, fecha, acción y cambios permitidos de usuarios, roles, publicaciones y
+configuración; contraseñas, tokens y credenciales no se guardan en la bitácora.
 
 ---
 

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Instalar Starcho</title>
+    @include('partials.favicon', ['staticOnly' => true])
     <style>
         :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background:#09090b; color:#f4f4f5; }
         body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 10% 10%,#312e81 0,transparent 35%),#09090b; }

@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <flux:heading size="xl" level="1">Operación del sitio</flux:heading>
-                <flux:text class="text-sm text-zinc-500">Ejecuciones recientes del scheduler y la cola, más carga de variantes multimedia.</flux:text>
+                <flux:text class="text-sm text-zinc-500">Salud de infraestructura, publicaciones programadas, scheduler, cola y variantes multimedia.</flux:text>
             </div>
             <a href="{{ route('admin.dashboard') }}" class="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
                 <i class="fas fa-arrow-left text-xs"></i> Dashboard
@@ -17,6 +17,16 @@
         @elseif($schedulerIsStale)
             <div class="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-200">
                 No se observa una ejecución reciente del scheduler. Verifica que <code>php artisan schedule:run</code> corra cada minuto en una sola instancia compartida.
+            </div>
+        @endif
+
+        @if($monitorTableReady && ($publishSchedulerIsStale || $latestPublishRun?->status === 'failed'))
+            <div class="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-200">
+                @if($publishSchedulerIsStale)
+                    No se detecta una ejecución reciente de <code>starcho:publish-scheduled</code>. Revisa el cron del scheduler y su conexión a la caché compartida.
+                @else
+                    La última ejecución de <code>starcho:publish-scheduled</code> terminó con error. Revisa el detalle en los fallos recientes.
+                @endif
             </div>
         @endif
 
@@ -53,20 +63,43 @@
                 @if($oldestPendingJobAt)
                     <p class="mt-1 text-xs text-zinc-500">Más antiguo: {{ $oldestPendingJobAt->diffForHumans() }}</p>
                 @endif
-                @if($queueQueryError)
-                    <p class="mt-1 truncate text-xs text-rose-600" title="{{ $queueQueryError }}">No fue posible consultar el backend.</p>
+                @if($queueQueryFailed)
+                    <p class="mt-1 truncate text-xs text-rose-600">No fue posible consultar el backend de la cola.</p>
+                @endif
+            </div>
+            <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Publicación programada</p>
+                <p class="mt-2 text-lg font-semibold {{ $publishSchedulerIsStale || $latestPublishRun?->status === 'failed' ? 'text-rose-600 dark:text-rose-300' : 'text-zinc-900 dark:text-zinc-100' }}">
+                    {{ $scheduledPostsCount }} artículo{{ $scheduledPostsCount === 1 ? '' : 's' }} en espera
+                </p>
+                <p class="mt-1 text-xs text-zinc-500">{{ $scheduledPostsDueCount }} vencidos · revisión cada {{ $publishIntervalMinutes }} min</p>
+                <p class="mt-1 text-xs text-zinc-500">Última ejecución: {{ $latestPublishRun?->started_at?->diffForHumans() ?? 'Sin registro' }} · {{ $latestPublishRun?->status ?? '—' }}</p>
+                @if($nextScheduledPostAt)
+                    <p class="mt-1 text-xs text-zinc-500">Próximo artículo: {{ $nextScheduledPostAt->format('d/m/Y H:i') }}</p>
                 @endif
             </div>
             <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                 <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Variantes de imagen</p>
                 <p class="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ $variantsQueued + $variantsProcessing }} en curso</p>
                 <p class="mt-1 text-xs text-zinc-500">{{ $variantsQueued }} en cola · {{ $variantsProcessing }} procesando · {{ $variantsFailed }} fallidas</p>
+                @unless($variantStateReady)
+                    <p class="mt-1 text-xs text-amber-600 dark:text-amber-300">Aplica la migración de estados de variantes.</p>
+                @endunless
             </div>
             <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                 <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">Conexiones de aplicación</p>
                 <p class="mt-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">DB: {{ $databaseConnection }}</p>
                 <p class="mt-1 text-xs text-zinc-500">Cache: {{ $cacheStore }} · Queue: {{ $queueConnection }}</p>
             </div>
+            @foreach(['Base de datos' => $databaseHealth, 'Caché' => $cacheHealth, 'Almacenamiento' => $storageHealth] as $healthName => $health)
+                <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-400">{{ $healthName }}</p>
+                    <p class="mt-2 text-lg font-semibold {{ $health['status'] === 'ok' ? 'text-emerald-600 dark:text-emerald-300' : ($health['status'] === 'warning' ? 'text-amber-600 dark:text-amber-300' : 'text-rose-600 dark:text-rose-300') }}">
+                        {{ $health['status'] === 'ok' ? 'Operativo' : ($health['status'] === 'warning' ? 'Revisar' : 'No disponible') }}
+                    </p>
+                    <p class="mt-1 text-xs text-zinc-500">{{ $health['detail'] }}@if($healthName === 'Almacenamiento') · {{ $storageDisk }}@endif</p>
+                </div>
+            @endforeach
         </div>
 
         <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">

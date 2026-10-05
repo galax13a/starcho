@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminDataTransferController;
 use App\Http\Controllers\Admin\AiImageController;
 use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CacheController;
 use App\Http\Controllers\Admin\ContentSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -30,6 +31,7 @@ Route::prefix('admin')
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('operations', [OperationsController::class, 'index'])->name('operations.index');
+        Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::view('comments', 'admin.posts.comments')->name('comments.index');
 
         // ── Roles: rutas custom ANTES del resource para evitar conflicto con {role} ──

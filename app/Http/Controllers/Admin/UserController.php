@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiPlan;
 use App\Models\StoragePlan;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -51,6 +52,7 @@ class UserController extends Controller
         }
 
         $user->syncRoles($roleIds);
+        app(AuditLogger::class)->recordRelationChange($user, 'roles', [], $user->getRoleNames()->all());
 
         return redirect()->route('admin.users.index')
             ->with('success', "Usuario '{$user->name}' creado correctamente.");
@@ -73,7 +75,9 @@ class UserController extends Controller
             'roles.*' => 'exists:roles,id',
         ]);
 
+        $rolesBefore = $user->getRoleNames()->all();
         $user->syncRoles($request->roles ?? []);
+        app(AuditLogger::class)->recordRelationChange($user, 'roles', $rolesBefore, $user->getRoleNames()->all());
 
         return redirect()->route('admin.users.index')
             ->with('success', "Roles de '{$user->name}' actualizados correctamente.");

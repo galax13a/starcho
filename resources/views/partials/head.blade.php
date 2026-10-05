@@ -21,7 +21,6 @@
 
         return app(\App\Services\StorageService::class)->publicUrlForPath($path);
     };
-    $faviconUrl = $siteAssetUrl($siteSettings?->favicon_path) ?: '/favicon.ico';
     $effectiveTitle = $pageMeta?->title ?: (filled($title ?? null) ? $title : ($siteSettings?->site_name ?? $appName));
     $effectiveDescription = $pageMeta?->description ?: (filled($description ?? null) ? $description : $siteSettings?->site_description);
     $effectiveKeywords = $pageMeta?->meta_keywords ?: $siteSettings?->meta_keywords;
@@ -35,11 +34,7 @@
 
 <title>{{ $effectiveTitle }}</title>
 
-<link rel="icon" href="{{ $faviconUrl }}" sizes="any">
-@if (!$siteSettings?->favicon_path)
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-@endif
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+@include('partials.favicon')
 
 @if($effectiveDescription)
 <meta name="description" content="{{ $effectiveDescription }}">

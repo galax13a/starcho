@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\OperationRun;
+use App\Models\Post;
+use App\Models\StorageSetting;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -11,6 +14,18 @@ it('shows scheduler and queue status to administrators', function () {
     $role->givePermissionTo($permission);
     $admin = User::factory()->create(['email_verified_at' => now()]);
     $admin->assignRole($role);
+    Storage::fake('public');
+    StorageSetting::singleton()->update(['default_driver' => 'local']);
+
+    Post::query()->create([
+        'type' => Post::TYPE_POST,
+        'title' => ['en' => 'Waiting article'],
+        'slug' => ['en' => 'waiting-article'],
+        'status' => Post::STATUS_SCHEDULED,
+        'published_at' => now()->addHour(),
+        'author_id' => $admin->id,
+        'user_id' => $admin->id,
+    ]);
 
     OperationRun::query()->create([
         'type' => 'scheduler',
@@ -36,6 +51,12 @@ it('shows scheduler and queue status to administrators', function () {
         ->get(route('admin.operations.index'))
         ->assertOk()
         ->assertSee('Operación del sitio')
+        ->assertSee('1 artículo en espera')
+        ->assertSee('Publicación programada')
+        ->assertSee('Base de datos')
+        ->assertSee('Caché')
+        ->assertSee('Almacenamiento')
+        ->assertSee('Operativo')
         ->assertSee('starcho:publish-scheduled')
         ->assertSee('GenerateMediaVariants')
         ->assertSee('scheduler test failure');

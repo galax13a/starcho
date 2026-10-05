@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Models\ContentSetting;
 use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
+use App\Observers\AuditObserver;
 use App\Observers\UserObserver;
+use App\Services\AuditLogger;
 use App\Services\OperationMonitor;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Events\ScheduledTaskFailed;
@@ -66,6 +68,11 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerListeners(): void
     {
+        // Observe only admin-sensitive models; AuditLogger uses explicit field allowlists.
+        foreach (AuditLogger::auditedModels() as $modelClass) {
+            $modelClass::observe(AuditObserver::class);
+        }
+
         // Listener para capturar IP en registro de usuario
         if (class_exists('Illuminate\\Auth\\Events\\Registered')) {
             Event::listen(

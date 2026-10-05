@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -31,6 +32,7 @@ class RoleController extends Controller
 
         $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
         $role->syncPermissions($request->permissions ?? []);
+        app(AuditLogger::class)->recordRelationChange($role, 'permissions', [], $role->permissions()->pluck('name')->all());
 
         return redirect()->route('admin.roles.index')
             ->with('success', "Rol '{$role->name}' creado correctamente.");
@@ -52,11 +54,19 @@ class RoleController extends Controller
             'permissions.*' => 'exists:permissions,id',
         ]);
 
+        $permissionsBefore = $role->permissions()->pluck('name')->all();
+
         if ($role->name !== 'admin') {
             $role->update(['name' => $request->name]);
         }
 
         $role->syncPermissions($request->permissions ?? []);
+        app(AuditLogger::class)->recordRelationChange(
+            $role,
+            'permissions',
+            $permissionsBefore,
+            $role->permissions()->pluck('name')->all()
+        );
 
         return redirect()->route('admin.roles.index')
             ->with('success', "Rol '{$role->name}' actualizado correctamente.");
@@ -109,12 +119,19 @@ class RoleController extends Controller
             $role->wasRecentlyCreated ? $created++ : $updated++;
 
             if (! empty($item['permissions']) && is_array($item['permissions'])) {
+                $permissionsBefore = $role->permissions()->pluck('name')->all();
                 $permIds = collect($item['permissions'])->map(function ($perm) {
                     return Permission::firstOrCreate(
                         ['name' => $perm, 'guard_name' => 'web']
                     )->id;
                 });
                 $role->syncPermissions($permIds);
+                app(AuditLogger::class)->recordRelationChange(
+                    $role,
+                    'permissions',
+                    $permissionsBefore,
+                    $role->permissions()->pluck('name')->all()
+                );
             }
         }
 
