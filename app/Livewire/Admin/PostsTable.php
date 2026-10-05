@@ -63,7 +63,7 @@ final class PostsTable extends PowerGridComponent
             ->add('status_badge', fn (Post $p) => view('admin.posts._status-badge', ['status' => $p->status])->render())
             ->add('author_name', fn (Post $p) => data_get($p->author, 'name') ?? '—')
             ->add('categories_list', fn (Post $p) => $p->categories->pluck('slug')->join(', ') ?: '—')
-            ->add('published_at_fmt', fn (Post $p) => $p->published_at?->format('d/m/Y H:i') ?? '—')
+            ->add('published_at_fmt', fn (Post $p) => $p->publishedAtInSiteTimezone()?->format('d/m/Y H:i') ?? '—')
             ->add('created_at_fmt', fn (Post $p) => Carbon::parse($p->created_at)->format('d/m/Y'));
     }
 

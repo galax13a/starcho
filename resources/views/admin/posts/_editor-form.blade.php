@@ -571,9 +571,9 @@
 
                     {{-- Scheduled date --}}
                     <div id="scheduled-section" class="ep-field" style="{{ $currentStatus !== 'scheduled' ? 'display:none' : '' }}">
-                        <label class="ep-label">Publicar el</label>
+                        <label class="ep-label">Publicar el ({{ $siteTimezone }})</label>
                         <input type="datetime-local" name="published_at"
-                            value="{{ old('published_at', $isEditing && $post->published_at ? $post->published_at->format('Y-m-d\TH:i') : '') }}"
+                            value="{{ old('published_at', $isEditing ? $post->publishedAtInSiteTimezone()?->format('Y-m-d\TH:i') : '') }}"
                             class="ep-input"/>
                         @error('published_at')<p class="text-xs text-rose-500 mt-1">{{ $message }}</p>@enderror
                     </div>

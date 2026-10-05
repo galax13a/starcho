@@ -71,7 +71,7 @@ final class PagesTable extends PowerGridComponent
             ->add('nav_badge', fn (Post $p) => $navIcons[$p->nav_position ?? 'none'] ?? $navIcons['none'])
             ->add('author_name', fn (Post $p) => data_get($p->author, 'name') ?? '—')
             ->add('menu_order')
-            ->add('published_at_fmt', fn (Post $p) => $p->published_at?->format('d/m/Y H:i') ?? '—')
+            ->add('published_at_fmt', fn (Post $p) => $p->publishedAtInSiteTimezone()?->format('d/m/Y H:i') ?? '—')
             ->add('created_at_fmt', fn (Post $p) => Carbon::parse($p->created_at)->format('d/m/Y'));
     }
 

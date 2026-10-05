@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\MemoizesPerRequest;
+use App\Services\ContentRenderCache;
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -140,6 +141,42 @@ class SiteSetting extends Model
         ];
     }
 
+    /** Resolve the site's display timezone, including the server-default sentinel. */
+    public static function siteTimezone(): string
+    {
+        $timezone = static::cached()?->server_timezone;
+
+        if (! is_string($timezone) || $timezone === '' || $timezone === 'server') {
+            return static::defaultServerTimezone();
+        }
+
+        try {
+            new \DateTimeZone($timezone);
+        } catch (\Throwable) {
+            return static::defaultServerTimezone();
+        }
+
+        return $timezone;
+    }
+
+    /** Resolve APP_SERVER_TIMEZONE or PHP's timezone, safely falling back to UTC. */
+    public static function defaultServerTimezone(): string
+    {
+        $timezone = config('app.server_timezone', 'UTC');
+
+        if (! is_string($timezone) || $timezone === '') {
+            return 'UTC';
+        }
+
+        try {
+            new \DateTimeZone($timezone);
+        } catch (\Throwable) {
+            return 'UTC';
+        }
+
+        return $timezone;
+    }
+
     public static function isHomePageEnabled(): bool
     {
         $settings = static::cached();
@@ -239,10 +276,15 @@ class SiteSetting extends Model
 
     protected static function booted(): void
     {
-        static::saved(function (): void {
+        static::saved(function (self $settings): void {
             Cache::forget(self::CACHE_KEY_ID);
             Cache::forget(self::CACHE_KEY_LEGACY);
             static::flushMemo();
+
+            // Public HTML contains formatted dates, so invalidate it when display timezone changes.
+            if ($settings->wasChanged('server_timezone')) {
+                app(ContentRenderCache::class)->clearAll();
+            }
         });
 
         static::deleted(function (): void {

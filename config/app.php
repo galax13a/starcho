@@ -69,6 +69,10 @@ return [
 
     'timezone' => 'UTC',
 
+    // Used only when the site chooses "server default"; application timestamps
+    // remain in UTC so database scheduling and comparisons stay consistent.
+    'server_timezone' => env('APP_SERVER_TIMEZONE', ini_get('date.timezone') ?: 'UTC'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

@@ -19,6 +19,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SiteController extends Controller
@@ -76,7 +77,16 @@ class SiteController extends Controller
             'company_city' => ['nullable', 'string', 'max:100'],
             'support_whatsapp' => ['nullable', 'string', 'max:20'],
             'business_whatsapp' => ['nullable', 'string', 'max:20'],
-            'server_timezone' => ['nullable', 'string', 'max:50'],
+            // "server" is a UI sentinel; all other accepted values are IANA timezone identifiers.
+            'server_timezone' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::in(array_merge(
+                    ['server', 'UTC'],
+                    \DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC),
+                )),
+            ],
             'canonical_url' => ['nullable', 'url', 'max:255'],
             'og_type' => ['nullable', 'string', 'max:40'],
             'og_title' => ['nullable', 'string', 'max:120'],

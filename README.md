@@ -494,9 +494,14 @@ cuyo horario ya llego. La revisión es cada 5 minutos por defecto y se administr
 Admin > Contenido > Blog; las frecuencias disponibles son 1, 2, 5, 10 y 30 minutos,
 o cada hora. El scheduler consulta la configuración cada minuto y publica solo en
 los límites de la frecuencia elegida, así los cambios del admin se aplican sin
-reiniciar el proceso. En desarrollo puedes ejecutar `php artisan schedule:work`; en
-producción configura el cron de Laravel para llamar `php artisan schedule:run` cada
-minuto. Comprueba la programación con
+reiniciar el proceso. El editor interpreta las fechas en la zona horaria configurada
+en Admin > Sitio y guarda los instantes convertidos a UTC. Revisa las fechas de los
+artículos que ya estaban programados antes de activar esta conversión. Las opciones
+incluyen UTC, Bogotá y otras zonas de América y Europa. La opción «Predeterminada
+del servidor» usa `APP_SERVER_TIMEZONE` o `date.timezone` de PHP, con UTC como respaldo,
+sin cambiar la zona horaria interna de Laravel. En desarrollo puedes ejecutar
+`php artisan schedule:work`; en producción configura el cron de Laravel para llamar
+`php artisan schedule:run` cada minuto. Comprueba la programación con
 `php artisan schedule:list`. Las busquedas de slugs y del blog funcionan con SQLite
 y MySQL.
 

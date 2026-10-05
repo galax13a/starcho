@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Spatie\Translatable\HasTranslations;
 
@@ -173,6 +174,12 @@ class Post extends Model
         return $this->type === self::TYPE_PAGE
             ? url('/'.$locale.'/'.$slug)
             : url('/'.$locale.'/blog/'.$slug);
+    }
+
+    /** Convert the stored UTC publication instant to the site's display timezone. */
+    public function publishedAtInSiteTimezone(): ?Carbon
+    {
+        return $this->published_at?->copy()->setTimezone(SiteSetting::siteTimezone());
     }
 
     public function isPublished(): bool

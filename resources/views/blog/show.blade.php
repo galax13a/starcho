@@ -606,7 +606,7 @@
         @if ($settings?->show_date && $post->published_at)
             <div class="post-meta-item">
                 <i class="fas fa-calendar-days"></i>
-                {{ $post->published_at->translatedFormat('d \d\e F, Y') }}
+                {{ $post->publishedAtInSiteTimezone()?->translatedFormat('d \d\e F, Y') }}
             </div>
         @endif
         @if ($readingTime)
@@ -721,7 +721,7 @@
             <div style="flex:1;min-width:0">
                 <div class="sidebar-post-title">{{ $rpTitle }}</div>
                 @if($rp->published_at)
-                <div class="sidebar-post-date">{{ $rp->published_at->translatedFormat('d M Y') }}</div>
+                <div class="sidebar-post-date">{{ $rp->publishedAtInSiteTimezone()?->translatedFormat('d M Y') }}</div>
                 @endif
             </div>
         </a>

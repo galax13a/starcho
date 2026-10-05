@@ -418,7 +418,7 @@
                                         <span><i class="fas fa-user"></i>{{ $post->author->name }}</span>
                                     @endif
                                     @if ($settings?->show_date && $post->published_at)
-                                        <span><i class="fas fa-calendar-alt"></i>{{ $post->published_at->translatedFormat('d M Y') }}</span>
+                                        <span><i class="fas fa-calendar-alt"></i>{{ $post->publishedAtInSiteTimezone()?->translatedFormat('d M Y') }}</span>
                                     @endif
                                     <a href="{{ $postUrl }}" class="post-card-read">
                                         {{ __('Read') }} <i class="fas fa-arrow-right" style="font-size:.65rem"></i>
@@ -474,7 +474,7 @@
                     <div style="flex:1;min-width:0">
                         <div class="sidebar-post-title">{{ $rpTitle }}</div>
                         @if($rp->published_at)
-                        <div class="sidebar-post-date">{{ $rp->published_at->translatedFormat('d M Y') }}</div>
+                        <div class="sidebar-post-date">{{ $rp->publishedAtInSiteTimezone()?->translatedFormat('d M Y') }}</div>
                         @endif
                     </div>
                 </a>

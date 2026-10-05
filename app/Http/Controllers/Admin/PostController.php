@@ -8,11 +8,13 @@ use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\PostTag;
 use App\Models\SiteLanguage;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\StorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -216,6 +218,7 @@ class PostController extends Controller
             'type' => $type,
             'languages' => $languages,
             'primaryLocale' => $primaryLocale,
+            'siteTimezone' => SiteSetting::siteTimezone(),
             'authors' => User::orderBy('name')->get(['id', 'name', 'email']),
             'categories' => $type === 'post' ? PostCategory::orderBy('sort_order')->orderBy('slug')->get() : collect(),
             'tags' => $type === 'post' ? PostTag::orderBy('slug')->get() : collect(),
@@ -292,7 +295,11 @@ class PostController extends Controller
             'content' => $trans('content') ?: null,
             'status' => $request->status,
             'author_id' => $request->author_id,
-            'published_at' => $request->status === 'scheduled' ? $request->published_at : null,
+            // datetime-local has no offset, so interpret it in the selected site
+            // timezone and persist the resulting instant in UTC.
+            'published_at' => $request->status === Post::STATUS_SCHEDULED
+                ? Carbon::parse($request->input('published_at'), SiteSetting::siteTimezone())->utc()
+                : null,
             'parent_id' => $request->parent_id,
             'menu_order' => $request->menu_order ?? 0,
             'nav_position' => $request->input('nav_position', 'none'),

@@ -313,8 +313,11 @@
                         <flux:label>{{ __('admin_ui.site.form.server_timezone') }}</flux:label>
                         @php
                             $tz = old('server_timezone', $settings->server_timezone ?? 'UTC');
+                            $serverTimezone = \App\Models\SiteSetting::defaultServerTimezone();
                         @endphp
                         <select name="server_timezone" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                            {{-- This option follows APP_SERVER_TIMEZONE or the PHP server configuration. --}}
+                            <option value="server" @selected($tz==='server')>{{ __('admin_ui.site.form.server_timezone_server_default', ['timezone' => $serverTimezone]) }}</option>
                             <option value="UTC" @selected($tz==='UTC')>UTC</option>
                             <option value="America/New_York" @selected($tz==='America/New_York')>America/New_York</option>
                             <option value="America/Chicago" @selected($tz==='America/Chicago')>America/Chicago</option>
@@ -334,6 +337,7 @@
                             <option value="Asia/Dubai" @selected($tz==='Asia/Dubai')>Asia/Dubai</option>
                             <option value="Asia/Kolkata" @selected($tz==='Asia/Kolkata')>Asia/Kolkata</option>
                         </select>
+                        <p class="mt-1 text-xs text-zinc-500">{{ __('admin_ui.site.form.server_timezone_help') }}</p>
                         <flux:error name="server_timezone" />
                     </flux:field>
                 </div>

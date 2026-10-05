@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ContentSetting;
 use App\Models\Post;
+use App\Models\SiteSetting;
 use App\Support\SafeCache;
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -102,6 +103,8 @@ class ContentRenderCache
             $post->type,
             $post->id,
             $localePart,
+            // Avoid serving cached HTML with dates formatted in a previous timezone.
+            sha1(SiteSetting::siteTimezone()),
         ]);
     }
 

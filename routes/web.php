@@ -18,7 +18,10 @@ Route::post('install', [InstallController::class, 'store'])
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('media/files/{media}', [MediaFileController::class, 'show'])->name('media.files.show');
 Route::get('media/albums/{album:slug}', [MediaAlbumController::class, 'show'])->name('media.albums.show');
-Route::post('media/albums/{album:slug}/unlock', [MediaAlbumController::class, 'unlock'])->name('media.albums.unlock');
+// Reduce password guessing against protected albums to five attempts per minute.
+Route::post('media/albums/{album:slug}/unlock', [MediaAlbumController::class, 'unlock'])
+    ->middleware('throttle:5,1')
+    ->name('media.albums.unlock');
 Route::get('/', [PageController::class, 'home'])->name('home');
 
 // Public blog and pages with locale prefix

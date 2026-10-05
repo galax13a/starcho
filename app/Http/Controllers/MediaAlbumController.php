@@ -56,8 +56,9 @@ class MediaAlbumController extends Controller
 
         abort_unless($album->effectiveVisibility() === 'protected', 404);
 
+        // Bound the input before hashing/comparing it to avoid oversized password payloads.
         $data = $request->validate([
-            'password' => ['required', 'string'],
+            'password' => ['required', 'string', 'max:255'],
         ]);
 
         if (! $album->password || ! Hash::check($data['password'], $album->password)) {
