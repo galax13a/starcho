@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Services\ContentRenderCache;
+use App\Services\SitemapService;
 use Illuminate\Console\Command;
 
 class PublishScheduledPosts extends Command
@@ -13,7 +14,7 @@ class PublishScheduledPosts extends Command
 
     protected $description = 'Publish scheduled content whose publication time has arrived';
 
-    public function handle(ContentRenderCache $renderCache): int
+    public function handle(ContentRenderCache $renderCache, SitemapService $sitemaps): int
     {
         $interval = ContentSetting::singleton()->scheduledPublishIntervalMinutes();
 
@@ -57,6 +58,11 @@ class PublishScheduledPosts extends Command
             });
 
         $this->info("Published {$published} scheduled item(s).");
+
+        // This command uses a bulk update, so model observers cannot invalidate the sitemap.
+        if ($published > 0) {
+            $sitemaps->invalidate();
+        }
 
         return self::SUCCESS;
     }

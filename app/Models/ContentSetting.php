@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\MemoizesPerRequest;
 use App\Services\ContentRenderCache;
+use App\Services\SitemapService;
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -152,15 +153,21 @@ class ContentSetting extends Model
 
     protected static function booted(): void
     {
-        static::saved(function (): void {
+        static::saved(function (self $settings): void {
             Cache::forget(self::CACHE_KEY);
             static::flushMemo();
             app(ContentRenderCache::class)->clearAll();
+
+            // Rebuild only when a setting that changes sitemap contents is edited.
+            if ($settings->wasChanged(['sitemap_include_pages', 'sitemap_include_posts', 'sitemap_excluded_urls'])) {
+                app(SitemapService::class)->invalidate();
+            }
         });
         static::deleted(function (): void {
             Cache::forget(self::CACHE_KEY);
             static::flushMemo();
             app(ContentRenderCache::class)->clearAll();
+            app(SitemapService::class)->invalidate();
         });
     }
 }

@@ -2,58 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContentSetting;
-use App\Models\Post;
-use App\Models\SiteLanguage;
+use App\Services\SitemapService;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
-    public function index(): Response
+    public function index(SitemapService $sitemaps): Response
     {
-        // Serve static file if it exists and is fresh (under 24h)
+        // A generated public copy is served directly when it is still fresh.
         $static = public_path('sitemap.xml');
         if (file_exists($static) && filemtime($static) > time() - 86400) {
-            return response(file_get_contents($static), 200, ['Content-Type' => 'application/xml']);
-        }
+            $contents = file_get_contents($static);
 
-        $settings = ContentSetting::cached();
-        $excluded = $settings->sitemap_excluded_urls ?? [];
-        $locales = SiteLanguage::activeCodes() ?: ['es'];
-        $urls = [];
-
-        if ($settings->sitemap_include_pages ?? true) {
-            foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
-                foreach ($locales as $locale) {
-                    $slug = $page->getTranslation('slug', $locale, false);
-                    if (! $slug) {
-                        continue;
-                    }
-                    $url = url('/'.$locale.'/'.$slug);
-                    if (! in_array($url, $excluded)) {
-                        $urls[] = ['loc' => $url, 'lastmod' => $page->updated_at?->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'];
-                    }
-                }
+            if (is_string($contents)) {
+                return response($contents, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
             }
         }
 
-        if ($settings->sitemap_include_posts ?? true) {
-            foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
-                foreach ($locales as $locale) {
-                    $slug = $post->getTranslation('slug', $locale, false);
-                    if (! $slug) {
-                        continue;
-                    }
-                    $url = url('/'.$locale.'/blog/'.$slug);
-                    if (! in_array($url, $excluded)) {
-                        $urls[] = ['loc' => $url, 'lastmod' => $post->updated_at?->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.6'];
-                    }
-                }
-            }
-        }
+        // Cache the generated XML and refresh the file so expiry never causes every request to rebuild it.
+        $xml = $sitemaps->cachedXml();
+        $sitemaps->writePublicCopy($xml);
 
-        $xml = view('sitemap', compact('urls'))->render();
-
-        return response($xml, 200, ['Content-Type' => 'application/xml']);
+        return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 }

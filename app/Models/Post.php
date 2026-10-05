@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\ContentRenderCache;
+use App\Services\SitemapService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -260,10 +261,19 @@ class Post extends Model
 
             if ($changed) {
                 app(ContentRenderCache::class)->clearForPost($post);
+                // A published post or page may add, remove, or change a sitemap URL.
+                app(SitemapService::class)->invalidate();
             }
         });
 
-        static::deleted(fn (self $post) => app(ContentRenderCache::class)->clearForPost($post));
-        static::restored(fn (self $post) => app(ContentRenderCache::class)->clearForPost($post));
+        static::deleted(function (self $post): void {
+            app(ContentRenderCache::class)->clearForPost($post);
+            app(SitemapService::class)->invalidate();
+        });
+
+        static::restored(function (self $post): void {
+            app(ContentRenderCache::class)->clearForPost($post);
+            app(SitemapService::class)->invalidate();
+        });
     }
 }

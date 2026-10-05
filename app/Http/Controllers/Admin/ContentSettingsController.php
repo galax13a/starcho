@@ -7,6 +7,7 @@ use App\Models\BrokenLink;
 use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Models\SiteLanguage;
+use App\Services\SitemapService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,62 +131,15 @@ class ContentSettingsController extends Controller
         return back()->with('success', __('admin_ui.content.notify.settings_saved'));
     }
 
-    public function generateSitemap(): RedirectResponse
+    public function generateSitemap(SitemapService $sitemaps): RedirectResponse
     {
         $settings = ContentSetting::singleton();
-        $excluded = $settings->sitemap_excluded_urls ?? [];
-        $locales = SiteLanguage::activeCodes() ?: ['es'];
-        $urls = [];
-
-        if ($settings->sitemap_include_pages) {
-            foreach (Post::where('type', 'page')->where('status', 'published')->orderBy('menu_order')->get() as $page) {
-                foreach ($locales as $locale) {
-                    $slug = $page->getTranslation('slug', $locale, false);
-                    if (! $slug) {
-                        continue;
-                    }
-                    $url = url('/'.$locale.'/'.$slug);
-                    if (! in_array($url, $excluded)) {
-                        $urls[] = ['loc' => $url, 'lastmod' => $page->updated_at?->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'];
-                    }
-                }
-            }
-        }
-
-        if ($settings->sitemap_include_posts) {
-            foreach (Post::where('type', 'post')->where('status', 'published')->latest('published_at')->get() as $post) {
-                foreach ($locales as $locale) {
-                    $slug = $post->getTranslation('slug', $locale, false);
-                    if (! $slug) {
-                        continue;
-                    }
-                    $url = url('/'.$locale.'/blog/'.$slug);
-                    if (! in_array($url, $excluded)) {
-                        $urls[] = ['loc' => $url, 'lastmod' => $post->updated_at?->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.6'];
-                    }
-                }
-            }
-        }
-
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
-        foreach ($urls as $entry) {
-            $xml .= "  <url>\n";
-            $xml .= '    <loc>'.e($entry['loc'])."</loc>\n";
-            if ($entry['lastmod']) {
-                $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
-            }
-            $xml .= "    <changefreq>{$entry['changefreq']}</changefreq>\n";
-            $xml .= "    <priority>{$entry['priority']}</priority>\n";
-            $xml .= "  </url>\n";
-        }
-        $xml .= '</urlset>';
-
-        file_put_contents(public_path('sitemap.xml'), $xml);
-        clearstatcache();
+        // Reuse the same chunked XML builder and cache as the public sitemap route.
+        $generated = $sitemaps->generate($settings);
+        $sitemaps->store($generated['xml']);
 
         return redirect()->route('admin.content.settings', ['tab' => 'sitemap'])
-            ->with('success', 'Sitemap generado con '.count($urls).' URLs → /sitemap.xml');
+            ->with('success', 'Sitemap generado con '.$generated['count'].' URLs → /sitemap.xml');
     }
 
     public function brokenLinks(Request $request): View

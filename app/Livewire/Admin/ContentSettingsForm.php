@@ -8,6 +8,7 @@ use App\Models\ContentSetting;
 use App\Models\Post;
 use App\Models\SiteLanguage;
 use App\Services\ContentRenderCache;
+use App\Services\SitemapService;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -115,26 +116,11 @@ class ContentSettingsForm extends Component
             'sitemap_excluded_urls' => array_values(array_filter($this->excludedUrls)) ?: null,
         ]);
 
-        $urls = $this->sitemapUrls($settings);
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+        // Share the chunked generator with the public endpoint so both emit identical XML.
+        $generated = app(SitemapService::class)->generate($settings);
+        app(SitemapService::class)->store($generated['xml']);
 
-        foreach ($urls as $entry) {
-            $xml .= "  <url>\n";
-            $xml .= '    <loc>'.e($entry['loc'])."</loc>\n";
-            if ($entry['lastmod']) {
-                $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
-            }
-            $xml .= "    <changefreq>{$entry['changefreq']}</changefreq>\n";
-            $xml .= "    <priority>{$entry['priority']}</priority>\n";
-            $xml .= "  </url>\n";
-        }
-
-        $xml .= '</urlset>';
-        file_put_contents(public_path('sitemap.xml'), $xml);
-        clearstatcache();
-
-        $this->notifySuccess(__('admin_ui.content.notify.sitemap_generated', ['count' => count($urls)]));
+        $this->notifySuccess(__('admin_ui.content.notify.sitemap_generated', ['count' => $generated['count']]));
     }
 
     public function render()

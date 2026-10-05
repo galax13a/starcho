@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\MemoizesPerRequest;
+use App\Services\SitemapService;
 use App\Support\SafeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -87,7 +88,18 @@ class SiteLanguage extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => static::clearCache());
-        static::deleted(fn () => static::clearCache());
+        static::saved(function (self $language): void {
+            static::clearCache();
+
+            // Active language changes alter the set of translated sitemap URLs.
+            if ($language->wasChanged(['code', 'active', 'sort_order'])) {
+                app(SitemapService::class)->invalidate();
+            }
+        });
+
+        static::deleted(function (): void {
+            static::clearCache();
+            app(SitemapService::class)->invalidate();
+        });
     }
 }
