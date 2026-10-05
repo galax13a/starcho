@@ -109,6 +109,7 @@ Todas las rutas admin viven bajo `/admin` y usan `auth`, `verified`, `role:root|
 | `/admin/comments` | `admin.comments.index` | Comentarios editoriales de posts |
 | `/admin/posts/comments` | `admin.posts.comments` | Comentarios editoriales desde el modulo posts |
 | `/admin/storage` | `admin.storage.index` | Pantalla dedicada de storage |
+| `/admin/operations` | `admin.operations.index` | Estado del scheduler, cola y trabajos de imágenes |
 | `/admin/storage` `PUT` | `admin.storage.update` | Guardar storage |
 | `/admin/storage/link` | `admin.storage.link` | Crear/verificar `storage:link` |
 | `/admin/storage/test` | `admin.storage.test` | Subida de prueba |
@@ -216,8 +217,10 @@ Flujo de subida:
 3. Las imagenes se convierten a WebP cuando GD esta disponible.
 4. Se guarda el archivo en el disco activo.
 5. Se crea un registro `Media` con driver, disk, path, url, mime, size, width, height, contexto y owner.
-6. Si las variantes estan activas, se generan copias WebP responsive.
-7. El tamaño real guardado reconcilia la reserva; si falla el registro o la generación de variantes, se intenta eliminar lo escrito y liberar la reserva.
+6. Si las variantes están activas, la generación responsive se encola después de guardar el original; la galería sirve el original como vista previa mientras el trabajo está pendiente.
+7. El tamaño real guardado reconcilia la reserva; si falla el registro original se intenta limpiar lo escrito y liberar la cuota. Los trabajos de variantes se reintentan tres veces y sus estados/error aparecen en la biblioteca.
+
+La cola predeterminada es `database`. En desarrollo y producción mantén un worker con `php artisan queue:work --tries=3 --timeout=180`; para varios nodos, usa el mismo backend de cola compartido. Admin > Operación muestra ejecuciones, pendientes, fallos y el estado de las variantes.
 
 Los álbumes públicos y el administrador muestran 24 archivos por página dentro del álbum seleccionado; el selector general del admin conserva su límite independiente. Para localizar inconsistencias sin modificar datos, ejecuta `php artisan starcho:storage-audit` (o `php artisan starcho:storage-audit --prefix=uploads`). El comando reporta objetos huérfanos, referencias faltantes y diferencias en cuotas; no borra ni repara archivos automáticamente. En producción queda programado semanalmente y escribe el resultado en `storage/logs/storage-audit.log`.
 
@@ -510,7 +513,11 @@ sin cambiar la zona horaria interna de Laravel. En desarrollo puedes ejecutar
 `php artisan schedule:work`; en producción configura el cron de Laravel para llamar
 `php artisan schedule:run` cada minuto. Comprueba la programación con
 `php artisan schedule:list`. Las busquedas de slugs y del blog funcionan con SQLite
-y MySQL.
+y MySQL. Las tareas programadas usan `onOneServer`; en un despliegue multinodo todas
+las instancias deben compartir la misma base de datos y un cache central (database,
+Redis o Memcached), además del backend de cola y los discos de archivos. El panel
+Admin > Operación muestra las últimas ejecuciones y fallos; requiere aplicar las
+migraciones y ejecutar un worker de Laravel permanentemente.
 
 ---
 

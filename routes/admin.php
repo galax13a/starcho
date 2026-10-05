@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MediaAlbumController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Admin\OperationsController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RoleController;
@@ -28,6 +29,7 @@ Route::prefix('admin')
 
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('operations', [OperationsController::class, 'index'])->name('operations.index');
         Route::view('comments', 'admin.posts.comments')->name('comments.index');
 
         // ── Roles: rutas custom ANTES del resource para evitar conflicto con {role} ──

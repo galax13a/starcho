@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateMediaVariants;
 use App\Models\Media;
 use App\Models\StorageSetting;
 use App\Models\User;
@@ -159,7 +160,9 @@ class StorageService
             ]);
 
             if ($media->isImage() && $this->settings->imageVariantsEnabled()) {
-                $this->generateImageVariants($media);
+                // Keep the original usable immediately; expensive responsive copies
+                // are handled by a retryable worker after this request returns.
+                $this->queueImageVariants($media);
             }
 
             return $media;
@@ -406,24 +409,59 @@ class StorageService
     }
 
     /**
+     * Queue variant generation without delaying the original upload response.
+     * A dispatch failure is visible on the media row; the original remains usable.
+     */
+    public function queueImageVariants(Media $media, bool $force = false): bool
+    {
+        if (! $media->isImage() || ! $this->settings->imageVariantsEnabled()) {
+            return false;
+        }
+
+        $media->forceFill(['variants_status' => 'queued', 'variants_error' => null])->save();
+
+        try {
+            GenerateMediaVariants::dispatch((int) $media->getKey(), $force)->afterCommit();
+
+            return true;
+        } catch (Throwable $exception) {
+            // A temporarily unavailable queue must not discard the successfully stored original.
+            $media->forceFill([
+                'variants_status' => 'failed',
+                'variants_error' => Str::limit($exception->getMessage(), 1000),
+            ])->save();
+            Log::error('Could not enqueue image variant generation.', [
+                'media_id' => $media->id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Generate responsive WebP copies for an existing image.
      */
     public function generateImageVariants(Media $media, bool $force = false): Media
     {
-        if (! $this->settings->imageVariantsEnabled() || ! $media->isImage() || ! function_exists('imagecreatefromstring')) {
+        if (! $this->settings->imageVariantsEnabled() || ! $media->isImage()) {
             return $media;
+        }
+
+        if (! function_exists('imagecreatefromstring')) {
+            throw new \RuntimeException('GD es requerido para generar variantes de imagen.');
         }
 
         $disk = $this->diskFor($media);
 
         if (! $media->path || ! $disk->exists($media->path)) {
-            return $media;
+            throw new \RuntimeException("No se encontró el archivo fuente para el medio {$media->id}.");
         }
 
         $source = @imagecreatefromstring($disk->get($media->path));
 
         if ($source === false) {
-            return $media;
+            throw new \RuntimeException("No se pudo leer la imagen fuente para el medio {$media->id}.");
         }
 
         $sourceWidth = imagesx($source);
@@ -494,6 +532,8 @@ class StorageService
             $media->forceFill([
                 'variants' => $variants ?: null,
                 'variants_size' => $newVariantsSize,
+                'variants_status' => 'ready',
+                'variants_error' => null,
             ])->save();
         } catch (Throwable $exception) {
             $remainingReserved = 0;

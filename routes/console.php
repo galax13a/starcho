@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\OperationRun;
 use App\Services\SitemapService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -9,8 +10,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Tick once per minute so the command can apply the latest admin-selected cadence at runtime.
-Schedule::command('starcho:publish-scheduled')->everyMinute()->withoutOverlapping();
+// The shared cache lock lets exactly one app instance publish when several web nodes run cron.
+// Keep the minute tick so the admin-selected publication cadence can change without redeploying.
+Schedule::command('starcho:publish-scheduled')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();
 
 // Backfill legacy protected uploads automatically in bounded batches after deployments/migrations.
 Schedule::command('starcho:secure-media --limit=100')
@@ -26,6 +31,13 @@ Schedule::command('starcho:storage-audit')
     ->withoutOverlapping(90)
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/storage-audit.log'));
+
+// Keep the operational timeline bounded while retaining enough history for troubleshooting.
+Schedule::call(fn () => OperationRun::query()->where('started_at', '<', now()->subDays(30))->delete())
+    ->name('starcho:prune-operation-runs')
+    ->dailyAt('03:45')
+    ->withoutOverlapping(60)
+    ->onOneServer();
 
 // Refresh expired static XML on a schedule; model events invalidate it immediately after content edits.
 Schedule::call(fn () => app(SitemapService::class)->refreshPublicCopyIfExpired())

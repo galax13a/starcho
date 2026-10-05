@@ -179,7 +179,15 @@ class Media extends Model
 
     public function getAverageRatingAttribute(): ?float
     {
-        $average = $this->ratings()->avg('rating');
+        // Respect eager-loaded relations and withAvg aggregates before falling
+        // back to SQL, so rendering a collection cannot create one query per file.
+        if (array_key_exists('ratings_avg_rating', $this->attributes)) {
+            $average = $this->attributes['ratings_avg_rating'];
+        } elseif ($this->relationLoaded('ratings')) {
+            $average = $this->ratings->avg('rating');
+        } else {
+            $average = $this->ratings()->avg('rating');
+        }
 
         return $average === null ? null : round((float) $average, 1);
     }

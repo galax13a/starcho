@@ -2,8 +2,8 @@
     @if($open && $this->media)
         @php
             $media = $this->media;
-            $isFavorite = $media->favorites->contains('user_id', auth()->id());
-            $averageRating = $media->ratings->isNotEmpty() ? round($media->ratings->avg('rating'), 1) : null;
+            $isFavorite = (bool) $media->is_favorite;
+            $averageRating = $media->average_rating;
             $mediaUrl = $media->public_url;
             $variantsEnabled = \App\Models\StorageSetting::singleton()->imageVariantsEnabled();
             $viewerImageUrl = (! $variantsEnabled || $variantSize === 'original') ? $mediaUrl : $media->variantUrl($variantSize);
@@ -163,7 +163,7 @@
                         </span>
                         <button type="button" wire:click="openComments" class="inline-flex items-center gap-1 rounded-md px-1 transition hover:bg-white/10 hover:text-white">
                             <flux:icon.chat-bubble-left class="size-3.5 text-violet-300" />
-                            {{ $media->comments->count() }} comentario(s)
+                            {{ $media->comments_count }} comentario(s)
                         </button>
                     </div>
 

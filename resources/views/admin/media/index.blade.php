@@ -375,6 +375,11 @@
                                 <span class="text-[10px] text-zinc-400">{{ $item->width }}x{{ $item->height }}</span>
                             @endif
                         </div>
+                        <p class="flex flex-wrap gap-x-2 text-[10px] text-zinc-400" title="Comentarios, calificaciones y favoritos">
+                            <span><i class="fas fa-comment"></i> {{ $item->comments_count }}</span>
+                            <span><i class="fas fa-star"></i> {{ $item->ratings_count }}@if($item->average_rating) · {{ $item->average_rating }}/10 @endif</span>
+                            <span><i class="fas fa-heart"></i> {{ $item->favorites_count }}</span>
+                        </p>
                         @if($imageVariantsEnabled && $item->isImage())
                             <p class="truncate text-[10px] text-emerald-600 dark:text-emerald-400">
                                 <i class="fas fa-layer-group text-[8px]"></i>
@@ -383,6 +388,14 @@
                                     · {{ $item->variantsSizeLabel() }}
                                 @endif
                             </p>
+                            @if(in_array($item->variants_status, ['queued', 'processing', 'failed', 'skipped'], true))
+                                <span
+                                    title="{{ $item->variants_status === 'failed' ? ($item->variants_error ?: 'La tarea agotó sus reintentos.') : '' }}"
+                                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium {{ $item->variants_status === 'failed' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' : ($item->variants_status === 'processing' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300') }}"
+                                >
+                                    {{ ['queued' => 'Variantes en cola · original visible', 'processing' => 'Generando · original visible', 'failed' => 'Error al generar variantes', 'skipped' => 'Variantes omitidas'][ $item->variants_status ] }}
+                                </span>
+                            @endif
                         @endif
                         @if($item->albums->isNotEmpty())
                             <p class="truncate text-[10px] text-emerald-600 dark:text-emerald-400"><i class="fas fa-folder text-[8px]"></i> {{ $item->albums->pluck('name')->implode(', ') }}</p>

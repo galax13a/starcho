@@ -150,6 +150,7 @@
             ['route' => 'admin.pages.index',    'icon' => 'fas fa-file-alt',     'color' => '#06b6d4', 'label' => __('Pages'),            'help' => $stats['pages_published'] . ' ' . __('published')],
             ['route' => 'admin.tasks.index',    'icon' => 'fas fa-clipboard-list','color' => '#10b981', 'label' => __('admin_ui.dashboard.quick.tasks'),   'help' => __('admin_ui.dashboard.quick.tasks_help')],
             ['route' => 'admin.media.index',    'icon' => 'fas fa-photo-film',    'color' => '#8b5cf6', 'label' => 'Media',            'help' => $mediaSummary['total_label'] . ' total'],
+            ['route' => 'admin.operations.index','icon' => 'fas fa-heart-pulse',   'color' => '#0ea5e9', 'label' => 'Operación',       'help' => 'Scheduler y cola'],
             ['route' => 'admin.users.index',    'icon' => 'fas fa-users',        'color' => '#f59e0b', 'label' => __('Users'),            'help' => $stats['users'] . ' ' . __('total')],
             ['route' => 'admin.site.index',     'icon' => 'fas fa-globe',        'color' => '#ef4444', 'label' => __('Website'),          'help' => __('SEO, metadata, branding')],
             ['route' => 'admin.modules.index',  'icon' => 'fas fa-puzzle-piece', 'color' => '#635bff', 'label' => __('admin_ui.dashboard.quick.modules'), 'help' => $stats['modules_active'] . ' ' . __('active')],

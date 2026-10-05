@@ -24,7 +24,13 @@ class MediaController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Media::with(['user', 'mediable', 'albums', 'tags', 'comments.user', 'ratings', 'favorites'])->latest();
+        // The gallery presents summaries, not full feedback threads. Counts and
+        // average score stay in SQL; comments/ratings/favorites load on demand in the viewer.
+        $query = Media::query()
+            ->with('albums')
+            ->withCount(['comments', 'ratings', 'favorites'])
+            ->withAvg('ratings', 'rating')
+            ->latest();
 
         if ($request->filled('type')) {
             $query->where('mime_type', 'like', $request->type.'/%');
@@ -141,6 +147,7 @@ class MediaController extends Controller
                     'url' => $media->public_url,
                     'preview_url' => $media->preview_url,
                     'variants' => $media->variants,
+                    'variants_status' => $media->variants_status,
                     'original_name' => $media->original_name,
                     'name' => $media->name,
                     'size_label' => $media->sizeLabel(),
@@ -229,13 +236,11 @@ class MediaController extends Controller
             return back()->with('warning', 'Activa Multi-size images en Storage antes de generar copias.');
         }
 
-        try {
-            $this->storage->generateImageVariants($media, true);
-        } catch (\RuntimeException $exception) {
-            return back()->with('warning', $exception->getMessage());
+        if (! $this->storage->queueImageVariants($media, true)) {
+            return back()->with('warning', 'No se pudo agregar la generación a la cola. El original sigue disponible.');
         }
 
-        return back()->with('success', 'Variantes de imagen generadas.');
+        return back()->with('success', 'La generación de variantes se agregó a la cola.');
     }
 
     public function bulkGenerateVariants(Request $request): RedirectResponse
@@ -245,7 +250,7 @@ class MediaController extends Controller
             'media_ids.*' => ['integer', 'exists:media,id'],
         ]);
 
-        $generated = 0;
+        $queued = 0;
         $settings = StorageSetting::singleton();
 
         if (! $settings->imageVariantsEnabled()) {
@@ -257,16 +262,15 @@ class MediaController extends Controller
         Media::whereIn('id', $data['media_ids'])
             ->where('mime_type', 'like', 'image/%')
             ->get()
-            ->each(function (Media $media) use (&$generated, &$failed): void {
-                try {
-                    $this->storage->generateImageVariants($media, true);
-                    $generated++;
-                } catch (\RuntimeException $exception) {
-                    $failed[] = $media->name.': '.$exception->getMessage();
+            ->each(function (Media $media) use (&$queued, &$failed): void {
+                if ($this->storage->queueImageVariants($media, true)) {
+                    $queued++;
+                } else {
+                    $failed[] = $media->name.': no se pudo agregar a la cola.';
                 }
             });
 
-        $response = back()->with('success', "{$generated} imagen(es) optimizada(s).");
+        $response = back()->with('success', "{$queued} imagen(es) agregada(s) a la cola.");
 
         if ($failed !== []) {
             $response->with('warning', implode(' ', array_slice($failed, 0, 3)));

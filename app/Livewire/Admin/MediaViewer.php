@@ -152,11 +152,13 @@ class MediaViewer extends Component
     public function openComments(): void
     {
         $this->commentsOpen = true;
+        unset($this->media);
     }
 
     public function closeComments(): void
     {
         $this->commentsOpen = false;
+        unset($this->media);
     }
 
     public function confirmDeleteComment(int $commentId): void
@@ -271,7 +273,19 @@ class MediaViewer extends Component
             return null;
         }
 
-        return Media::with(['comments.user', 'ratings', 'favorites'])->find($this->mediaId);
+        $media = Media::query()
+            ->with(['ratings' => fn ($query) => $query->where('user_id', auth()->id())])
+            ->withCount('comments')
+            ->withAvg('ratings', 'rating')
+            ->withExists(['favorites as is_favorite' => fn ($query) => $query->where('user_id', auth()->id())])
+            ->find($this->mediaId);
+
+        // Fetch full comment bodies and authors only after the admin opens that panel.
+        if ($media && $this->commentsOpen) {
+            $media->load('comments.user');
+        }
+
+        return $media;
     }
 
     #[Computed]

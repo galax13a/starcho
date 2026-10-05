@@ -6,11 +6,20 @@ use App\Models\ContentSetting;
 use App\Models\SiteLanguage;
 use App\Models\SiteSetting;
 use App\Observers\UserObserver;
+use App\Services\OperationMonitor;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -21,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(OperationMonitor::class);
     }
 
     /**
@@ -63,6 +72,32 @@ class AppServiceProvider extends ServiceProvider
                 'Illuminate\\Auth\\Events\\Registered',
                 [UserObserver::class, 'handle']
             );
+        }
+
+        // Track only app-owned scheduled commands and queue work for the admin
+        // operations panel; the listener itself skips writes before its migration exists.
+        $operationListeners = [
+            ScheduledTaskStarting::class => 'schedulerStarting',
+            ScheduledTaskFinished::class => 'schedulerFinished',
+            ScheduledTaskFailed::class => 'schedulerFailed',
+            JobProcessing::class => 'queueStarting',
+            JobProcessed::class => 'queueProcessed',
+            JobExceptionOccurred::class => 'queueException',
+            JobFailed::class => 'queueFailed',
+        ];
+
+        foreach ($operationListeners as $eventClass => $handler) {
+            Event::listen($eventClass, function (object $event) use ($handler): void {
+                try {
+                    app(OperationMonitor::class)->{$handler}($event);
+                } catch (\Throwable $exception) {
+                    // Monitoring is best-effort and must never prevent the real job from running.
+                    Log::warning('Could not persist an operations monitor event.', [
+                        'event' => $event::class,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                }
+            });
         }
     }
 
