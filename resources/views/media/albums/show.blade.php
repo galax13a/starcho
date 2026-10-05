@@ -18,9 +18,9 @@
             </div>
             @if($unlocked)
                 <div class="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700">
-                    {{ $album->media->count() }} archivos
-                    @if($album->average_rating)
-                        · {{ $album->average_rating }}/10
+                    {{ $album->media->count() }} archivos visibles en esta página
+                    @if($album->ratings_avg_rating)
+                        · {{ number_format((float) $album->ratings_avg_rating, 1) }}/10
                     @endif
                 </div>
             @endif
@@ -38,7 +38,7 @@
             </form>
         @else
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                @forelse($album->media as $item)
+                @forelse($media as $item)
                     <a href="{{ $item->public_url }}" target="_blank" rel="noopener" class="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="aspect-square bg-zinc-100 dark:bg-zinc-800">
                             @if($item->isImage())
@@ -54,9 +54,12 @@
                         </div>
                     </a>
                 @empty
-                    <p class="col-span-full text-sm text-zinc-500">Este álbum no tiene archivos todavía.</p>
+                    <p class="col-span-full text-sm text-zinc-500">No hay archivos visibles en esta página.</p>
                 @endforelse
             </div>
+            @if($media?->hasPages())
+                <div class="mt-6">{{ $media->links() }}</div>
+            @endif
         @endunless
     </main>
 </x-layouts::site>

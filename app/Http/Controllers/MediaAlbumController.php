@@ -11,7 +11,7 @@ use Illuminate\View\View;
 
 class MediaAlbumController extends Controller
 {
-    public function show(MediaAlbum $album): View
+    public function show(Request $request, MediaAlbum $album): View
     {
         $user = request()->user();
         $isOwnerOrAdmin = $user && (
@@ -29,15 +29,29 @@ class MediaAlbumController extends Controller
             || $visibility !== 'protected'
             || (bool) session($this->sessionKey($album));
 
+        $media = null;
+
         if ($unlocked) {
-            $album->load(['media.tags', 'media.albums', 'tags', 'ratings', 'comments.user']);
-            $album->setRelation(
-                'media',
-                $album->media->filter(fn (Media $media) => $media->isAccessibleBy($user))->values()
-            );
+            // This page needs album tags and an aggregate only; loading every
+            // comment/rating for a long-lived album would defeat bounded paging.
+            $album->load('tags')->loadAvg('ratings', 'rating');
+
+            // Bound both hydrated models and their visibility checks to one page.
+            // The per-file authorization check remains mandatory because a file may
+            // also belong to a stricter album elsewhere in the library.
+            $media = $album->media()
+                ->with('albums')
+                ->simplePaginate(24)
+                ->withQueryString();
+            $visibleMedia = $media->getCollection()
+                ->filter(fn (Media $item) => $item->isAccessibleBy($user))
+                ->values();
+
+            $media->setCollection($visibleMedia);
+            $album->setRelation('media', $visibleMedia);
         }
 
-        return view('media.albums.show', compact('album', 'unlocked'));
+        return view('media.albums.show', compact('album', 'unlocked', 'media'));
     }
 
     public function unlock(Request $request, MediaAlbum $album): RedirectResponse

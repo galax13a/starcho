@@ -16,7 +16,7 @@
     ];
 
     $albumViewerIds = $selectedAlbum
-        ? $selectedAlbum->media->filter(fn ($item) => $item->isImage() || $item->isVideo())->pluck('id')->values()->all()
+        ? $selectedAlbumMedia->getCollection()->filter(fn ($item) => $item->isImage() || $item->isVideo())->pluck('id')->values()->all()
         : [];
 @endphp
 
@@ -134,9 +134,9 @@
                             @endforeach
                         </div>
                         <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->media->count() }} archivos</span>
-                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->comments->count() }} comentarios</span>
-                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->average_rating ? $selectedAlbum->average_rating . '/10' : 'Sin calificar' }}</span>
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->media_count }} archivos</span>
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->comments_count }} comentarios</span>
+                            <span class="rounded-lg bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $selectedAlbum->ratings_avg_rating ? $selectedAlbum->ratings_avg_rating . '/10' : 'Sin calificar' }}</span>
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
@@ -213,7 +213,7 @@
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h3 class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Archivos en este álbum</h3>
-                        <span class="text-xs text-zinc-500">{{ $selectedAlbum->media->count() }} archivos</span>
+                        <span class="text-xs text-zinc-500">{{ $selectedAlbum->media_count }} archivos</span>
                     </div>
                     <div class="flex items-center gap-2 rounded-lg border border-zinc-200 p-1 dark:border-zinc-700">
                         <button type="button" @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'text-zinc-500'" class="flex size-8 items-center justify-center rounded-md transition" title="Grilla">
@@ -248,14 +248,14 @@
                     </div>
                 </div>
 
-                @if($selectedAlbum->media->isEmpty())
+                @if($selectedAlbumMedia->isEmpty())
                     <div class="py-16 text-center text-zinc-400">
                         <i class="fas fa-folder-open mb-3 block text-4xl"></i>
                         <p class="text-sm">Este álbum todavía no tiene archivos.</p>
                     </div>
                 @else
                     <div x-show="viewMode === 'grid'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-                        @foreach($selectedAlbum->media as $item)
+                        @foreach($selectedAlbumMedia as $item)
                             @php
                                 $ftype = $item->fileType();
                                 $icon = $typeIcons[$ftype] ?? 'fa-file';
@@ -412,7 +412,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zinc-100 bg-white dark:divide-zinc-800 dark:bg-zinc-900">
-                                @foreach($selectedAlbum->media as $item)
+                                @foreach($selectedAlbumMedia as $item)
                                     @php
                                         $ftype = $item->fileType();
                                         $icon = $typeIcons[$ftype] ?? 'fa-file';
@@ -489,6 +489,9 @@
                             </tbody>
                         </table>
                     </div>
+                @endif
+                @if($selectedAlbumMedia->hasPages())
+                    <div class="mt-4">{{ $selectedAlbumMedia->links() }}</div>
                 @endif
             </section>
         @else

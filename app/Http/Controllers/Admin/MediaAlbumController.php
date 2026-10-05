@@ -21,17 +21,31 @@ class MediaAlbumController extends Controller
 
     public function index(Request $request): View
     {
-        $albums = MediaAlbum::with(['tags', 'ratings'])
-            ->withCount('media')
+        $albums = MediaAlbum::withCount(['media', 'comments'])
             ->withAvg('ratings', 'rating')
             ->latest()
             ->get();
 
         $selectedAlbum = $request->filled('album')
-            ? MediaAlbum::whereKey($request->integer('album'))->first()
+            ? $albums->firstWhere('id', $request->integer('album'))
             : $albums->first();
 
-        $selectedAlbum?->load(['media.tags', 'media.ratings', 'media.comments.user', 'tags', 'ratings', 'comments.user']);
+        $selectedAlbum?->load([
+            'tags',
+            'ratings' => fn ($query) => $query->where('user_id', auth()->id()),
+        ]);
+
+        // Keep the album workspace paginated independently from the library list below.
+        // Its comment preview and rating controls need only the latest two comments and
+        // the current administrator's rating for each item.
+        $selectedAlbumMedia = $selectedAlbum?->media()
+            ->with([
+                'tags',
+                'ratings' => fn ($query) => $query->where('user_id', auth()->id()),
+                'comments' => fn ($query) => $query->limit(2)->with('user'),
+            ])
+            ->paginate(24, ['media.*'], 'album_page')
+            ->withQueryString();
 
         $mediaQuery = Media::with(['albums', 'tags', 'ratings', 'comments.user'])->latest();
 
@@ -62,6 +76,7 @@ class MediaAlbumController extends Controller
         return view('admin.media.albums', compact(
             'albums',
             'selectedAlbum',
+            'selectedAlbumMedia',
             'media',
             'availableMedia',
             'tags',

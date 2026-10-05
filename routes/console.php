@@ -19,6 +19,14 @@ Schedule::command('starcho:secure-media --limit=100')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/secure-media.log'));
 
+// A weekly, read-only scan catches orphaned/missing objects and quota counter drift
+// without adding storage-listing latency or cost to normal requests.
+Schedule::command('starcho:storage-audit')
+    ->weeklyOn(1, '03:30')
+    ->withoutOverlapping(90)
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/storage-audit.log'));
+
 // Refresh expired static XML on a schedule; model events invalidate it immediately after content edits.
 Schedule::call(fn () => app(SitemapService::class)->refreshPublicCopyIfExpired())
     ->name('starcho:sitemap-refresh')

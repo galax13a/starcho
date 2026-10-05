@@ -212,12 +212,14 @@ Drivers soportados:
 Flujo de subida:
 
 1. El usuario sube un archivo desde media, post editor, album, avatar o galeria.
-2. `StorageService::upload()` valida cuota del usuario.
+2. `StorageService::upload()` reserva la cuota con una actualización condicional en base de datos antes de escribir el objeto; las subidas simultáneas no pueden consumir el mismo saldo.
 3. Las imagenes se convierten a WebP cuando GD esta disponible.
 4. Se guarda el archivo en el disco activo.
 5. Se crea un registro `Media` con driver, disk, path, url, mime, size, width, height, contexto y owner.
 6. Si las variantes estan activas, se generan copias WebP responsive.
-7. Se incrementa `users.storage_used_bytes`.
+7. El tamaño real guardado reconcilia la reserva; si falla el registro o la generación de variantes, se intenta eliminar lo escrito y liberar la reserva.
+
+Los álbumes públicos y el administrador muestran 24 archivos por página dentro del álbum seleccionado; el selector general del admin conserva su límite independiente. Para localizar inconsistencias sin modificar datos, ejecuta `php artisan starcho:storage-audit` (o `php artisan starcho:storage-audit --prefix=uploads`). El comando reporta objetos huérfanos, referencias faltantes y diferencias en cuotas; no borra ni repara archivos automáticamente. En producción queda programado semanalmente y escribe el resultado en `storage/logs/storage-audit.log`.
 
 Configuracion importante en `/admin/site`:
 

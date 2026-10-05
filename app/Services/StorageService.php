@@ -8,8 +8,10 @@ use App\Models\User;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * StorageService
@@ -75,13 +77,11 @@ class StorageService
         $mimeType = $file->getMimeType() ?? 'application/octet-stream';
         $isImage = str_starts_with($mimeType, 'image/');
 
-        // ── Quota check ──────────────────────────────────────────────
-        if ($user && $user->storage_plan_id) {
-            if ($user->storageExceeded($file->getSize())) {
-                throw new \RuntimeException(
-                    'Storage quota exceeded. Plan: '.$user->storagePlan->limitLabel()
-                );
-            }
+        // Reserve against the current database value before doing CPU or disk work.
+        // The conditional UPDATE makes concurrent requests compete for the same quota.
+        $reservedBytes = $file->getSize();
+        if ($user) {
+            $this->reserveStorage($user, $reservedBytes);
         }
 
         // ── Build destination path ───────────────────────────────────
@@ -105,64 +105,88 @@ class StorageService
         $webpPath = null;
         [$width, $height] = [null, null];
 
-        if ($isImage) {
-            [$content, $width, $height] = $this->convertToWebp($file);
-            $disk->put($path, $content, $restricted ? ['visibility' => 'private'] : 'public');
-        } else {
-            $disk->put($path, file_get_contents($file->getRealPath()), $restricted ? ['visibility' => 'private'] : 'public');
-        }
+        $writeAttempted = false;
+        $media = null;
 
-        // For cloud drivers, capture only truly public URLs. R2's S3 endpoint is private
-        // unless a public/custom domain is configured, so the UI will use Laravel's proxy.
-        if (! $restricted && ! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
-            $storedUrl = $disk->url($path);
-        }
-
-        if ($isImage) {
-            $webpPath = $path;
-        }
-
-        // Actual stored size (WebP may differ from original)
-        $storedSize = $disk->size($path);
-
-        // ── Persist Media record ─────────────────────────────────────
-        $media = Media::create([
-            'user_id' => $user?->id,
-            'driver' => $storedDriver,
-            'disk' => $diskName,
-            'private_bucket' => $privateBucket,
-            'path' => $path,
-            'webp_path' => $webpPath,
-            'url' => $storedUrl,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $isImage ? 'image/webp' : $mimeType,
-            'size' => $storedSize,
-            'width' => $width,
-            'height' => $height,
-            'mediable_type' => $mediable ? get_class($mediable) : null,
-            'mediable_id' => $mediable?->getKey(),
-            'context' => $context,
-            'visibility' => $visibility,
-            'alt' => $meta['alt'] ?? null,
-            'caption' => $meta['caption'] ?? null,
-        ]);
-
-        // ── Update user quota counter ────────────────────────────────
-        if ($user) {
-            $user->increment('storage_used_bytes', $storedSize);
-        }
-
-        if ($media->isImage() && $this->settings->imageVariantsEnabled()) {
-            try {
-                $this->generateImageVariants($media);
-            } catch (\RuntimeException $exception) {
-                $this->delete($media);
-
-                throw $exception;
+        try {
+            if ($isImage) {
+                [$content, $width, $height] = $this->convertToWebp($file);
+            } else {
+                $content = file_get_contents($file->getRealPath());
             }
-        }
 
-        return $media;
+            $writeAttempted = true;
+            if (! is_string($content) || ! $disk->put($path, $content, $restricted ? ['visibility' => 'private'] : 'public')) {
+                throw new \RuntimeException('No se pudo guardar el archivo multimedia.');
+            }
+
+            // For cloud drivers, capture only truly public URLs. R2's S3 endpoint is private
+            // unless a public/custom domain is configured, so the UI will use Laravel's proxy.
+            if (! $restricted && ! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
+                $storedUrl = $disk->url($path);
+            }
+
+            if ($isImage) {
+                $webpPath = $path;
+            }
+
+            // WebP conversion can change the byte count; reconcile the reservation before persisting.
+            $storedSize = $disk->size($path);
+            if ($user && $storedSize !== $reservedBytes) {
+                $this->adjustStorageReservation($user, $reservedBytes, $storedSize);
+                $reservedBytes = $storedSize;
+            }
+
+            $media = Media::create([
+                'user_id' => $user?->id,
+                'driver' => $storedDriver,
+                'disk' => $diskName,
+                'private_bucket' => $privateBucket,
+                'path' => $path,
+                'webp_path' => $webpPath,
+                'url' => $storedUrl,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $isImage ? 'image/webp' : $mimeType,
+                'size' => $storedSize,
+                'width' => $width,
+                'height' => $height,
+                'mediable_type' => $mediable ? get_class($mediable) : null,
+                'mediable_id' => $mediable?->getKey(),
+                'context' => $context,
+                'visibility' => $visibility,
+                'alt' => $meta['alt'] ?? null,
+                'caption' => $meta['caption'] ?? null,
+            ]);
+
+            if ($media->isImage() && $this->settings->imageVariantsEnabled()) {
+                $this->generateImageVariants($media);
+            }
+
+            return $media;
+        } catch (Throwable $exception) {
+            // Compensate for a DB or image-variant failure; retain the reservation if
+            // cleanup itself fails so the leaked bytes cannot be uploaded over quota.
+            $cleaned = true;
+            try {
+                if ($media?->exists) {
+                    $this->delete($media, adjustStorageUsage: false);
+                } elseif ($writeAttempted && $disk->exists($path)) {
+                    $cleaned = $disk->delete($path) && ! $disk->exists($path);
+                }
+            } catch (Throwable $cleanupException) {
+                $cleaned = false;
+                Log::error('Failed to clean up a media upload after an error.', [
+                    'path' => $path,
+                    'exception' => $cleanupException->getMessage(),
+                ]);
+            }
+
+            if ($user && $cleaned) {
+                $this->releaseStorage($user, $reservedBytes);
+            }
+
+            throw $exception;
+        }
     }
 
     public function uploadProfileAvatar(UploadedFile $file, User $user): Media
@@ -176,10 +200,12 @@ class StorageService
             ->where('path', $user->avatar)
             ->first();
         $oldSize = (int) ($oldMedia->size ?? 0);
+        $oldAvatarPath = $user->avatar;
 
-        if ($user->storageExceeded(max(0, $size - $oldSize))) {
-            throw new \RuntimeException('No hay espacio suficiente en tu plan para subir este avatar.');
-        }
+        // Reserve only the growth over the existing avatar so a replacement can
+        // succeed at quota; the old file remains intact until the new row is saved.
+        $reservedBytes = max(0, $size - $oldSize);
+        $this->reserveStorage($user, $reservedBytes, 'No hay espacio suficiente en tu plan para subir este avatar.');
 
         $baseName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'avatar';
         $folder = trim($this->settings->uploadFolder().'/profiles/avatars/'.$user->id, '/');
@@ -187,44 +213,90 @@ class StorageService
         $disk = $this->disk();
         $diskName = $this->settings->diskName();
 
-        $disk->put($path, $content, 'public');
+        $writeAttempted = false;
+        $media = null;
+        $avatarSwitched = false;
 
-        if ($oldMedia) {
-            $this->delete($oldMedia);
-        } elseif ($user->avatar && ! Str::startsWith($user->avatar, ['http://', 'https://'])) {
-            $oldDisk = $user->avatar !== $path ? $this->disk() : null;
-
-            if ($oldDisk && $oldDisk->exists($user->avatar)) {
-                $oldDisk->delete($user->avatar);
+        try {
+            $writeAttempted = true;
+            if (! $disk->put($path, $content, 'public')) {
+                throw new \RuntimeException('No se pudo guardar el nuevo avatar.');
             }
+
+            $media = Media::create([
+                'user_id' => $user->id,
+                'driver' => $this->settings->default_driver,
+                'disk' => $diskName,
+                'path' => $path,
+                'webp_path' => $path,
+                'url' => null,
+                'variants' => null,
+                'variants_size' => 0,
+                'original_name' => $baseName.'.webp',
+                'display_name' => 'Avatar de '.$user->name,
+                'mime_type' => 'image/webp',
+                'size' => $size,
+                'width' => $width,
+                'height' => $height,
+                'context' => 'profile_avatar',
+                'alt' => 'Avatar de '.$user->name,
+            ]);
+
+            $user->forceFill(['avatar' => $path])->save();
+            $avatarSwitched = true;
+
+            // Only remove the previous avatar after the replacement is addressable.
+            if ($oldMedia) {
+                try {
+                    $this->delete($oldMedia, adjustStorageUsage: false);
+                    if ($size < $oldSize) {
+                        $this->releaseStorage($user, $oldSize - $size);
+                    }
+                } catch (Throwable $cleanupException) {
+                    // Keep quota truthful if both old and new files remain, even if
+                    // that means the account temporarily exceeds its plan limit.
+                    $overlap = min($oldSize, $size);
+                    if ($overlap > 0) {
+                        User::query()->whereKey($user->id)->increment('storage_used_bytes', $overlap);
+                    }
+                    Log::error('The old profile avatar could not be removed after replacement.', [
+                        'media_id' => $oldMedia->id,
+                        'path' => $oldMedia->path,
+                        'exception' => $cleanupException->getMessage(),
+                    ]);
+                }
+            } elseif ($oldAvatarPath && ! Str::startsWith($oldAvatarPath, ['http://', 'https://']) && $oldAvatarPath !== $path) {
+                $oldDisk = $this->disk();
+                if ($oldDisk->exists($oldAvatarPath)) {
+                    $oldDisk->delete($oldAvatarPath);
+                }
+            }
+
+            return $media;
+        } catch (Throwable $exception) {
+            if (! $avatarSwitched) {
+                $cleaned = true;
+                try {
+                    if ($media?->exists) {
+                        $this->delete($media, adjustStorageUsage: false);
+                    } elseif ($writeAttempted && $disk->exists($path)) {
+                        $cleaned = $disk->delete($path) && ! $disk->exists($path);
+                    }
+                } catch (Throwable $cleanupException) {
+                    $cleaned = false;
+                    Log::error('Failed to clean up a profile avatar upload after an error.', [
+                        'path' => $path,
+                        'exception' => $cleanupException->getMessage(),
+                    ]);
+                }
+
+                if ($cleaned) {
+                    $this->releaseStorage($user, $reservedBytes);
+                }
+            }
+
+            throw $exception;
         }
-
-        $media = Media::create([
-            'user_id' => $user->id,
-            'driver' => $this->settings->default_driver,
-            'disk' => $diskName,
-            'path' => $path,
-            'webp_path' => $path,
-            'url' => null,
-            'variants' => null,
-            'variants_size' => 0,
-            'original_name' => $baseName.'.webp',
-            'display_name' => 'Avatar de '.$user->name,
-            'mime_type' => 'image/webp',
-            'size' => $size,
-            'width' => $width,
-            'height' => $height,
-            'context' => 'profile_avatar',
-            'alt' => 'Avatar de '.$user->name,
-        ]);
-
-        $user->forceFill(['avatar' => $path])->save();
-
-        if ($user->storage_plan_id) {
-            $user->increment('storage_used_bytes', $size);
-        }
-
-        return $media;
     }
 
     /**
@@ -260,61 +332,74 @@ class StorageService
                 : [null, null];
         }
 
-        $disk->put($path, $content, 'public');
+        $writeAttempted = false;
 
-        if (! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
-            $storedUrl = $disk->url($path);
+        try {
+            $writeAttempted = true;
+            if (! is_string($content) || ! $disk->put($path, $content, 'public')) {
+                throw new \RuntimeException('No se pudo guardar el recurso del sitio.');
+            }
+
+            if (! $this->settings->isLocal() && ! ($this->settings->default_driver === 'r2' && blank($this->settings->r2_public_url))) {
+                $storedUrl = $disk->url($path);
+            }
+
+            return Media::create([
+                'user_id' => auth()->id(),
+                'driver' => $this->settings->default_driver,
+                'disk' => $diskName,
+                'path' => $path,
+                'webp_path' => $isConvertibleOgImage ? $path : null,
+                'url' => $storedUrl,
+                'variants' => null,
+                'variants_size' => 0,
+                'original_name' => $file->getClientOriginalName(),
+                'display_name' => $file->getClientOriginalName(),
+                'mime_type' => $mimeType,
+                'size' => $disk->size($path),
+                'width' => is_numeric($width) ? (int) $width : null,
+                'height' => is_numeric($height) ? (int) $height : null,
+                'context' => $context,
+                'alt' => $context === 'site_favicon' ? 'Site favicon' : 'Open Graph image',
+            ]);
+        } catch (Throwable $exception) {
+            if ($writeAttempted) {
+                try {
+                    if ($disk->exists($path) && (! $disk->delete($path) || $disk->exists($path))) {
+                        Log::error('Failed to clean up a site asset after its database write failed.', ['path' => $path]);
+                    }
+                } catch (Throwable $cleanupException) {
+                    Log::error('Failed to clean up a site asset after its database write failed.', [
+                        'path' => $path,
+                        'exception' => $cleanupException->getMessage(),
+                    ]);
+                }
+            }
+
+            throw $exception;
         }
-
-        return Media::create([
-            'user_id' => auth()->id(),
-            'driver' => $this->settings->default_driver,
-            'disk' => $diskName,
-            'path' => $path,
-            'webp_path' => $isConvertibleOgImage ? $path : null,
-            'url' => $storedUrl,
-            'variants' => null,
-            'variants_size' => 0,
-            'original_name' => $file->getClientOriginalName(),
-            'display_name' => $file->getClientOriginalName(),
-            'mime_type' => $mimeType,
-            'size' => $disk->size($path),
-            'width' => is_numeric($width) ? (int) $width : null,
-            'height' => is_numeric($height) ? (int) $height : null,
-            'context' => $context,
-            'alt' => $context === 'site_favicon' ? 'Site favicon' : 'Open Graph image',
-        ]);
     }
 
     /**
      * Delete a media record and its file(s) from disk.
      */
-    public function delete(Media $media): void
+    public function delete(Media $media, bool $adjustStorageUsage = true): void
     {
         $disk = $this->diskFor($media);
+        $paths = collect([$media->path, $media->webp_path])
+            ->merge(collect($media->variants ?? [])->pluck('path'))
+            ->filter()
+            ->unique();
 
-        if ($media->path && $disk->exists($media->path)) {
-            $disk->delete($media->path);
-        }
-
-        if ($media->webp_path && $media->webp_path !== $media->path && $disk->exists($media->webp_path)) {
-            $disk->delete($media->webp_path);
-        }
-
-        foreach (($media->variants ?? []) as $variant) {
-            $path = $variant['path'] ?? null;
-
-            if ($path && $path !== $media->path && $disk->exists($path)) {
-                $disk->delete($path);
+        foreach ($paths as $path) {
+            if ($disk->exists($path) && (! $disk->delete($path) || $disk->exists($path))) {
+                // Keep the DB row and quota reservation if the physical delete failed.
+                throw new \RuntimeException("No se pudo eliminar el archivo multimedia {$media->id} del storage.");
             }
         }
 
-        // Decrement owner's quota counter
-        if ($media->user_id) {
-            $user = $media->user;
-            if ($user) {
-                $user->decrement('storage_used_bytes', max(0, $media->totalSize()));
-            }
+        if ($adjustStorageUsage && $media->user_id && ! str_starts_with((string) $media->context, 'site_')) {
+            $this->releaseStorage($media->user_id, max(0, $media->totalSize()));
         }
 
         $media->delete();
@@ -348,16 +433,15 @@ class StorageService
         $folder = trim(dirname($media->path), '.');
         $variantFolder = ($folder === '' ? '' : $folder.'/').'variants';
         $oldVariants = $media->variants ?? [];
-        $existing = $force ? [] : $oldVariants;
-        $variants = $existing;
+        $variants = $force ? [] : $oldVariants;
         $pendingWrites = [];
 
         foreach ($this->settings->imageVariantSizes() as $size) {
             $key = (string) $size;
-            $targetPath = $variantFolder.'/'.$basename.'-'.$size.'.webp';
+            // Unique names let us finish the new set before touching files used by the old metadata.
+            $targetPath = $variantFolder.'/'.$basename.'-'.$size.'-'.Str::uuid().'.webp';
 
-            if (! $force && isset($existing[$key]['path']) && $disk->exists($existing[$key]['path'])) {
-                $variants[$key] = $existing[$key];
+            if (! $force && isset($variants[$key]['path']) && $disk->exists($variants[$key]['path'])) {
 
                 continue;
             }
@@ -385,47 +469,80 @@ class StorageService
 
         imagedestroy($source);
 
-        $oldVariantsSize = (int) $media->variants_size;
         $newVariantsSize = collect($variants)->sum(fn (array $variant) => (int) ($variant['size'] ?? 0));
 
-        if ($media->user_id && $newVariantsSize > $oldVariantsSize) {
-            $diff = $newVariantsSize - $oldVariantsSize;
-            $user = $media->user;
-
-            if ($user && $user->storageExceeded($diff)) {
-                throw new \RuntimeException(
-                    'No hay espacio suficiente para generar las copias responsive. Plan: '.($user->storagePlan?->limitLabel() ?? 'sin límite')
-                );
-            }
+        // Reserve only the bytes about to be written. Old variants remain available
+        // until the new metadata commits, so replacement never creates broken URLs.
+        $pendingBytes = collect($pendingWrites)->sum(fn (string $content) => strlen($content));
+        if ($media->user_id && ! str_starts_with((string) $media->context, 'site_')) {
+            $this->reserveStorage(
+                $media->user_id,
+                $pendingBytes,
+                'No hay espacio suficiente para generar las copias responsive.'
+            );
         }
 
-        if ($force) {
-            foreach ($oldVariants as $variant) {
-                $path = $variant['path'] ?? null;
-
-                if ($path && $path !== $media->path && $disk->exists($path)) {
-                    $disk->delete($path);
+        $attemptedPaths = [];
+        try {
+            foreach ($pendingWrites as $targetPath => $content) {
+                $attemptedPaths[] = $targetPath;
+                if (! $disk->put($targetPath, $content, $media->disk === 'starcho_private' ? ['visibility' => 'private'] : 'public')) {
+                    throw new \RuntimeException('No se pudo guardar una copia responsive.');
                 }
             }
-        }
 
-        foreach ($pendingWrites as $targetPath => $content) {
-            $disk->put($targetPath, $content, $media->disk === 'starcho_private' ? ['visibility' => 'private'] : 'public');
-        }
-
-        $media->forceFill([
-            'variants' => $variants ?: null,
-            'variants_size' => $newVariantsSize,
-        ])->save();
-
-        if ($media->user_id && $newVariantsSize !== $oldVariantsSize) {
-            $diff = $newVariantsSize - $oldVariantsSize;
-
-            if ($diff > 0) {
-                $media->user?->increment('storage_used_bytes', $diff);
-            } else {
-                $media->user?->decrement('storage_used_bytes', abs($diff));
+            $media->forceFill([
+                'variants' => $variants ?: null,
+                'variants_size' => $newVariantsSize,
+            ])->save();
+        } catch (Throwable $exception) {
+            $remainingReserved = 0;
+            foreach ($attemptedPaths as $attemptedPath) {
+                try {
+                    if ($disk->exists($attemptedPath) && (! $disk->delete($attemptedPath) || $disk->exists($attemptedPath))) {
+                        $remainingReserved += (int) ($pendingWrites[$attemptedPath] ? strlen($pendingWrites[$attemptedPath]) : 0);
+                    }
+                } catch (Throwable $cleanupException) {
+                    $remainingReserved += (int) ($pendingWrites[$attemptedPath] ? strlen($pendingWrites[$attemptedPath]) : 0);
+                    Log::error('Failed to clean up a responsive image after generation failed.', [
+                        'path' => $attemptedPath,
+                        'exception' => $cleanupException->getMessage(),
+                    ]);
+                }
             }
+
+            if ($media->user_id && ! str_starts_with((string) $media->context, 'site_')) {
+                $this->releaseStorage($media->user_id, max(0, $pendingBytes - $remainingReserved));
+            }
+
+            throw $exception;
+        }
+
+        // Metadata now points at the complete new variant set. Remove replaced
+        // objects and release only the bytes that were actually deleted.
+        $newPaths = collect($variants)->pluck('path')->filter()->all();
+        $releasedBytes = 0;
+        foreach ($oldVariants as $key => $variant) {
+            $oldPath = $variant['path'] ?? null;
+            if (! $oldPath || in_array($oldPath, $newPaths, true) || ! $disk->exists($oldPath)) {
+                continue;
+            }
+
+            try {
+                if ($disk->delete($oldPath) && ! $disk->exists($oldPath)) {
+                    $releasedBytes += (int) ($variant['size'] ?? 0);
+                }
+            } catch (Throwable $cleanupException) {
+                Log::warning('A replaced responsive image could not be removed.', [
+                    'media_id' => $media->id,
+                    'path' => $oldPath,
+                    'exception' => $cleanupException->getMessage(),
+                ]);
+            }
+        }
+
+        if ($media->user_id && ! str_starts_with((string) $media->context, 'site_') && $releasedBytes > 0) {
+            $this->releaseStorage($media->user_id, $releasedBytes);
         }
 
         return $media->refresh();
@@ -453,6 +570,12 @@ class StorageService
         config(['filesystems.disks.'.$diskName => $this->buildDiskConfig($driver)]);
 
         return Storage::disk($diskName);
+    }
+
+    /** Resolve a saved private-storage location for read-only maintenance commands. */
+    public function privateDiskFor(string $driver, ?string $bucket = null): Filesystem
+    {
+        return $this->privateDisk($driver, $bucket);
     }
 
     /**
@@ -835,6 +958,70 @@ class StorageService
         $diskName = $this->configurePrivateDisk($driver ?: 'local', $bucket);
 
         return Storage::disk($diskName);
+    }
+
+    /**
+     * Atomically reserve bytes on the owner's counter before writing objects.
+     * A conditional UPDATE prevents two uploads from both spending the same remainder.
+     */
+    private function reserveStorage(User|int $owner, int $bytes, ?string $errorMessage = null): void
+    {
+        if ($bytes <= 0) {
+            return;
+        }
+
+        $userId = $owner instanceof User ? (int) $owner->getKey() : $owner;
+        $user = User::query()->with('storagePlan')->findOrFail($userId);
+        $planId = $user->storage_plan_id;
+        $query = User::query()->whereKey($userId);
+
+        if ($planId === null) {
+            $query->whereNull('storage_plan_id');
+        } else {
+            $limit = (int) ($user->storagePlan?->storage_limit_bytes ?? 0);
+            if ($bytes > $limit) {
+                throw new \RuntimeException($errorMessage ?: 'Storage quota exceeded. Plan: '.($user->storagePlan?->limitLabel() ?? 'unavailable'));
+            }
+
+            $query->where('storage_plan_id', $planId)
+                ->where('storage_used_bytes', '<=', $limit - $bytes);
+        }
+
+        if ($query->increment('storage_used_bytes', $bytes) !== 1) {
+            throw new \RuntimeException($errorMessage ?: 'Storage quota exceeded. Plan: '.($user->storagePlan?->limitLabel() ?? 'unavailable'));
+        }
+    }
+
+    /** Release a completed deletion or failed-upload reservation without going negative. */
+    private function releaseStorage(User|int $owner, int $bytes): void
+    {
+        if ($bytes <= 0) {
+            return;
+        }
+
+        $userId = $owner instanceof User ? (int) $owner->getKey() : $owner;
+        $released = User::query()
+            ->whereKey($userId)
+            ->where('storage_used_bytes', '>=', $bytes)
+            ->decrement('storage_used_bytes', $bytes);
+
+        if ($released !== 1) {
+            // An undercount is safer than subtracting unrelated bytes or making usage negative.
+            Log::warning('Could not fully release a user storage reservation.', [
+                'user_id' => $userId,
+                'bytes' => $bytes,
+            ]);
+        }
+    }
+
+    /** Reconcile an upload reservation after conversion changes its actual byte size. */
+    private function adjustStorageReservation(User $user, int $reservedBytes, int $actualBytes): void
+    {
+        if ($actualBytes > $reservedBytes) {
+            $this->reserveStorage($user, $actualBytes - $reservedBytes);
+        } elseif ($actualBytes < $reservedBytes) {
+            $this->releaseStorage($user, $reservedBytes - $actualBytes);
+        }
     }
 
     private function diskNameForDriver(string $driver): string
